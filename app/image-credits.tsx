@@ -17,9 +17,9 @@ export default function ImageCreditsScreen() {
         license listed below. We use Wikimedia thumbnails, cropped to fit the display.
       </Text>
       <Text variant="caption" tone="muted">
-        DecisionEats serving and pantry illustrations are original generated artwork. Meal-type defaults
-        are shared examples, not photographs of individual recipes. Always follow the recipe
-        ingredients and instructions.
+        DecisionEats serving and pantry illustrations are original generated artwork. Meal-type
+        defaults are shared examples, not photographs of individual recipes. Always follow the
+        recipe ingredients and instructions.
       </Text>
       {FOOD_IMAGE_CREDITS.map((credit) => (
         <Card key={credit.key}>
