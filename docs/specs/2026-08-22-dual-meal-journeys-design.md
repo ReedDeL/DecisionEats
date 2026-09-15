@@ -1,4 +1,4 @@
-# HomeChef Dual Meal Journeys Technical Design
+# DecisionEats Dual Meal Journeys Technical Design
 
 > **Current authority:** Product behavior is governed by
 > `../00_PRODUCT_DIRECTION.md` and `../04_UIUX_SPEC.md`. This file preserves
@@ -38,7 +38,7 @@ tracking, a nutrition dashboard, weight history, roommate planning, or a general
 
 ## 2. Product decision
 
-HomeChef has two decision journeys:
+DecisionEats has two decision journeys:
 
 1. Now makes a meal decision from the saved pantry, with optional photo correction.
 2. Plan proposes a practical week and derives the ingredient gaps created by that plan.

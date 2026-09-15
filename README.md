@@ -1,13 +1,13 @@
-# HomeChef
+# DecisionEats
 
-HomeChef reduces food decision fatigue.
+DecisionEats reduces food decision fatigue.
 
 It helps with two moments:
 
 - **Now:** decide what to make from the kitchen you already have.
 - **This week:** propose a practical meal plan and identify what is missing.
 
-HomeChef is not a recipe search engine. It is a guided decision tree. Each step
+DecisionEats is not a recipe search engine. It is a guided decision tree. Each step
 asks one question, or two closely related questions, and uses the pantry,
 equipment, allergens, dietary needs, and prior choices to remove unnecessary
 decisions.
@@ -15,7 +15,7 @@ decisions.
 ## Make something now
 
 Take a photo of the pantry or correct it manually, choose the time available,
-and add one optional preference. HomeChef leads with a small set of strong
+and add one optional preference. DecisionEats leads with a small set of strong
 matches.
 
 The first set stays focused. **Show more matches** reveals additional catalog
@@ -32,7 +32,7 @@ relaxed to fill a screen.
 
 ## Plan my week
 
-The weekly journey uses the same intelligence in reverse. HomeChef asks a few
+The weekly journey uses the same intelligence in reverse. DecisionEats asks a few
 simple questions, proposes one week, and shows **What to get** beyond the
 current pantry.
 
@@ -47,7 +47,7 @@ list.
 Photo recognition makes setup faster. Confirmation and manual correction keep
 the pantry trustworthy.
 
-Over time, explicit recipe and plan selections may help HomeChef suggest likely
+Over time, explicit recipe and plan selections may help DecisionEats suggest likely
 future ingredients. Suggestions require confirmation before changing pantry or
 plan state.
 

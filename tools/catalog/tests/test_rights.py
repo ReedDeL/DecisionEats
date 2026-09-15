@@ -109,9 +109,15 @@ def test_manifest_rejects_multiple_versions_of_one_source_id() -> None:
         )
 
 
-def test_committed_manifest_approves_only_the_wikibooks_release() -> None:
+def test_committed_manifest_archives_are_checksum_pinned() -> None:
+    import hashlib
+
     manifest_path = Path(__file__).parents[1] / "rights-manifest.json"
     manifest = RightsManifest.model_validate(json.loads(manifest_path.read_text(encoding="utf-8")))
 
-    assert [source.id for source in manifest.approved_sources()] == ["wikibooks-cookbook"]
-    assert manifest.candidate_sources() == []
+    assert {"wikibooks-cookbook", "wikibooks-expanded", "historical-cookbooks"} <= {
+        source.id for source in manifest.approved_sources()
+    }
+    for source in manifest.approved_sources():
+        archive = manifest_path.parent / "archives" / f"{source.id}-{source.version[:7]}.jsonl"
+        assert hashlib.sha256(archive.read_bytes()).hexdigest() == source.sha256

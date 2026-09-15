@@ -5,7 +5,7 @@
 
 ## Decision
 
-HomeChef is moving to a rights-first recipe catalog that it can host and
+DecisionEats is moving to a rights-first recipe catalog that it can host and
 operate without recipe-provider APIs. Approved, checksum-pinned bulk archives
 are the only source of new catalog releases. A small curated offline catalog
 ships with the app so the decision experience begins immediately and remains
@@ -36,7 +36,7 @@ hard-constraint filter.
 2. The build pipeline downloads only an `approved` manifest entry, verifies the
    checksum, parses it through source-neutral models, and quarantines invalid or
    unsafe records with explicit reasons.
-3. Normalization creates stable HomeChef IDs, structured ingredient measures,
+3. Normalization creates stable DecisionEats IDs, structured ingredient measures,
    provenance, deterministic deduplication, and safe equipment metadata.
 4. Validation produces a candidate release and an offline subset. Unknown
    equipment, allergen, or dietary status excludes a recipe; it never admits.
@@ -51,7 +51,7 @@ approved source and checksum.
 
 The client reads a bounded hosted candidate set through authenticated RPCs and
 has the curated offline catalog available immediately. It merges candidates by
-stable HomeChef ID, then passes plain `Recipe[]` values to the pure decision
+stable DecisionEats ID, then passes plain `Recipe[]` values to the pure decision
 engine. The engine never knows whether a recipe was hosted or offline.
 
 ```text

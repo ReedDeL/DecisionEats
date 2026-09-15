@@ -42,6 +42,8 @@ build/catalog/
 coverage/
 *.tsbuildinfo
 .vitest/
+output/
+.playwright-cli/
 
 # Python (tools/catalog)
 __pycache__/
@@ -80,6 +82,7 @@ docs/local/
 
 # Personal local configuration (not shared team configuration)
 .agents/
+.opencode/
 # Personal coding-agent instructions are local-only. Shared engineering
 # guidance belongs in CONTRIBUTING.md and docs/.
 AGENTS.md

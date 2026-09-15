@@ -10,7 +10,7 @@ vi.mock('@/theme/useTheme', () => ({
       surfaceAlt: '#F6EBDD',
       text: '#251B16',
       textMuted: '#706158',
-      accent: '#C04E31',
+      accent: '#247148',
       accentText: '#FFFFFF',
       border: '#E8D6C5',
     },

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 from collections.abc import Iterator, Mapping
@@ -15,6 +16,7 @@ from tools.catalog.models import (
     CatalogIngredient,
     CatalogRecipe,
     Provenance,
+    RecipeAttribution,
     SourceRecipe,
     VocabularyEntry,
 )
@@ -25,6 +27,7 @@ from tools.catalog.normalize import (
     display_name,
     is_staple,
 )
+from tools.catalog.nutrition import enrich_recipes, load_usda_cache
 from tools.catalog.rights import ReleaseSource, RightsManifest, RightsSource
 from tools.catalog.seed_loader import (
     AUTHORED_SOURCE_ID,
@@ -333,6 +336,17 @@ def _normalize_recipe(
             dietary_tags=sorted(set(recipe.dietary_tags)),
             ingredients=ingredients,
             instructions=recipe.instructions,
+            base_servings=recipe.base_servings,
+            mealSlots=recipe.meal_slots,
+            attribution=RecipeAttribution(
+                source_id=source.id,
+                source_version=source.version,
+                source_recipe_id=recipe.source_recipe_id,
+                attribution=recipe.attribution_text or source.attribution,
+                url=recipe.source_url or source.archive_url,
+                license_name=source.license_name,
+                license_url=source.license_url,
+            ),
             provenance=[
                 Provenance(
                     source_id=source.id,
@@ -454,7 +468,9 @@ def _sorted_quarantine(entries: list[QuarantineEntry]) -> list[QuarantineEntry]:
     return sorted(entries, key=lambda item: (item.coordinate, item.code, item.detail))
 
 
-def rebuild_committed_catalog(output_dir: Path | None = None) -> ReleaseBuild:
+def rebuild_committed_catalog(
+    output_dir: Path | None = None, *, usda_cache_path: Path | None = None
+) -> ReleaseBuild:
     """Build the approved release from committed archives and seeds, writing to src/data."""
     catalog_output_dir = (
         output_dir
@@ -469,6 +485,10 @@ def rebuild_committed_catalog(output_dir: Path | None = None) -> ReleaseBuild:
         for source in manifest.approved_sources()
     }
     release = build_release(manifest, archives)
+    if usda_cache_path is not None:
+        release.recipes = enrich_recipes(release.recipes, load_usda_cache(usda_cache_path))
+        enriched = {recipe.id: recipe for recipe in release.recipes}
+        release.offline_recipes = [enriched[recipe.id] for recipe in release.offline_recipes]
     catalog_output_dir.mkdir(parents=True, exist_ok=True)
     recipes_payload = [r.model_dump(by_alias=True) for r in release.recipes]
     vocabulary_payload = [v.model_dump(by_alias=True) for v in release.vocabulary]
@@ -481,11 +501,36 @@ def rebuild_committed_catalog(output_dir: Path | None = None) -> ReleaseBuild:
         json.dumps(vocabulary_payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+    (catalog_output_dir / "catalog-attributions.json").write_text(
+        json.dumps(
+            [
+                {
+                    "sourceId": source.id,
+                    "sourceVersion": source.version,
+                    "title": source.title,
+                    "url": source.archive_url,
+                    "licenseName": source.license_name,
+                    "licenseUrl": source.license_url,
+                    "attribution": source.attribution,
+                }
+                for source in release.sources
+            ],
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     return release
 
 
 def main() -> int:
-    release = rebuild_committed_catalog()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--usda-cache", type=Path)
+    args = parser.parse_args()
+    release = rebuild_committed_catalog(args.output_dir, usda_cache_path=args.usda_cache)
     print(f"Wrote {len(release.recipes)} recipes and {len(release.vocabulary)} ingredients.")
     return 0
 

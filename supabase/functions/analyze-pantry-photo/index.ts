@@ -15,12 +15,12 @@ import { errorResponse, jsonResponse, preflight } from '../_shared/cors.ts';
  * Normalization to canonical ids happens on the client, against the same
  * bundled vocabulary the engine matches against. See NORMALIZATION below.
  *
- * Every caller must present a valid user session (401 otherwise) and spend one
- * unit of their daily budget (429 once spent) BEFORE any Gemini traffic — an
- * unauthenticated or over-budget request costs nothing but a database round
- * trip. Without both gates, the public anon key alone would be enough to
- * invoke this function in a loop and drain the Gemini quota: a cost attack
- * with no data at stake.
+ * Every caller must present a valid, verified user session (401/403 otherwise)
+ * and spend one unit of both the per-user and global daily budgets (429 once
+ * spent) BEFORE any Gemini traffic. An unauthenticated, unverified, or
+ * over-budget request costs nothing but a database round trip. Without both
+ * gates, the public anon key alone would be enough to invoke this function in
+ * a loop and drain the Gemini quota: a cost attack with no data at stake.
  */
 
 /**
@@ -59,13 +59,20 @@ const MAX_IMAGE_CHARS = 2_000_000;
 const MAX_TOTAL_IMAGE_CHARS = 6_000_000;
 
 /**
- * Scans per user per UTC day. A household photographs their fridge a few
- * times a day at most; twenty is generous headroom above real usage and far
- * below what an automated loop would burn. Raised via migration only if
- * launch telemetry shows honest users hitting it — never loosened here
- * silently, since the budget is the last line of defense for the quota.
+ * Conservative defaults. Both limits are server configuration so operators
+ * can lower them during an incident or raise them only after reviewing real
+ * usage and provider cost. The database function validates the same bounds as
+ * a second line of defense against a bad secret value.
  */
-const DAILY_SCAN_LIMIT = 20;
+const DEFAULT_DAILY_SCAN_LIMIT = 20;
+const DEFAULT_GLOBAL_DAILY_SCAN_LIMIT = 1_000;
+const MAX_CONFIGURED_DAILY_SCAN_LIMIT = 100;
+const MAX_CONFIGURED_GLOBAL_DAILY_SCAN_LIMIT = 100_000;
+
+type ScanLimits = {
+  daily: number;
+  globalDaily: number;
+};
 
 /**
  * The response contract from §2.4, as a plain JSON Schema for the Interactions
@@ -185,8 +192,22 @@ Deno.serve(async (request: Request): Promise<Response> => {
       return errorResponse(request, 'Sign in to scan your pantry.', 401);
     }
     user = data.user;
-  } catch (error) {
-    console.error('Auth verification failed', error);
+  } catch {
+    console.error('Auth verification failed');
+    return errorResponse(request, 'Photo recognition is unavailable.', 503);
+  }
+
+  // Gemini's API terms require an adult-oriented client. Google OAuth users
+  // have a verified provider email; do not spend paid/free AI quota on
+  // disposable unverified accounts. This is an abuse control, not proof of
+  // age, so the product's age-policy decision remains documented separately.
+  if (!user.email_confirmed_at) {
+    return errorResponse(request, 'Verify your account to scan your pantry.', 403);
+  }
+
+  const scanLimits = readScanLimits();
+  if (!scanLimits) {
+    console.error('Invalid pantry scan limit configuration');
     return errorResponse(request, 'Photo recognition is unavailable.', 503);
   }
 
@@ -199,13 +220,14 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 
   const { data: granted, error: claimError } = await supabaseAdmin.rpc('claim_pantry_scan', {
-    p_daily_limit: DAILY_SCAN_LIMIT,
+    p_daily_limit: scanLimits.daily,
+    p_global_daily_limit: scanLimits.globalDaily,
   });
   if (claimError) {
     // Budget check failing is an outage, not a denial: fail closed anyway.
     // Spending Gemini quota we cannot account for is how the attack from the
     // header comment gets back in through the side door.
-    console.error(`Budget claim failed for ${user.id}`, claimError);
+    console.error('Budget claim failed', claimError);
     return errorResponse(request, 'Photo recognition is unavailable.', 503);
   }
   if (!granted) {
@@ -243,9 +265,9 @@ Deno.serve(async (request: Request): Promise<Response> => {
           // Cataloguing is a perception task, not a creative one.
           temperature: 0,
         },
-        // Stored interactions would keep fridge photos on Google's servers
-        // past this request, breaking the §6 photo-retention posture:
-        // images are processed and discarded, never retained.
+        // Do not retain this interaction as a stored conversation. HomeChef
+        // does not persist the submitted images, but the provider's service
+        // tier and abuse-monitoring terms still apply.
         store: false,
       }),
     });
@@ -255,9 +277,11 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 
   if (!geminiResponse.ok) {
-    // The upstream body can carry key material or quota detail; log it, never
-    // forward it.
-    console.error(`Gemini returned ${geminiResponse.status}`, await geminiResponse.text());
+    // The upstream body can carry prompt-derived content, key material, or
+    // quota detail. Consume it so the response can be released, but never log
+    // or forward the body.
+    await geminiResponse.text();
+    console.error(`Gemini returned ${geminiResponse.status}`);
     return errorResponse(request, 'Photo recognition failed.', 502);
   }
 
@@ -271,12 +295,37 @@ Deno.serve(async (request: Request): Promise<Response> => {
   try {
     items = DetectedItems.parse(JSON.parse(text));
   } catch (error) {
-    console.error('Gemini output failed validation', error, text.slice(0, 500));
+    // The model output is derived from a user's photo. Keep it out of logs.
+    console.error('Gemini output failed validation', error);
     return errorResponse(request, 'Photo recognition returned an unexpected shape.', 502);
   }
 
   return jsonResponse(request, { items });
 });
+
+function readScanLimits(): ScanLimits | null {
+  const daily = readPositiveIntegerEnv(
+    'DAILY_SCAN_LIMIT',
+    DEFAULT_DAILY_SCAN_LIMIT,
+    MAX_CONFIGURED_DAILY_SCAN_LIMIT
+  );
+  const globalDaily = readPositiveIntegerEnv(
+    'GLOBAL_DAILY_SCAN_LIMIT',
+    DEFAULT_GLOBAL_DAILY_SCAN_LIMIT,
+    MAX_CONFIGURED_GLOBAL_DAILY_SCAN_LIMIT
+  );
+
+  if (daily === null || globalDaily === null) return null;
+  return { daily, globalDaily };
+}
+
+function readPositiveIntegerEnv(name: string, fallback: number, maximum: number): number | null {
+  const raw = Deno.env.get(name)?.trim();
+  if (!raw) return fallback;
+
+  const value = Number(raw);
+  return Number.isSafeInteger(value) && value > 0 && value <= maximum ? value : null;
+}
 
 /** Whole seconds until the next UTC midnight — when the daily budget resets. */
 function secondsUntilUtcMidnight(): number {

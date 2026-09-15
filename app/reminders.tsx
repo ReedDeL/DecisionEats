@@ -179,8 +179,8 @@ export default function RemindersScreen() {
         <Card variant="alt">
           <Text variant="heading">How reminders work</Text>
           <Text variant="body">
-            HomeChef creates reminders only for concrete meals in a confirmed weekly plan. Drafts,
-            one-off Now choices, and “Decide that day” entries never create a reminder.
+            DecisionEats creates reminders only for concrete meals in a confirmed weekly plan.
+            Drafts, one-off Now choices, and “Decide that day” entries never create a reminder.
           </Text>
         </Card>
         <PrimaryButton
@@ -216,8 +216,8 @@ export default function RemindersScreen() {
           <Card variant="alt">
             <Text variant="heading">Reminders are unavailable on the web</Text>
             <Text variant="body" tone="muted">
-              Your plan still works and stays saved. Use the HomeChef mobile app for local cooking
-              reminders.
+              Your plan still works and stays saved. Use the DecisionEats mobile app for local
+              cooking reminders.
             </Text>
           </Card>
         ) : permission === 'granted' ? (
@@ -244,7 +244,7 @@ export default function RemindersScreen() {
                   label="Open device settings"
                   variant="ghost"
                   onPress={openPlatformSettings}
-                  accessibilityHint="Opens device settings for HomeChef notifications"
+                  accessibilityHint="Opens device settings for DecisionEats notifications"
                 />
               </Card>
             ) : null}
@@ -289,8 +289,8 @@ export default function RemindersScreen() {
         <View style={styles.header}>
           <Text variant="display">When should we remind you?</Text>
           <Text variant="body" tone="muted">
-            HomeChef uses the longer of the recipe time and your chosen lead time, so you are never
-            prompted after cooking needs to start.
+            DecisionEats uses the longer of the recipe time and your chosen lead time, so you are
+            never prompted after cooking needs to start.
           </Text>
         </View>
         <View
@@ -342,8 +342,8 @@ export default function RemindersScreen() {
         <Card variant="alt">
           <Text variant="heading">Unavailable on the web</Text>
           <Text variant="body" tone="muted">
-            Local cooking reminders work in the HomeChef mobile app. Your weekly plan is still saved
-            here.
+            Local cooking reminders work in the DecisionEats mobile app. Your weekly plan is still
+            saved here.
           </Text>
         </Card>
       ) : (
@@ -375,7 +375,7 @@ export default function RemindersScreen() {
               label="Open device settings"
               variant="ghost"
               onPress={openPlatformSettings}
-              accessibilityHint="Opens device settings for HomeChef notifications"
+              accessibilityHint="Opens device settings for DecisionEats notifications"
             />
           ) : null}
         </Card>

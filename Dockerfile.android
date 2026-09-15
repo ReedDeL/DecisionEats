@@ -7,7 +7,7 @@ ARG ANDROID_BUILD_TOOLS_VERSION=36.0.0
 ENV ANDROID_HOME=/opt/android-sdk
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV ANDROID_AVD_HOME=/opt/android-avd
-ENV ANDROID_AVD_NAME=homechef-api-36
+ENV ANDROID_AVD_NAME=decisioneats-api-36
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH=/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/emulator:/opt/android-sdk/platform-tools:/opt/android-sdk/build-tools/36.0.0:$PATH
 

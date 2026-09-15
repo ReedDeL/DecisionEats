@@ -38,7 +38,7 @@ describe('resolveIngredient', () => {
   it('drops qualifier words the vocabulary does not carry', () => {
     // The exact case the vision model produces constantly.
     expect(resolveIngredient('baby spinach').id).toBe('spinach');
-    expect(resolveIngredient('large red onion').id).toBe('onion');
+    expect(resolveIngredient('large red onion').id).toBe('red_onions');
     expect(resolveIngredient('Tyson Chicken Breast 3lb').id).toBe('chicken_breast');
   });
 
@@ -49,9 +49,8 @@ describe('resolveIngredient', () => {
   });
 
   it('never reports a qualifier-stripped match as trusted', () => {
-    // "oat milk" resolving to "milk" is plausible and wrong. It must reach the
-    // user rather than the pantry.
-    const result = resolveIngredient('oat milk');
+    // Unrecognized product qualifiers still require confirmation.
+    const result = resolveIngredient('barista oat milk');
     expect(result.match).toBe('partial');
     expect(isTrustedMatch(result.match)).toBe(false);
   });
@@ -104,9 +103,9 @@ describe('resolveIngredient', () => {
 describe('synonym targets missing from the vocabulary', () => {
   const known = new Set(INGREDIENT_VOCABULARY.map((entry) => entry.id));
 
-  it('is still limited to the two known cases', () => {
+  it('is still limited to the remaining known case', () => {
     const missing = [...new Set(Object.values(SYNONYMS))].filter((id) => !known.has(id)).sort();
-    expect(missing).toEqual(['bell_pepper', 'ground_beef']);
+    expect(missing).toEqual(['ground_beef']);
   });
 
   it('falls through to a usable match instead of vanishing', () => {

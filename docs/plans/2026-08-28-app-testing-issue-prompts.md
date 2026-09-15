@@ -39,7 +39,7 @@ The original acceptance prompts follow.
 
 ```text
 Design and implement a caloric goals and weight gain/loss onboarding step positioned immediately
-before the “We assumed you have these” pantry starter screen in HomeChef.
+before the “We assumed you have these” pantry starter screen in DecisionEats.
 
 Before coding, read docs/agentic/OPERATING_SYSTEM.md, docs/00_PRODUCT_DIRECTION.md,
 docs/04_UIUX_SPEC.md, and the supporting body-profile, portion-guidance, privacy, and
@@ -91,7 +91,7 @@ implementation and tests, run focused tests and npm run check, and review the fi
 ## Prompt 5: Polish the Settings action
 
 ```text
-Polish HomeChef's Settings action across every screen where it appears.
+Polish DecisionEats's Settings action across every screen where it appears.
 
 Read docs/agentic/OPERATING_SYSTEM.md, docs/00_PRODUCT_DIRECTION.md,
 docs/04_UIUX_SPEC.md, the theme tokens, shared button/icon primitives, and all current Settings
@@ -155,7 +155,7 @@ review the final diff.
 ## Prompt 7: Create a meal-prep reminders page with its own onboarding
 
 ```text
-Create a dedicated meal-prep and cooking-reminders experience for HomeChef, including a short
+Create a dedicated meal-prep and cooking-reminders experience for DecisionEats, including a short
 first-visit onboarding flow.
 
 Treat this as a product-scope addition. Read docs/agentic/OPERATING_SYSTEM.md,
@@ -199,7 +199,7 @@ and npm run check; clearly report any device-only verification still required.
 ## Prompt 9: Curate authentic microwave meals and improve microwave recommendations
 
 ```text
-Expand HomeChef's microwave catalog with authentic, realistic microwave meals (e.g., microwave pizza,
+Expand DecisionEats's microwave catalog with authentic, realistic microwave meals (e.g., microwave pizza,
 microwave burritos, microwave quesadillas, mug meals) and ensure microwave-only users receive genuine,
 practical meal recommendations.
 
@@ -246,7 +246,7 @@ Tests & Verification:
 ## Prompt 10: Unify appliance options and make onboarding subtext universal
 
 ```text
-Update HomeChef's kitchen setup onboarding and settings to present appliances cleanly as first-class
+Update DecisionEats's kitchen setup onboarding and settings to present appliances cleanly as first-class
 appliance options (eliminating ambiguous “Anything else?” phrasing) and use universal, functional subtext.
 
 Before editing, read docs/agentic/OPERATING_SYSTEM.md, docs/00_PRODUCT_DIRECTION.md,
@@ -289,7 +289,7 @@ Tests & Verification:
 ## Prompt 11: Add a dedicated, non-destructive Kitchen Setup management UI
 
 ```text
-Create a dedicated, non-destructive “Kitchen Setup” management screen in HomeChef that allows users to
+Create a dedicated, non-destructive “Kitchen Setup” management screen in DecisionEats that allows users to
 reconfigure their equipment, appliances, and kitchen choices anytime without wiping out their pantry or
 preferences.
 
@@ -328,7 +328,7 @@ Tests & Verification:
 ## Prompt 12: Implement the Weekly Meal Prep reversal journey and active reminder scheduling
 
 ```text
-Implement the complete Weekly Meal Prep experience in HomeChef, featuring the “meal prep reversal”
+Implement the complete Weekly Meal Prep experience in DecisionEats, featuring the “meal prep reversal”
 workflow that derives consolidated grocery lists from user meal prep choices and schedules cooking
 reminders.
 

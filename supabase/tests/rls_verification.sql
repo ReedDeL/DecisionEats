@@ -671,6 +671,14 @@ begin
   results := results || format('20|Scan ledger hidden from clients|blocked|%s',
                                case when blocked then 'blocked' else 'ALLOWED' end);
 
+  blocked := false;
+  begin
+    perform count(*) from private.pantry_scan_global_usage;
+  exception when others then blocked := true;
+  end;
+  results := results || format('24|Global scan ledger hidden from clients|blocked|%s',
+                               case when blocked then 'blocked' else 'ALLOWED' end);
+
   -- Spend A's budget against a limit of 2: two grants, then a refusal. The
   -- refusal is the point -- an off-by-one here is the cost attack reopening.
   perform set_config('role', 'postgres', true);
@@ -679,7 +687,7 @@ begin
 
   granted_count := 0;
   for i in 1 .. 3 loop
-    granted := private.claim_pantry_scan(2);
+    granted := private.claim_pantry_scan(2, 1000);
     if granted then
       granted_count := granted_count + 1;
     end if;
@@ -690,13 +698,19 @@ begin
   perform set_config('request.jwt.claims',
                      json_build_object('sub', user_b, 'role', 'authenticated')::text, true);
   results := results || format('22|Roommate budget independent|true|%s',
-                               case when private.claim_pantry_scan(2) then 'true' else 'false' end);
+                               case when private.claim_pantry_scan(2, 1000) then 'true' else 'false' end);
+
+  -- A global cap applies across users. A has spent two and B has spent one;
+  -- with a global limit of three, the next request must be refused even though
+  -- B has not reached its own per-user limit.
+  results := results || format('25|Global budget caps all users|false|%s',
+                               case when private.claim_pantry_scan(2, 3) then 'true' else 'false' end);
 
   -- No JWT claims, no identity, no scan. This is the branch that keeps the
   -- function safe even if it were ever called without forwarding auth.
   perform set_config('request.jwt.claims', '{"role":"anon"}', true);
   results := results || format('23|Anonymous claim refused|false|%s',
-                               case when private.claim_pantry_scan(2) then 'true' else 'false' end);
+                               case when private.claim_pantry_scan(2, 1000) then 'true' else 'false' end);
 
   insert into _rls_results (n, assertion, expected, actual, pass)
   select split_part(r, '|', 1)::int,

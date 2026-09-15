@@ -1,4 +1,4 @@
-# HomeChef Collaboration Blueprint
+# DecisionEats Collaboration Blueprint
 
 **Updated:** August 26, 2026  
 **Release:** Version 1.0 ships when the product is ready.

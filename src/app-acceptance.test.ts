@@ -89,6 +89,21 @@ describe('shared Settings action acceptance contract', () => {
   });
 });
 
+describe('photo safety acceptance contract', () => {
+  it('discloses provider processing and review responsibility', () => {
+    const scan = source('app/scan.tsx');
+    const settings = source('app/settings.tsx');
+
+    for (const screen of [scan, settings]) {
+      const lowerScreen = screen.toLowerCase();
+      expect(lowerScreen).toContain('third-party photo-recognition provider');
+      expect(lowerScreen).toContain('does not save');
+      expect(lowerScreen).toContain('not medical');
+      expect(lowerScreen).toContain('do not include people');
+    }
+  });
+});
+
 describe('pantry starter onboarding acceptance contract', () => {
   it('exposes photo scan, search, and virtualized checklist in order', () => {
     const staples = source('app/(onboarding)/staples.tsx');

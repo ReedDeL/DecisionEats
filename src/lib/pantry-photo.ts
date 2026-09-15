@@ -75,6 +75,9 @@ async function toPantryPhotoError(error: unknown): Promise<PantryPhotoError> {
     const response: unknown = error.context;
     const status = (response as { status?: number } | null)?.status;
     if (status === 401) return new PantryPhotoError('Sign in to scan your pantry.');
+    if (status === 403) {
+      return new PantryPhotoError('Verify your account to scan your pantry.');
+    }
     if (status === 429) {
       return new PantryPhotoError('Daily photo limit reached. Try again tomorrow.');
     }

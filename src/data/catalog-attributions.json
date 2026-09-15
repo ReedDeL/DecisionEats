@@ -1,12 +1,30 @@
 [
   {
-    "attribution": "HomeChef-authored recipe seed catalog.",
-    "licenseName": "HomeChef-authored original content",
-    "licenseUrl": "https://github.com/ReedDeL/HomeChef/blob/master/docs/specs/2026-08-22-owned-recipe-catalog-design.md",
+    "attribution": "Adapted from Fannie Merritt Farmer, The Boston Cooking-School Cook Book, through Open Recipe Archive. Public-domain source confirmed by Project Gutenberg ebook 65061; the author died in 1915. Source records and reviews are retained under tools/catalog/reviews/historical-2026-09.",
+    "licenseName": "Public domain source; DecisionEats adaptations CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "sourceId": "historical-cookbooks",
+    "sourceVersion": "2026-09-09",
+    "title": "Reviewed public-domain cookbook recipes",
+    "url": "https://github.com/AdamBouhmad/open-recipe-archive/tree/ae3bd2c009a8899dfe63b9166fa98ae3fa8041a8"
+  },
+  {
+    "attribution": "DecisionEats-authored recipe seed catalog.",
+    "licenseName": "DecisionEats-authored original content",
+    "licenseUrl": "https://github.com/ReedDeL/DecisionEats/blob/master/docs/specs/2026-08-22-owned-recipe-catalog-design.md",
     "sourceId": "homechef-authored",
     "sourceVersion": "authored-seed-1",
-    "title": "HomeChef-authored recipe seed catalog",
-    "url": "https://raw.githubusercontent.com/ReedDeL/HomeChef/master/tools/catalog/seed/recipes.json"
+    "title": "DecisionEats-authored recipe seed catalog",
+    "url": "https://raw.githubusercontent.com/ReedDeL/DecisionEats/master/tools/catalog/seed/recipes.json"
+  },
+  {
+    "attribution": "DecisionEats original meal-template variations: 6 proteins, 12 vegetable pairings, 6 flavors, 5 bases. Complete materialized preparations, not independently sourced or individually kitchen-tested recipes.",
+    "licenseName": "DecisionEats-authored original content",
+    "licenseUrl": "https://github.com/ReedDeL/DecisionEats/blob/master/docs/specs/2026-08-22-owned-recipe-catalog-design.md",
+    "sourceId": "homechef-templates",
+    "sourceVersion": "2026-09-09",
+    "title": "DecisionEats original meal-template variations",
+    "url": "https://github.com/ReedDeL/DecisionEats/blob/master/tools/catalog/meal_templates.py"
   },
   {
     "attribution": "Recipe text is adapted from the Wikibooks Cookbook under CC BY-SA 4.0. The normalized archive is retained in this repository.",
@@ -16,5 +34,14 @@
     "sourceVersion": "2026-08-27",
     "title": "Wikibooks Cookbook recipe snapshot (adapted)",
     "url": "https://en.wikibooks.org/wiki/Cookbook:Recipes"
+  },
+  {
+    "attribution": "Adapted from Wikibooks contributors. Page revisions, original text and editorial reviews are retained under tools/catalog/reviews/wikibooks-2026-09. Adapted recipe text is available under CC BY-SA 4.0.",
+    "licenseName": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "sourceId": "wikibooks-expanded",
+    "sourceVersion": "2026-09-09",
+    "title": "Reviewed Wikibooks Cookbook expansion",
+    "url": "https://dumps.wikimedia.org/enwikibooks/20260901/enwikibooks-20260901-pages-articles.xml.bz2"
   }
 ]

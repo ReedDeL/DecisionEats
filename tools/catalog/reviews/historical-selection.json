@@ -1,0 +1,159 @@
+{
+  "upstream_sha256": "02da777aa691335729ee3fa2f9ebf44ea4cdd8d2486c31ff3ff75b115d4d3639",
+  "columns": [
+    "revision",
+    "minutes",
+    "servings",
+    "equipment",
+    "mealSlots",
+    "cuisine",
+    "ingredients",
+    "instructions",
+    "diet"
+  ],
+  "recipes": [
+    [
+      "historical:ye-old-american:appledore-soup",
+      45,
+      4,
+      "stove",
+      "lunch",
+      "american",
+      "potatoes|3;milk|1 quart;onion|2 slices;butter|3 tbsp;all_purpose_flour|2 tbsp;salt|to taste;celery_salt|1/4 tsp;black_pepper|1/8 tsp;cayenne_pepper|1 pinch;parsley|1 tsp;ketchup|3 tbsp;water|for boiling",
+      "Peel and dice potatoes, boil until tender and drain. Mash well. Heat milk gently with the onion, remove onion and stir milk into potatoes. Melt half the butter in another pan, stir in flour and seasonings and cook 1 minute. Gradually whisk in the potato mixture and simmer until thickened and flour is cooked. Stir in remaining butter, parsley and ketchup.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:celery-soup-i",
+      40,
+      4,
+      "stove",
+      "lunch",
+      "american",
+      "celery|3 cups chopped;water|1 pint;milk|2 1/2 cups;onion|1 slice;butter|3 tbsp;all_purpose_flour|1/4 cup;salt|to taste;black_pepper|to taste",
+      "Simmer chopped celery in water until soft, then press through a sieve, retaining the cooking water. Heat milk with onion and remove onion. In a saucepan melt butter, stir in flour and cook 1 minute. Gradually whisk in milk, then celery and its liquid. Simmer until thickened, season and serve. Optional crackers are omitted.",
+      "veg"
+    ],
+    [
+      "historical:ye-old-american:chicken-stew",
+      100,
+      4,
+      "stove",
+      "lunch,dinner",
+      "american",
+      "chicken|1 whole cut in pieces;water|enough to cover;all_purpose_flour|1/3 cup;salt|to taste;black_pepper|to taste;butter|1 tbsp",
+      "Cover chicken pieces with water in a large pot. Bring to a boil, reduce heat and simmer until tender and at least 74 C (165 F), about 60-75 minutes. Season. Whisk flour with enough cold water to form a smooth slurry. Stir into simmering broth and cook at least 5 minutes until thickened. Add butter. Remove bones carefully before serving; optional dumplings are omitted.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:chicken-timbales-ii",
+      45,
+      3,
+      "stove,oven",
+      "lunch,dinner",
+      "american",
+      "butter|2 tbsp plus for moulds;breadcrumbs|1/4 cup;milk|2/3 cup;cooked_chicken|1 cup chopped;parsley|1/2 tbsp;egg|2;salt|to taste;black_pepper|to taste;water|for water bath",
+      "Heat oven to 175 C (350 F). Melt butter in a saucepan, add breadcrumbs and milk and stir over low heat for 5 minutes. Remove from heat and cool slightly. Add cooked chicken, parsley, beaten eggs and seasoning. Divide between buttered ovenproof ramekins, two-thirds full. Place in a deep baking tray and add hot water halfway up the ramekins. Bake 20-30 minutes until centers reach 74 C (165 F). Optional sauce is omitted.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:baked-macaroni-with-cheese",
+      40,
+      2,
+      "stove,oven",
+      "lunch,dinner",
+      "american",
+      "macaroni|3/4 cup;water|for boiling;salt|to taste;cheddar_cheese|1/2 cup;butter|3 tbsp;all_purpose_flour|2 tbsp;milk|1 1/2 cups;breadcrumbs|1/4 cup",
+      "Heat oven to 190 C (375 F). Boil macaroni in salted water until just tender and drain. Melt 2 tablespoons butter, stir in flour and cook 1 minute. Whisk in milk gradually and simmer until thickened. Layer macaroni and cheese in a baking dish and pour over sauce. Toss breadcrumbs with remaining melted butter, scatter over the dish and bake until bubbling and golden, about 15 minutes.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:macaroni-italian-style",
+      30,
+      2,
+      "stove",
+      "lunch,dinner",
+      "american",
+      "macaroni|1 cup;water|for boiling;butter|2 tbsp;all_purpose_flour|2 tbsp;milk|1 1/2 cups;cheddar_cheese|2/3 cup;salt|to taste;paprika|to taste;cooked_ham|1/4 cup chopped;parsley|1 tsp",
+      "Boil macaroni according to packet directions and drain. Melt butter in a saucepan, stir in flour and cook 1 minute. Gradually whisk in milk and simmer until thickened. Stir in cheese until melted, season and add macaroni and cooked ham. Heat until steaming hot and garnish with parsley.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:macaroni-with-white-sauce",
+      30,
+      2,
+      "stove",
+      "lunch,dinner",
+      "american",
+      "macaroni|3/4 cup;water|for boiling;salt|to taste;butter|2 tbsp;all_purpose_flour|2 tbsp;milk|1 1/2 cups",
+      "Cook macaroni in boiling salted water according to the packet and drain. Melt butter in a saucepan, add flour and cook, stirring, for 1 minute. Whisk in milk slowly until smooth, then simmer until thickened. Season and add macaroni. Warm through and serve.",
+      "veg"
+    ],
+    [
+      "historical:ye-old-american:leek-and-potato-soup",
+      70,
+      4,
+      "stove",
+      "lunch",
+      "american",
+      "leek|1 bunch;celery|1 cup;butter|4 1/2 tbsp;milk|1 quart;potatoes|2 1/2 cups diced;all_purpose_flour|2 tbsp;salt|to taste;black_pepper|to taste;cayenne_pepper|1 pinch;water|for boiling",
+      "Wash leeks thoroughly and slice with celery. Soften in 2 1/2 tablespoons butter for 10 minutes. Add milk and cook very gently, stirring often, for 35-40 minutes. Meanwhile boil diced potatoes until tender and drain. In another pan cook remaining butter with flour for 1 minute. Gradually stir in the milk and vegetables, add potatoes and simmer until thickened. Season.",
+      "veg"
+    ],
+    [
+      "historical:ye-old-american:corn-fritters",
+      30,
+      4,
+      "stove",
+      "lunch",
+      "american",
+      "sweetcorn|1 can drained;all_purpose_flour|1 cup;baking_powder|1 tsp;salt|1/2 tsp;paprika|1/4 tsp;egg|2;lard|3 tbsp",
+      "Chop the drained corn. Combine flour, baking powder, salt and paprika. Separate eggs. Beat yolks and stir into the corn and flour mixture. Whisk whites until stiff and fold into the batter. Heat lard in a skillet and fry small flattened spoonfuls, turning, until golden and fully cooked through. Drain on paper. Salt is reduced from the source.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:cream-of-tomato-soup",
+      45,
+      4,
+      "stove",
+      "lunch",
+      "american",
+      "canned_tomatoes|200 g;sugar|2 tsp;baking_soda|1/4 tsp;milk|1 quart;onion|1 slice;all_purpose_flour|4 tbsp;salt|to taste;black_pepper|1/8 tsp;butter|1/3 cup;water|3 tbsp",
+      "Warm milk gently with onion and then remove onion. Mix flour and water into a smooth slurry and whisk into milk. Simmer gently for 20 minutes, stirring to prevent sticking. In another pan simmer tomatoes with sugar for 15 minutes. Stir in baking soda carefully as it foams, then press through a sieve. Combine tomato and milk mixtures, add butter and seasoning and warm through.",
+      "veg"
+    ],
+    [
+      "historical:ye-old-american:dropped-eggs-poached",
+      20,
+      2,
+      "stove,toaster_oven",
+      "breakfast",
+      "american",
+      "egg|2;bread|2 slices;butter|2 tsp;salt|to taste;black_pepper|to taste;parsley|1 tsp;water|for poaching",
+      "Bring a shallow pan of water to a gentle simmer. Crack each egg into a cup and slide into the water. Poach until the whites and yolks are firm. Meanwhile toast bread in a toaster oven and butter it. Lift eggs with a slotted spoon, drain and place on toast. Season and garnish with parsley.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:asparagus-on-toast",
+      25,
+      2,
+      "stove,toaster_oven",
+      "breakfast,lunch",
+      "american",
+      "asparagus|250 g;bread|2 slices;butter|2 tsp;water|for boiling",
+      "Trim asparagus and simmer in water until tender, about 5-8 minutes depending on thickness. Toast bread in a toaster oven and spread with butter. Drain asparagus well and arrange on the toast. Serve hot. The buttered-toast alternative is selected from the source.",
+      ""
+    ],
+    [
+      "historical:ye-old-american:buttered-eggs-with-tomatoes",
+      20,
+      2,
+      "stove",
+      "breakfast",
+      "american",
+      "tomato|2;egg|2;salt|to taste;black_pepper|to taste;all_purpose_flour|2 tbsp;butter|2 tbsp",
+      "Cut tomatoes into thick slices, season and lightly coat with flour. Heat half the butter in a skillet and fry tomato slices until softened and golden. Set aside. Melt remaining butter and cook the eggs gently until whites and yolks are firm. Place an egg on the tomatoes and serve. Eggs mentioned in the source instructions are explicitly included in the ingredient list.",
+      "veg"
+    ]
+  ]
+}

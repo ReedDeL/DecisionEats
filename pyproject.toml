@@ -1,7 +1,7 @@
 [project]
-name = "homechef-tools"
-version = "0.1.0"
-description = "Build-time tooling for HomeChef. Not a runtime service."
+name = "decisioneats-tools"
+version = "0.2.0"
+description = "Build-time tooling for DecisionEats. Not a runtime service."
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.9",

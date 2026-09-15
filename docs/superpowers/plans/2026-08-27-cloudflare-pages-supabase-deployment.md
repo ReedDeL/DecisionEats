@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
-**Goal:** Publish HomeChef's Expo web build from GitHub master through a new Cloudflare Pages project connected to the existing hosted Supabase backend.
+**Goal:** Publish DecisionEats's Expo web build from GitHub master through a new Cloudflare Pages project connected to the existing hosted Supabase backend.
 
 **Architecture:** Cloudflare Pages builds and serves the static dist export; the browser connects directly to Supabase with the existing public project URL and publishable key. Supabase remains responsible for Auth, RLS-protected Postgres access, Storage, and the pantry-photo Edge Function. Pages Functions, Workers, and direct Postgres connections are not part of this deployment.
 
@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Create a Cloudflare Pages project named homechef only; if unavailable, stop and ask the owner for a replacement name.
-- Connect ReedDeL/HomeChef; production deploys follow master; branch preview deployments stay disabled.
+- Connect ReedDeL/DecisionEats; production deploys follow master; branch preview deployments stay disabled.
 - Use npm run web:build, output dist, root /, framework preset None, and Node.js 22.
 - Configure only EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_POSTHOG_API_KEY, and EXPO_PUBLIC_POSTHOG_HOST in the Pages production environment.
 - Never copy a database password, service-role/secret key, Gemini key, Spoonacular key, Google OAuth secret, or communication credential into Cloudflare, browser code, build output, or tracked files.
@@ -107,9 +107,9 @@ Expected: no matches. Public Supabase and PostHog client configuration is expect
 
 - [ ] **Step 1: Authenticate the owner in Cloudflare and authorize GitHub access**
 
-Open Cloudflare Dashboard → Workers & Pages → Create application → Pages → Import an existing Git repository. Sign in with the account that owns the intended Pages project. If ReedDeL/HomeChef is not selectable, authorize the Cloudflare GitHub App for that repository, then restart this step.
+Open Cloudflare Dashboard → Workers & Pages → Create application → Pages → Import an existing Git repository. Sign in with the account that owns the intended Pages project. If ReedDeL/DecisionEats is not selectable, authorize the Cloudflare GitHub App for that repository, then restart this step.
 
-Expected: the repository selection screen shows ReedDeL/HomeChef.
+Expected: the repository selection screen shows ReedDeL/DecisionEats.
 
 - [ ] **Step 2: Create the project with the approved build configuration**
 
@@ -165,24 +165,24 @@ Expected: the deployment log runs npm run web:build, finishes successfully, and 
 
 - [ ] **Step 1: Set the production site and redirect origins in Supabase Auth**
 
-In Supabase Dashboard → project HomeChef → Authentication → URL Configuration, set Site URL to PAGES_ORIGIN. Add PAGES_ORIGIN to Redirect URLs while retaining these existing entries:
+In Supabase Dashboard → project DecisionEats → Authentication → URL Configuration, set Site URL to PAGES_ORIGIN. Add PAGES_ORIGIN to Redirect URLs while retaining these existing entries:
 
 ~~~text
 http://localhost:8081
-homechef://**
+decisioneats://**
 ~~~
 
 Expected: the web OAuth code's current browser origin redirect is on the Supabase allowlist; local web and Android redirects still remain allowed.
 
 - [ ] **Step 2: Authorize PAGES_ORIGIN in the existing Google Web OAuth client**
 
-In Google Cloud → Google Auth Platform → Clients, open the Web OAuth client configured for HomeChef. Add PAGES_ORIGIN to Authorized JavaScript origins. Leave the Supabase Auth callback in Authorized redirect URIs unchanged.
+In Google Cloud → Google Auth Platform → Clients, open the Web OAuth client configured for DecisionEats. Add PAGES_ORIGIN to Authorized JavaScript origins. Leave the Supabase Auth callback in Authorized redirect URIs unchanged.
 
 Expected: Google accepts the browser origin while Supabase remains the OAuth broker and keeps the Google client secret server-side.
 
 - [ ] **Step 3: Restrict Edge Function browser CORS to the deployed and local web origins**
 
-In Supabase Dashboard → project HomeChef → Edge Functions → Secrets, set ALLOWED_ORIGINS to one comma-separated line formed from PAGES_ORIGIN followed immediately by http://localhost:8081. Do not add an asterisk, Android URI scheme, database credential, or Edge Function service-role key.
+In Supabase Dashboard → project DecisionEats → Edge Functions → Secrets, set ALLOWED_ORIGINS to one comma-separated line formed from PAGES_ORIGIN followed immediately by http://localhost:8081. Do not add an asterisk, Android URI scheme, database credential, or Edge Function service-role key.
 
 Expected: the analyze-pantry-photo preflight returns a matching Access-Control-Allow-Origin header to Pages and localhost requests. Native clients remain unaffected because they do not send a browser Origin header.
 

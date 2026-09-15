@@ -1,0 +1,178 @@
+{
+  "foods": [
+    {
+      "aliases": [],
+      "description": "Almond milk, unsweetened, plain, shelf stable",
+      "energyKcalPer100g": 14.6,
+      "fdcId": 1999631,
+      "ingredientId": "almond_milk"
+    },
+    {
+      "aliases": [],
+      "description": "Asparagus, green, raw",
+      "energyKcalPer100g": 23.5,
+      "fdcId": 2710823,
+      "ingredientId": "asparagus"
+    },
+    {
+      "aliases": [],
+      "description": "Bananas, ripe and slightly ripe, raw",
+      "energyKcalPer100g": 97.0,
+      "fdcId": 1105314,
+      "ingredientId": "banana"
+    },
+    {
+      "aliases": [],
+      "description": "Broccoli, raw",
+      "energyKcalPer100g": 31.0,
+      "fdcId": 747447,
+      "ingredientId": "broccoli"
+    },
+    {
+      "aliases": [],
+      "description": "Cabbage, green, raw",
+      "energyKcalPer100g": 27.9,
+      "fdcId": 2346407,
+      "ingredientId": "cabbage"
+    },
+    {
+      "aliases": [],
+      "description": "Beans, black, canned, sodium added, drained and rinsed",
+      "energyKcalPer100g": 115.0,
+      "fdcId": 2644285,
+      "ingredientId": "canned_black_beans"
+    },
+    {
+      "aliases": [],
+      "description": "Beans, cannellini, canned, sodium added, drained and rinsed",
+      "energyKcalPer100g": 112.0,
+      "fdcId": 2644287,
+      "ingredientId": "canned_cannellini_beans"
+    },
+    {
+      "aliases": [],
+      "description": "Chickpeas (garbanzo beans, bengal gram), canned, sodium added, drained and rinsed",
+      "energyKcalPer100g": 133.0,
+      "fdcId": 2644288,
+      "ingredientId": "canned_chickpeas"
+    },
+    {
+      "aliases": [],
+      "description": "Carrots, mature, raw",
+      "energyKcalPer100g": 45.0,
+      "fdcId": 2258586,
+      "ingredientId": "carrots"
+    },
+    {
+      "aliases": [],
+      "description": "Cauliflower, raw",
+      "energyKcalPer100g": 22.9,
+      "fdcId": 2685573,
+      "ingredientId": "cauliflower"
+    },
+    {
+      "aliases": [],
+      "description": "Celery, raw",
+      "energyKcalPer100g": 14.8,
+      "fdcId": 2346405,
+      "ingredientId": "celery"
+    },
+    {
+      "aliases": [],
+      "description": "Chicken, breast, boneless, skinless, raw",
+      "energyKcalPer100g": 112.0,
+      "fdcId": 2646170,
+      "ingredientId": "chicken_breast"
+    },
+    {
+      "aliases": [],
+      "description": "Cucumber, with peel, raw",
+      "energyKcalPer100g": 13.9,
+      "fdcId": 2346406,
+      "ingredientId": "cucumber"
+    },
+    {
+      "aliases": [],
+      "description": "Garlic, raw",
+      "energyKcalPer100g": 143.0,
+      "fdcId": 1104647,
+      "ingredientId": "garlic"
+    },
+    {
+      "aliases": [],
+      "description": "Turkey, ground, 93% lean/ 7% fat, raw",
+      "energyKcalPer100g": 158.0,
+      "fdcId": 2514747,
+      "ingredientId": "ground_turkey"
+    },
+    {
+      "aliases": [],
+      "description": "Mushrooms, white button",
+      "energyKcalPer100g": 24.9,
+      "fdcId": 1999629,
+      "ingredientId": "mushrooms"
+    },
+    {
+      "aliases": [],
+      "description": "Peanut butter, creamy",
+      "energyKcalPer100g": 589.0,
+      "fdcId": 2262072,
+      "ingredientId": "peanut_butter"
+    },
+    {
+      "aliases": [],
+      "description": "Rice, white, long grain, unenriched, raw",
+      "energyKcalPer100g": 370.0,
+      "fdcId": 2512381,
+      "ingredientId": "rice"
+    },
+    {
+      "aliases": [],
+      "description": "Soy milk, unsweetened, plain, shelf stable",
+      "energyKcalPer100g": 38.5,
+      "fdcId": 1999630,
+      "ingredientId": "soy_milk"
+    },
+    {
+      "aliases": [],
+      "description": "Strawberries, raw",
+      "energyKcalPer100g": 32.7,
+      "fdcId": 2346409,
+      "ingredientId": "strawberries"
+    },
+    {
+      "aliases": [],
+      "description": "Sesame butter, creamy",
+      "energyKcalPer100g": 648.0,
+      "fdcId": 2262073,
+      "ingredientId": "tahini"
+    },
+    {
+      "aliases": [],
+      "description": "Tomato, paste, canned, without salt added",
+      "energyKcalPer100g": 88.5,
+      "fdcId": 2685580,
+      "ingredientId": "tomato_paste"
+    },
+    {
+      "aliases": [],
+      "description": "Flour, whole wheat, unenriched",
+      "energyKcalPer100g": 370.0,
+      "fdcId": 790085,
+      "ingredientId": "whole_wheat_flour"
+    },
+    {
+      "aliases": [],
+      "description": "Squash, summer, green, zucchini, includes skin, raw",
+      "energyKcalPer100g": 16.0,
+      "fdcId": 2685568,
+      "ingredientId": "zucchini"
+    }
+  ],
+  "metadata": {
+    "calculatedAt": "2026-09-09T00:00:00+00:00",
+    "payloadChecksum": "2dcf49e3257d6b0299586718a2dd2299df04ab3b1b96d47b50d74ac22124d9cd",
+    "schemaVersion": 1,
+    "sourceVersion": "USDA Foundation Foods 2026-04-30"
+  }
+}

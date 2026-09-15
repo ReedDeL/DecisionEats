@@ -1,10 +1,10 @@
-# HomeChef Product Direction
+# DecisionEats Product Direction
 
 **Owner:** Founding team  
 **Decision date:** August 26, 2026  
 **Status:** Current product direction
 
-HomeChef reduces decision fatigue around food. The first question is still
+DecisionEats reduces decision fatigue around food. The first question is still
 “What should I make right now?”, but the wider job is to help busy people make
 fewer food decisions across both today and the week ahead.
 
@@ -13,10 +13,10 @@ older weekly-planning boundaries when they conflict.
 
 ## Product principle
 
-HomeChef is a guided decision tree, not a search page.
+DecisionEats is a guided decision tree, not a search page.
 
 Each screen asks for one decision, or two closely related decisions. The user
-should never need to build a complex query in their head. We use what HomeChef
+should never need to build a complex query in their head. We use what DecisionEats
 already knows—pantry, equipment, allergens, dietary needs, and prior choices—to
 remove questions instead of adding them.
 
@@ -55,7 +55,7 @@ make now, it proposes a week and then identifies the ingredient gaps.
 
 The decision tree asks only a few questions:
 
-1. How many days should HomeChef plan?
+1. How many days should DecisionEats plan?
 2. Which meals should be planned: breakfast, lunch, dinner, or a combination?
 3. Is the week mostly quick meals, batch prep, or a mix?
 4. Does the user want variety or comfortable repeats?
@@ -68,8 +68,8 @@ label every meal slot. Existing single-meal plans retain their meals as dinner.
 Existing equipment, allergens, dietary needs, pantry contents, and learned
 preferences apply automatically.
 
-HomeChef produces one recommended weekly plan, not a calendar full of choices.
-The user may replace one meal at a time. After confirmation, HomeChef shows
+DecisionEats produces one recommended weekly plan, not a calendar full of choices.
+The user may replace one meal at a time. After confirmation, DecisionEats shows
 **What to get**: the ingredients needed beyond the pantry.
 
 “What to get” is plan-linked guidance, not a general shopping-list product. It
@@ -116,7 +116,7 @@ Use:
 - clear progress through each decision tree;
 - purposeful motion that never slows the decision.
 
-HomeChef keeps its own warm palette and accessibility standards. The visual
+DecisionEats keeps its own warm palette and accessibility standards. The visual
 design should communicate momentum: one question, one answer, one next step.
 
 ## Release policy

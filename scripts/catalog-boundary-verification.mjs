@@ -45,7 +45,7 @@ check(
   settings.includes('BUNDLED_CATALOG_ATTRIBUTIONS') && !/themealdb/i.test(settings)
 );
 check(
-  'Release includes Wikibooks and HomeChef attribution records',
+  'Release includes Wikibooks and DecisionEats attribution records',
   Array.isArray(attributions) &&
     attributions.some(
       (s) => s.sourceId === 'wikibooks-cookbook' && s.licenseName === 'CC BY-SA 4.0'

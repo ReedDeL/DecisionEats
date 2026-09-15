@@ -57,6 +57,7 @@ export default tseslint.config(
       'dist/**',
       'web-build/**',
       'coverage/**',
+      'output/**',
       // Worktrees carry their own build output, which the bare 'dist/**' glob
       // does not reach. Linting a sibling branch's bundle fails CI on code that
       // is not even in this checkout.
@@ -129,11 +130,11 @@ export default tseslint.config(
     files: ['app/**/*.tsx', 'src/**/*.tsx'],
     plugins: {
       'react-native-a11y': reactNativeA11y,
-      'homechef-a11y': { rules: { 'interactive-needs-label': interactiveNeedsLabel } },
+      'decisioneats-a11y': { rules: { 'interactive-needs-label': interactiveNeedsLabel } },
     },
     rules: {
       ...reactNativeA11y.configs.basic.rules,
-      'homechef-a11y/interactive-needs-label': 'error',
+      'decisioneats-a11y/interactive-needs-label': 'error',
     },
   }
 );

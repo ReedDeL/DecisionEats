@@ -293,6 +293,9 @@ class CatalogRecipe(BaseModel):
     )
     source: Literal["bundled"] = "bundled"
     attribution: RecipeAttribution | None = None
+    meal_slots: list[Literal["breakfast", "lunch", "dinner"]] | None = Field(
+        default=None, alias="mealSlots"
+    )
 
     @model_validator(mode="after")
     def _nutrition_is_coherent(self) -> Self:
@@ -369,6 +372,14 @@ class SourceRecipe(BaseModel):
     allergen_status: SafetyStatus = Field(alias="allergenStatus")
     dietary_status: SafetyStatus = Field(alias="dietaryStatus")
     dietary_tags: list[DietaryTag] = Field(default_factory=list, alias="dietaryTags")
+    source_url: str | None = Field(default=None, alias="sourceUrl")
+    attribution_text: str | None = Field(default=None, alias="attributionText")
+    base_servings: Annotated[float, Field(gt=0, allow_inf_nan=False)] | None = Field(
+        default=None, alias="baseServings"
+    )
+    meal_slots: list[Literal["breakfast", "lunch", "dinner"]] | None = Field(
+        default=None, alias="mealSlots"
+    )
 
     @field_validator("source_recipe_id", "title", "instructions")
     @classmethod

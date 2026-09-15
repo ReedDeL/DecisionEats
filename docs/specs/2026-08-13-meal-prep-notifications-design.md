@@ -1,13 +1,13 @@
 > **Supporting future design.** Weekly planning is current MVP scope; notifications are optional follow-on work and do not define release readiness.
 
-# HomeChef Meal-Prep Notification Foundation Design
+# DecisionEats Meal-Prep Notification Foundation Design
 
 **Date:** 2026-08-13
 **Status:** Approved for implementation
 
 ## Goal
 
-Prepare HomeChef to send local start-cooking reminders for future weekly meal-prep
+Prepare DecisionEats to send local start-cooking reminders for future weekly meal-prep
 plans. Users can enable or disable reminders and choose how much extra time they
 want before cooking begins. One-off meal decisions never schedule a notification.
 
@@ -77,11 +77,11 @@ The existing Settings screen receives a **Meal-prep reminders** section:
 - The lead-time preset choices appear only when enabled.
 - Turning the switch on requests local-notification permission. If permission is
   granted, the enabled preference is saved. If it is denied, the switch returns
-  to off, any scheduled HomeChef reminders are cleared, and the user receives
+  to off, any scheduled DecisionEats reminders are cleared, and the user receives
   calm explanatory copy with a route to the operating system settings where the
   platform supports it.
 - Turning the switch off immediately saves the preference and clears scheduled
-  HomeChef reminders.
+  DecisionEats reminders.
 
 The store holds `mealPrepRemindersEnabled` and `mealPrepReminderLeadMinutes` so
 the preference survives app restarts. The default is off and `0` extra minutes.

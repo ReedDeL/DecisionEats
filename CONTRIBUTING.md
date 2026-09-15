@@ -1,6 +1,6 @@
-# Contributing to HomeChef
+# Contributing to DecisionEats
 
-Thanks for helping improve HomeChef. This guide covers the shared workflow for changes to the
+Thanks for helping improve DecisionEats. This guide covers the shared workflow for changes to the
 product. The project documentation is the source of truth for architecture, product behavior, and
 detailed coding standards.
 
@@ -59,7 +59,7 @@ project-management systems. External connector sessions are managed outside this
 
 ## Local agent configuration
 
-`AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, and `docs/agentic/` are developer-local
+`AGENTS.md`, `.agents/`, and `docs/agentic/` are developer-local
 configuration. Keep them ignored and out of pull requests. Shared product, architecture, security,
 and contribution guidance belongs in this guide and the tracked documentation under `docs/`.
 

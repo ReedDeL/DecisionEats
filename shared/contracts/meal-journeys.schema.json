@@ -492,9 +492,9 @@
     "weeklyMealPlan"
   ],
   "additionalProperties": false,
-  "x-homechef-semanticValidation": {
+  "x-decisioneats-semanticValidation": {
     "version": 2,
-    "validator": "homechef.dual-meal-journeys.v2",
+    "validator": "decisioneats.dual-meal-journeys.v2",
     "rules": [
       {
         "id": "prompt_state_lifecycle",

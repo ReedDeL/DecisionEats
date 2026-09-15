@@ -353,7 +353,7 @@ describe('cross-platform artifacts', () => {
     ) as Record<string, unknown>;
     expect(dualMealJourneysFixtureSchema.parse(fixture)).toEqual(fixture);
     expect(
-      validatePortableMealJourneysSemantics(fixture, checkedIn['x-homechef-semanticValidation'])
+      validatePortableMealJourneysSemantics(fixture, checkedIn['x-decisioneats-semanticValidation'])
         .success
     ).toBe(true);
   });
@@ -374,11 +374,11 @@ describe('cross-platform artifacts', () => {
     const checkedIn = JSON.parse(
       readFileSync(sharedPath('contracts/meal-journeys.schema.json'), 'utf8')
     ) as Record<string, unknown>;
-    const semanticContract = checkedIn['x-homechef-semanticValidation'];
+    const semanticContract = checkedIn['x-decisioneats-semanticValidation'];
 
     expect(semanticContract).toMatchObject({
       version: 2,
-      validator: 'homechef.dual-meal-journeys.v2',
+      validator: 'decisioneats.dual-meal-journeys.v2',
       rules: [
         { id: 'prompt_state_lifecycle' },
         { id: 'planned_time_local_date' },
@@ -400,7 +400,7 @@ describe('cross-platform artifacts', () => {
     const checkedIn = JSON.parse(
       readFileSync(sharedPath('contracts/meal-journeys.schema.json'), 'utf8')
     ) as Record<string, unknown>;
-    const semanticContract = checkedIn['x-homechef-semanticValidation'];
+    const semanticContract = checkedIn['x-decisioneats-semanticValidation'];
     const validFixture = JSON.parse(
       readFileSync(sharedPath('fixtures/dual-meal-journeys.json'), 'utf8')
     ) as MutableFixture;

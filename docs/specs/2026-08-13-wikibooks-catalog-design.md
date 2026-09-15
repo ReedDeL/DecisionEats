@@ -7,7 +7,7 @@
 
 Use English Wikibooks Cookbook as the first researched open-content source for
 the owned recipe catalog. Acquire it from an official Wikimedia dump at build
-time, extract it into HomeChef's neutral JSONL contract, and keep it
+time, extract it into DecisionEats's neutral JSONL contract, and keep it
 release-ineligible until checksum, attribution, parser-quality, hard-constraint,
 and parity gates pass.
 
@@ -56,7 +56,7 @@ Every emitted source record must include:
 - canonical page URL and revision identity;
 - recipe title, ingredients, and instructions;
 - source license and attribution text;
-- whether HomeChef modified or derived displayed text;
+- whether DecisionEats modified or derived displayed text;
 - deterministic parser version and rejection reason when quarantined.
 
 Attribution must survive normalization, hosted loading, offline subset
@@ -66,7 +66,7 @@ page-level provenance is not releasable.
 ## License obligations
 
 Wikibooks states that most text is available under CC BY-SA 4.0 and the GFDL,
-while individual media can have different terms. HomeChef must preserve
+while individual media can have different terms. DecisionEats must preserve
 page-level evidence rather than assuming every asset shares one license.
 
 For reused or adapted recipe text, the release design must support:

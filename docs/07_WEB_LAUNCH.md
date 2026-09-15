@@ -1,4 +1,4 @@
-# HomeChef — Cloudflare Web Release
+# DecisionEats — Cloudflare Web Release
 
 **Version:** 0.1.0 · **Date:** August 23, 2026
 
@@ -14,7 +14,7 @@ move an API, or create a second backend.
 | Supabase | Authentication, database, storage, and Edge Functions |
 | PostHog | The approved product analytics events |
 
-HomeChef uses no Pages Functions for this release. Static asset requests on
+DecisionEats uses no Pages Functions for this release. Static asset requests on
 Cloudflare Pages are free; the vendor's current limits still apply and should
 be rechecked before a higher-traffic release.
 
@@ -45,7 +45,7 @@ approved by the repository owner.
 
 1. In Cloudflare, open **Workers & Pages** and choose **Create application**.
 2. Choose **Pages** and **Import an existing Git repository**.
-3. Select the HomeChef repository.
+3. Select the DecisionEats repository.
 4. Use these build settings:
 
    | Setting | Value |
@@ -73,7 +73,7 @@ approved by the repository owner.
 6. Select **Save and Deploy**. Cloudflare assigns a `*.pages.dev` HTTPS URL.
 7. Add a custom domain only after the `pages.dev` release passes the checklist.
 
-PostHog is optional for rendering: if its project token is absent, HomeChef
+PostHog is optional for rendering: if its project token is absent, DecisionEats
 starts with analytics disabled. Supabase configuration is required for the
 photo pipeline and future authentication.
 

@@ -69,7 +69,10 @@
     "isStaple": false
   },
   {
-    "allergenGroups": [],
+    "allergenGroups": [
+      "nut",
+      "tree_nut"
+    ],
     "displayName": "almond milk",
     "id": "almond_milk",
     "isStaple": false
@@ -123,6 +126,12 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "applesauce",
+    "id": "applesauce",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "apricot",
     "id": "apricot",
     "isStaple": false
@@ -131,6 +140,12 @@
     "allergenGroups": [],
     "displayName": "apricot jam",
     "id": "apricot_jam",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "arugula",
+    "id": "arugula",
     "isStaple": false
   },
   {
@@ -387,6 +402,12 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "bell pepper",
+    "id": "bell_pepper",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "bicarbonate of soda",
     "id": "bicarbonate_of_soda",
     "isStaple": false
@@ -459,6 +480,12 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "blood orange",
+    "id": "blood_orange",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "blueberries",
     "id": "blueberries",
     "isStaple": false
@@ -473,6 +500,12 @@
     "allergenGroups": [],
     "displayName": "bok choi",
     "id": "bok_choi",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "bok choy",
+    "id": "bok_choy",
     "isStaple": false
   },
   {
@@ -740,6 +773,24 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "canned black beans",
+    "id": "canned_black_beans",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "canned cannellini beans",
+    "id": "canned_cannellini_beans",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "canned chickpeas",
+    "id": "canned_chickpeas",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "canned tomatoes",
     "id": "canned_tomatoes",
     "isStaple": false
@@ -856,6 +907,12 @@
     "allergenGroups": [],
     "displayName": "caster sugar",
     "id": "caster_sugar",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "cauliflower",
+    "id": "cauliflower",
     "isStaple": false
   },
   {
@@ -1155,6 +1212,16 @@
     "isStaple": false
   },
   {
+    "allergenGroups": [
+      "gluten",
+      "wheat",
+      "soy"
+    ],
+    "displayName": "ciabatta roll",
+    "id": "ciabatta_roll",
+    "isStaple": false
+  },
+  {
     "allergenGroups": [],
     "displayName": "cider",
     "id": "cider",
@@ -1324,6 +1391,32 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "cooked brown rice",
+    "id": "cooked_brown_rice",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "cooked chicken",
+    "id": "cooked_chicken",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
+      "soy"
+    ],
+    "displayName": "cooked ham",
+    "id": "cooked_ham",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "cooked rice",
+    "id": "cooked_rice",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "cooking apples",
     "id": "cooking_apples",
     "isStaple": false
@@ -1395,7 +1488,9 @@
     "isStaple": false
   },
   {
-    "allergenGroups": [],
+    "allergenGroups": [
+      "dairy"
+    ],
     "displayName": "cottage cheese",
     "id": "cottage_cheese",
     "isStaple": false
@@ -1413,6 +1508,14 @@
     ],
     "displayName": "couscous",
     "id": "couscous",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
+      "shellfish"
+    ],
+    "displayName": "crab",
+    "id": "crab",
     "isStaple": false
   },
   {
@@ -1590,6 +1693,12 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "dates",
+    "id": "dates",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "deli ham",
     "id": "deli_ham",
     "isStaple": false
@@ -1638,6 +1747,18 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "dog buns",
+    "id": "dog_buns",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "dogs",
+    "id": "dogs",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "doner meat",
     "id": "doner_meat",
     "isStaple": false
@@ -1652,6 +1773,12 @@
     "allergenGroups": [],
     "displayName": "dried apricots",
     "id": "dried_apricots",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "dried basil",
+    "id": "dried_basil",
     "isStaple": false
   },
   {
@@ -1863,7 +1990,12 @@
     "isStaple": false
   },
   {
-    "allergenGroups": [],
+    "allergenGroups": [
+      "gluten",
+      "wheat",
+      "dairy",
+      "soy"
+    ],
     "displayName": "english muffins",
     "id": "english_muffins",
     "isStaple": false
@@ -2120,6 +2252,12 @@
     "allergenGroups": [],
     "displayName": "fromage frais",
     "id": "fromage_frais",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "frozen corn",
+    "id": "frozen_corn",
     "isStaple": false
   },
   {
@@ -2439,6 +2577,12 @@
     "isStaple": false
   },
   {
+    "allergenGroups": [],
+    "displayName": "ground turkey",
+    "id": "ground_turkey",
+    "isStaple": false
+  },
+  {
     "allergenGroups": [
       "dairy"
     ],
@@ -2470,6 +2614,14 @@
     "allergenGroups": [],
     "displayName": "hake",
     "id": "hake",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
+      "dairy"
+    ],
+    "displayName": "half and half",
+    "id": "half_and_half",
     "isStaple": false
   },
   {
@@ -2562,6 +2714,12 @@
     "allergenGroups": [],
     "displayName": "hummus",
     "id": "hummus",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "ice",
+    "id": "ice",
     "isStaple": false
   },
   {
@@ -2692,6 +2850,12 @@
     "allergenGroups": [],
     "displayName": "kampot pepper",
     "id": "kampot_pepper",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "ketchup",
+    "id": "ketchup",
     "isStaple": false
   },
   {
@@ -2996,8 +3160,20 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "mango nectar",
+    "id": "mango_nectar",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "maple syrup",
     "id": "maple_syrup",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "maraschino cherry",
+    "id": "maraschino_cherry",
     "isStaple": false
   },
   {
@@ -3209,6 +3385,14 @@
     "isStaple": false
   },
   {
+    "allergenGroups": [
+      "dairy"
+    ],
+    "displayName": "muenster cheese",
+    "id": "muenster_cheese",
+    "isStaple": false
+  },
+  {
     "allergenGroups": [],
     "displayName": "mulukhiyah",
     "id": "mulukhiyah",
@@ -3315,6 +3499,18 @@
     "allergenGroups": [],
     "displayName": "nutmeg",
     "id": "nutmeg",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "oat bran",
+    "id": "oat_bran",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "oat milk",
+    "id": "oat_milk",
     "isStaple": false
   },
   {
@@ -3485,6 +3681,12 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "papaya",
+    "id": "papaya",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "paprika",
     "id": "paprika",
     "isStaple": false
@@ -3647,6 +3849,15 @@
     "isStaple": false
   },
   {
+    "allergenGroups": [
+      "soy",
+      "dairy"
+    ],
+    "displayName": "pepperoni",
+    "id": "pepperoni",
+    "isStaple": false
+  },
+  {
     "allergenGroups": [],
     "displayName": "petit pois",
     "id": "petit_pois",
@@ -3690,6 +3901,12 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "pickles",
+    "id": "pickles",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "pico de gallo sauce",
     "id": "pico_de_gallo_sauce",
     "isStaple": false
@@ -3719,6 +3936,12 @@
     ],
     "displayName": "pine nuts",
     "id": "pine_nuts",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "pineapple",
+    "id": "pineapple",
     "isStaple": false
   },
   {
@@ -3785,6 +4008,15 @@
     "allergenGroups": [],
     "displayName": "pitted dates",
     "id": "pitted_dates",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
+      "dairy",
+      "soy"
+    ],
+    "displayName": "pizza sauce",
+    "id": "pizza_sauce",
     "isStaple": false
   },
   {
@@ -3872,6 +4104,17 @@
     "isStaple": false
   },
   {
+    "allergenGroups": [
+      "gluten",
+      "wheat",
+      "soy",
+      "dairy"
+    ],
+    "displayName": "pork sausages",
+    "id": "pork_sausages",
+    "isStaple": false
+  },
+  {
     "allergenGroups": [],
     "displayName": "pork shoulder",
     "id": "pork_shoulder",
@@ -3893,6 +4136,12 @@
     "allergenGroups": [],
     "displayName": "porridge oats",
     "id": "porridge_oats",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "portobello mushrooms",
+    "id": "portobello_mushrooms",
     "isStaple": false
   },
   {
@@ -3962,6 +4211,12 @@
     "allergenGroups": [],
     "displayName": "pumpkin puree",
     "id": "pumpkin_puree",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "pumpkin seeds",
+    "id": "pumpkin_seeds",
     "isStaple": false
   },
   {
@@ -4377,6 +4632,12 @@
   },
   {
     "allergenGroups": [],
+    "displayName": "sauce",
+    "id": "sauce",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
     "displayName": "sauerkraut",
     "id": "sauerkraut",
     "isStaple": false
@@ -4463,7 +4724,10 @@
     "isStaple": false
   },
   {
-    "allergenGroups": [],
+    "allergenGroups": [
+      "gluten",
+      "wheat"
+    ],
     "displayName": "semolina",
     "id": "semolina",
     "isStaple": false
@@ -4652,9 +4916,22 @@
     "isStaple": false
   },
   {
-    "allergenGroups": [],
+    "allergenGroups": [
+      "fish"
+    ],
     "displayName": "smoked salmon",
     "id": "smoked_salmon",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
+      "gluten",
+      "wheat",
+      "soy",
+      "dairy"
+    ],
+    "displayName": "smoked sausage",
+    "id": "smoked_sausage",
     "isStaple": false
   },
   {
@@ -4715,8 +4992,17 @@
   },
   {
     "allergenGroups": [
+      "soy"
+    ],
+    "displayName": "soy milk",
+    "id": "soy_milk",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
       "soy",
-      "gluten"
+      "gluten",
+      "wheat"
     ],
     "displayName": "soy sauce",
     "id": "soy_sauce",
@@ -5001,7 +5287,9 @@
     "isStaple": false
   },
   {
-    "allergenGroups": [],
+    "allergenGroups": [
+      "sesame"
+    ],
     "displayName": "tahini",
     "id": "tahini",
     "isStaple": false
@@ -5140,6 +5428,21 @@
     "allergenGroups": [],
     "displayName": "tomato ketchup",
     "id": "tomato_ketchup",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
+      "dairy",
+      "soy"
+    ],
+    "displayName": "tomato pasta sauce",
+    "id": "tomato_pasta_sauce",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "tomato paste",
+    "id": "tomato_paste",
     "isStaple": false
   },
   {
@@ -5565,6 +5868,24 @@
     "isStaple": false
   },
   {
+    "allergenGroups": [
+      "gluten",
+      "wheat"
+    ],
+    "displayName": "whole wheat flour",
+    "id": "whole_wheat_flour",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [
+      "gluten",
+      "wheat"
+    ],
+    "displayName": "whole wheat spaghetti",
+    "id": "whole_wheat_spaghetti",
+    "isStaple": false
+  },
+  {
     "allergenGroups": [],
     "displayName": "wholegrain bread",
     "id": "wholegrain_bread",
@@ -5604,6 +5925,12 @@
     "allergenGroups": [],
     "displayName": "worcestershire sauce",
     "id": "worcestershire_sauce",
+    "isStaple": false
+  },
+  {
+    "allergenGroups": [],
+    "displayName": "yam",
+    "id": "yam",
     "isStaple": false
   },
   {

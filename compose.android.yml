@@ -1,6 +1,6 @@
 services:
   android-build:
-    image: homechef-android-test:local
+    image: decisioneats-android-test:local
     build:
       context: .
       dockerfile: Dockerfile.android
@@ -11,7 +11,7 @@ services:
 
   android-emulator:
     profiles: ['emulator']
-    image: homechef-android-test:local
+    image: decisioneats-android-test:local
     build:
       context: .
       dockerfile: Dockerfile.android

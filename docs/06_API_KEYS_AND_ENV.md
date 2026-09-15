@@ -1,6 +1,6 @@
-# HomeChef — API Keys & Environment Setup
+# DecisionEats — API Keys & Environment Setup
 
-**Version:** 0.1.0 · **Date:** August 3, 2026
+**Version:** 0.2.0 · **Date:** September 9, 2026
 **Read this before writing any code that touches a third-party service.**
 
 ---
@@ -41,14 +41,14 @@ repository or client bundle.
 | **PostHog project token** | EAS PostHog integration | Client `.env.local` + EAS environment | ✅ Yes — ingestion only |
 | **PostHog ingestion host** | EAS PostHog integration | Client `.env.local` + EAS environment | ✅ Yes — public endpoint |
 | **PostHog personal API key** | Not used for product analytics | **Nowhere** | ❌ **Never** — account access |
-| **Supabase service_role key** | Supabase dashboard → Settings → API | **Nowhere yet** | ❌ **Never** — bypasses all RLS |
+| **Supabase service_role key** | Supabase dashboard → Settings → API | Supabase Edge Function secret / local ignored env | ❌ **Never** — bypasses all RLS |
 
 ### On the two Supabase keys
 
 They are not interchangeable, and confusing them is the single most common way a Supabase project leaks.
 
 - **`anon` key** — meant to be public. It identifies your project, and Row Level Security decides what the caller may actually read. Safe in the app bundle.
-- **`service_role` key** — bypasses RLS entirely. It can read every user's allergens and every household's pantry. **If this key ever reaches the client, your database is fully open.** We have no use for it in this project. If you find yourself reaching for it, that's a signal your RLS policy is wrong.
+- **`service_role` key** — bypasses RLS entirely. It can read every user's allergens and every household's pantry. **If this key ever reaches the client, your database is fully open.** The photo Edge Function uses it only server-side to call the private scan-budget RPC while forwarding the caller's bearer token. No client screen or client module may use it directly.
 
 ---
 
@@ -56,7 +56,7 @@ They are not interchangeable, and confusing them is the single most common way a
 
 ### Step 1 — Get the keys
 
-**Gemini** — [aistudio.google.com/apikey](https://aistudio.google.com/apikey) → *Create API key*. Free tier, no credit card.
+**Gemini** — [aistudio.google.com/apikey](https://aistudio.google.com/apikey) → *Create API key*. Use the free tier only for local testing; production photo processing requires a provider data-use review and should use the paid service terms.
 
 **Spoonacular** — [spoonacular.com/food-api/console](https://spoonacular.com/food-api/console) → sign up → Profile → API key. Choose the **Free** plan on their own site, *not* through RapidAPI — RapidAPI's free tier requires a credit card and bills overages. Signing up directly means you hit a hard stop at 50 points instead of a surprise charge.
 
@@ -108,7 +108,6 @@ SPOONACULAR_API_KEY=your_key_here
 supabase functions serve --env-file supabase/.env.local
 ```
 
-<<<<<<< HEAD
 ### Step 4a — Google OAuth (web and Android)
 
 Google OAuth is brokered by Supabase Auth. Create **one Web application** OAuth
@@ -118,15 +117,15 @@ Android OAuth client for this flow.
 1. In Supabase Dashboard → **Authentication → Providers → Google**, copy the
    displayed callback URL. In the Google Web client, add that exact value under
    **Authorized redirect URIs**.
-2. Under **Authorized JavaScript origins**, add only the deployed HomeChef web
+2. Under **Authorized JavaScript origins**, add only the deployed DecisionEats web
    origin and `http://localhost:8081`. Do not add an Android scheme here.
 3. Back in Supabase Dashboard → **Authentication → Providers → Google**, enable
    Google and enter the Web client ID and client secret. Those values belong in
    the Dashboard, never in `app.json`, client `.env`, `.env.example`, or source
    code.
 4. In Supabase Dashboard → **Authentication → URL Configuration → Redirect
-   URLs**, add the deployed HomeChef web origin, `http://localhost:8081`, and
-   `homechef://**`. Keep the deployed origin exact; do not use a broad web
+   URLs**, add the deployed DecisionEats web origin, `http://localhost:8081`, and
+   `decisioneats://**`. Keep the deployed origin exact; do not use a broad web
    wildcard.
 
 For local Supabase Auth only, put the credentials in the ignored
@@ -149,7 +148,7 @@ place, verify both round trips:
 1. Run `npm run web`, sign in at `http://localhost:8081`, confirm a new account
    reaches equipment onboarding, then reload and confirm the session remains.
 2. Run `npm run android:dev`, complete sign-in in the Android auth browser,
-   confirm the `homechef://` return opens HomeChef, then relaunch and confirm
+   confirm the `decisioneats://` return opens DecisionEats, then relaunch and confirm
    the session remains.
 
 Repository configuration cannot perform those sign-ins: they require a real
@@ -157,10 +156,7 @@ Google Cloud OAuth client and access to the hosted Supabase Dashboard. Record
 the result after that external setup is available; until then, treat live OAuth
 verification as blocked rather than simulated.
 
-### Step 5 — `.gitignore`
-=======
 ### Step 5 — verify repository-owned environment files
->>>>>>> origin/master
 
 Use [`.gitignore`](../.gitignore) and [`.env.example`](../.env.example)
 as the live source of truth. The example contains names only; real values never
@@ -196,6 +192,26 @@ before authentication, and include CORS headers on every response. The current
 implementation in `supabase/functions/analyze-pantry-photo/` is the source of
 truth. Never log a secret, return it in an error, or put it into client-visible
 configuration.
+
+### Photo data, provider terms, and scan limits
+
+`store: false` asks Gemini not to store the Interaction as an application
+conversation. It does not override the provider's service-tier terms,
+retention, abuse-monitoring, or data-use rules. Do not send faces, identity
+documents, or other sensitive personal information. Production photo scanning
+must use a reviewed provider tier and the user-facing disclosure in
+`app/scan.tsx` must remain accurate.
+
+The Edge Function rejects unverified accounts, applies a per-user UTC-day
+budget, and applies a global UTC-day budget before any Gemini request. The
+defaults are `DAILY_SCAN_LIMIT=20` and `GLOBAL_DAILY_SCAN_LIMIT=1000`; both are
+operator configuration, and the private database function validates their
+safe range again. Set `ALLOWED_ORIGINS` to the exact deployed web origin before
+enabling browser photo scanning in production.
+
+The verified-account check is an abuse control, not age verification. A formal
+adult-use policy, age gate decision, privacy notice, deletion/export process,
+and legal review remain launch requirements.
 
 ---
 
@@ -234,6 +250,11 @@ Before the App Store submission on **Aug 17**:
 - [ ] `grep -ri "AIza\|sk-\|service_role" src/ app/` returns nothing
 - [ ] `.env` and `supabase/.env.local` are gitignored and were never committed
 - [ ] `.env.example` is committed and current
+- [ ] Production `ALLOWED_ORIGINS` contains only the exact deployed web origin
+- [ ] Production scan limits and a global Gemini budget are configured
+- [ ] Gemini production data-use terms and the photo/privacy disclosure have
+      received legal/privacy review
+- [ ] Adult-use policy and age-gate decision are approved
 - [ ] GitHub secret scanning + push protection on
 - [ ] TheMealDB supporter payment made (R4)
 - [ ] Spoonacular attribution and backlink shipped in the UI (R11)
@@ -249,4 +270,4 @@ unzip -p build.ipa | strings | grep -i "AIza\|spoonacular.*key"
 
 ---
 
-*Application42 · HomeChef · API Keys & Environment Setup v0.1.0 · August 3, 2026*
+*Application42 · DecisionEats · API Keys & Environment Setup v0.1.0 · August 3, 2026*

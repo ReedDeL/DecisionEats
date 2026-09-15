@@ -11,13 +11,17 @@ import {
 } from '@/data/meal-art';
 
 describe('bundled meal artwork', () => {
-  it('covers every offline recipe with its own registered serving tile', () => {
-    expect(Object.keys(MEAL_ART_TILES).sort()).toEqual(recipes.map((recipe) => recipe.id).sort());
-    for (const recipe of recipes) {
-      expect(mealArtTile(recipe.id)).toBeGreaterThanOrEqual(0);
-      expect(mealArtTile(recipe.id)).toBeLessThan(MEAL_ART_FALLBACK);
+  it('retains registered artwork and uses the neutral tile for source recipes without art', () => {
+    const ids = new Set(recipes.map((recipe) => recipe.id));
+    for (const id of Object.keys(MEAL_ART_TILES)) {
+      expect(ids.has(id)).toBe(true);
+      expect(mealArtTile(id)).toBeGreaterThanOrEqual(0);
+      expect(mealArtTile(id)).toBeLessThan(MEAL_ART_FALLBACK);
     }
-    expect(new Set(Object.values(MEAL_ART_TILES)).size).toBe(recipes.length);
+    for (const recipe of recipes.filter((recipe) => !Object.hasOwn(MEAL_ART_TILES, recipe.id))) {
+      expect(mealArtTile(recipe.id)).toBe(MEAL_ART_FALLBACK);
+    }
+    expect(new Set(Object.values(MEAL_ART_TILES)).size).toBe(Object.keys(MEAL_ART_TILES).length);
   });
 
   it('uses a neutral fallback for unknown IDs without matching titles or prototype keys', () => {

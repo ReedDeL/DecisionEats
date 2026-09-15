@@ -1,4 +1,4 @@
-# HomeChef Weekly Meal Prep Specification
+# DecisionEats Weekly Meal Prep Specification
 
 **Updated:** August 26, 2026  
 **Status:** Current MVP journey
@@ -19,7 +19,7 @@ Each step asks one question.
 
 ### 1. Days
 
-Ask how many days HomeChef should plan. Use a small set of common choices.
+Ask how many days DecisionEats should plan. Use a small set of common choices.
 
 ### 2. Preparation style
 
@@ -41,7 +41,7 @@ not turn the first flow into a planning form.
 
 ## Proposal
 
-HomeChef generates one recommended plan.
+DecisionEats generates one recommended plan.
 
 The plan should:
 
@@ -77,7 +77,7 @@ a reusable list.
 
 ## Ingredient recommendations
 
-HomeChef may learn from explicit recipe selections and confirmed weekly plans.
+DecisionEats may learn from explicit recipe selections and confirmed weekly plans.
 
 Future suggestions may consider:
 

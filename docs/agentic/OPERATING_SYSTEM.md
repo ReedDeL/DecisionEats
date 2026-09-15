@@ -1,4 +1,4 @@
-# HomeChef Operating System
+# DecisionEats Operating System
 
 This file is the canonical operating guide for work in this repository.
 
@@ -16,7 +16,7 @@ product direction.
 
 ## Product boundary
 
-HomeChef reduces food decision fatigue through two guided journeys:
+DecisionEats reduces food decision fatigue through two guided journeys:
 
 - decide what to make now;
 - plan a practical week and identify ingredient gaps.

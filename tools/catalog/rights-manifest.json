@@ -2,6 +2,42 @@
   "schemaVersion": 1,
   "sources": [
     {
+      "id": "homechef-templates",
+      "version": "2026-09-09",
+      "title": "DecisionEats original meal-template variations",
+      "archiveUrl": "https://github.com/ReedDeL/DecisionEats/blob/master/tools/catalog/meal_templates.py",
+      "sha256": "c0dc4a95692af8ce7f089656cd15d299ed02e66cfb80f55c731e99f4dd113864",
+      "licenseName": "DecisionEats-authored original content",
+      "licenseUrl": "https://github.com/ReedDeL/DecisionEats/blob/master/docs/specs/2026-08-22-owned-recipe-catalog-design.md",
+      "attribution": "DecisionEats original meal-template variations: 6 proteins, 12 vegetable pairings, 6 flavors, 5 bases. Complete materialized preparations, not independently sourced or individually kitchen-tested recipes.",
+      "archiveFormat": "jsonl",
+      "status": "approved"
+    },
+    {
+      "id": "wikibooks-expanded",
+      "version": "2026-09-09",
+      "title": "Reviewed Wikibooks Cookbook expansion",
+      "archiveUrl": "https://dumps.wikimedia.org/enwikibooks/20260901/enwikibooks-20260901-pages-articles.xml.bz2",
+      "sha256": "5a45d049800add5367e643477ebe551d63461525e6a8ef3f38d9eb4f4de98275",
+      "licenseName": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "attribution": "Adapted from Wikibooks contributors. Page revisions, original text and editorial reviews are retained under tools/catalog/reviews/wikibooks-2026-09. Adapted recipe text is available under CC BY-SA 4.0.",
+      "archiveFormat": "jsonl",
+      "status": "approved"
+    },
+    {
+      "id": "historical-cookbooks",
+      "version": "2026-09-09",
+      "title": "Reviewed public-domain cookbook recipes",
+      "archiveUrl": "https://github.com/AdamBouhmad/open-recipe-archive/tree/ae3bd2c009a8899dfe63b9166fa98ae3fa8041a8",
+      "sha256": "5c13700b480d06849ac9629d0821dbd0a390b794e8c0de091190ecf111c28198",
+      "licenseName": "Public domain source; DecisionEats adaptations CC0 1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "attribution": "Adapted from Fannie Merritt Farmer, The Boston Cooking-School Cook Book, through Open Recipe Archive. Public-domain source confirmed by Project Gutenberg ebook 65061; the author died in 1915. Source records and reviews are retained under tools/catalog/reviews/historical-2026-09.",
+      "archiveFormat": "jsonl",
+      "status": "approved"
+    },
+    {
       "id": "wikibooks-cookbook",
       "version": "2026-08-27",
       "title": "Wikibooks Cookbook recipe snapshot (adapted)",

@@ -5,12 +5,12 @@ import { runGoogleOAuthFlow, type GoogleOAuthFlowDependencies } from '@/lib/auth
 function flow(overrides: Partial<GoogleOAuthFlowDependencies> = {}): GoogleOAuthFlowDependencies {
   return {
     platform: 'android',
-    redirectTo: 'homechef://auth/callback',
+    redirectTo: 'decisioneats://auth/callback',
     startWebRedirect: vi.fn(async () => undefined),
     requestNativeUrl: vi.fn(async () => 'https://project.supabase.co/auth/v1/authorize'),
     openNativeSession: vi.fn(async () => ({
       type: 'success',
-      url: 'homechef://auth/callback#access_token=access&refresh_token=refresh',
+      url: 'decisioneats://auth/callback#access_token=access&refresh_token=refresh',
     })),
     readSessionTokens: vi.fn(() => ({ accessToken: 'access', refreshToken: 'refresh' })),
     setSession: vi.fn(async () => undefined),

@@ -1,4 +1,4 @@
-# HomeChef UI/UX Specification
+# DecisionEats UI/UX Specification
 
 **Decision date:** August 26, 2026  
 **Status:** Current experience direction  
@@ -6,7 +6,7 @@
 
 ## Experience principle
 
-HomeChef reduces decisions. It does not move search filters into prettier
+DecisionEats reduces decisions. It does not move search filters into prettier
 cards.
 
 Each step asks one question, or two closely related questions. Defaults come
@@ -18,12 +18,12 @@ action is always obvious.
 The interface should meet the quality level of modern food apps such as Cal AI
 without copying their layout or identity.
 
-HomeChef uses:
+DecisionEats uses:
 
 - strong food photography;
 - bold, clean system type;
 - a warm cream canvas with restrained oat surfaces;
-- terracotta as the primary brand and action color;
+- forest green as the primary brand and action color;
 - herb green for ready matches;
 - amber for small pantry gaps;
 - red only for allergen warnings;

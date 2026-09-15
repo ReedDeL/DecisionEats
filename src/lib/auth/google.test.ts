@@ -81,25 +81,25 @@ describe('createGoogleOAuthDependencies', () => {
     }));
     const dependencies = createGoogleOAuthDependencies({
       platform: 'android',
-      redirectTo: 'homechef://auth/callback',
+      redirectTo: 'decisioneats://auth/callback',
       signInWithOAuth,
       setSession: vi.fn(async () => ({ error: null })),
       openAuthSessionAsync: vi.fn(),
       getQueryParams: vi.fn(),
     });
-    await expect(dependencies.requestNativeUrl('homechef://auth/callback')).resolves.toBe(
+    await expect(dependencies.requestNativeUrl('decisioneats://auth/callback')).resolves.toBe(
       'https://auth.example'
     );
     expect(signInWithOAuth).toHaveBeenCalledWith({
       provider: 'google',
-      options: { redirectTo: 'homechef://auth/callback', skipBrowserRedirect: true },
+      options: { redirectTo: 'decisioneats://auth/callback', skipBrowserRedirect: true },
     });
   });
 
   it('maps callback tokens for the flow without retaining provider tokens', () => {
     const dependencies = createGoogleOAuthDependencies({
       platform: 'android',
-      redirectTo: 'homechef://auth/callback',
+      redirectTo: 'decisioneats://auth/callback',
       signInWithOAuth: vi.fn(async () => ({ data: {}, error: null })),
       setSession: vi.fn(async () => ({ error: null })),
       openAuthSessionAsync: vi.fn(),
@@ -109,7 +109,7 @@ describe('createGoogleOAuthDependencies', () => {
       })),
     });
 
-    expect(dependencies.readSessionTokens('homechef://auth/callback')).toEqual({
+    expect(dependencies.readSessionTokens('decisioneats://auth/callback')).toEqual({
       accessToken: 'session-access',
       refreshToken: 'session-refresh',
     });
@@ -118,20 +118,20 @@ describe('createGoogleOAuthDependencies', () => {
   it('maps an access_denied OAuth error code to cancellation', () => {
     const dependencies = createGoogleOAuthDependencies({
       platform: 'android',
-      redirectTo: 'homechef://auth/callback',
+      redirectTo: 'decisioneats://auth/callback',
       signInWithOAuth: vi.fn(async () => ({ data: {}, error: null })),
       setSession: vi.fn(async () => ({ error: null })),
       openAuthSessionAsync: vi.fn(),
       getQueryParams: vi.fn(() => ({ errorCode: 'access_denied', params: {} })),
     });
 
-    expect(dependencies.readSessionTokens('homechef://auth/callback')).toBeNull();
+    expect(dependencies.readSessionTokens('decisioneats://auth/callback')).toBeNull();
   });
 
   it('maps Supabase access_denied callback parameters to cancellation', () => {
     const dependencies = createGoogleOAuthDependencies({
       platform: 'android',
-      redirectTo: 'homechef://auth/callback',
+      redirectTo: 'decisioneats://auth/callback',
       signInWithOAuth: vi.fn(async () => ({ data: {}, error: null })),
       setSession: vi.fn(async () => ({ error: null })),
       openAuthSessionAsync: vi.fn(),
@@ -141,13 +141,13 @@ describe('createGoogleOAuthDependencies', () => {
       })),
     });
 
-    expect(dependencies.readSessionTokens('homechef://auth/callback')).toBeNull();
+    expect(dependencies.readSessionTokens('decisioneats://auth/callback')).toBeNull();
   });
 
   it('rejects a callback containing another OAuth error', () => {
     const dependencies = createGoogleOAuthDependencies({
       platform: 'android',
-      redirectTo: 'homechef://auth/callback',
+      redirectTo: 'decisioneats://auth/callback',
       signInWithOAuth: vi.fn(async () => ({ data: {}, error: null })),
       setSession: vi.fn(async () => ({ error: null })),
       openAuthSessionAsync: vi.fn(),
@@ -157,7 +157,7 @@ describe('createGoogleOAuthDependencies', () => {
       })),
     });
 
-    expect(() => dependencies.readSessionTokens('homechef://auth/callback')).toThrow(
+    expect(() => dependencies.readSessionTokens('decisioneats://auth/callback')).toThrow(
       'Google sign-in failed.'
     );
   });
@@ -166,7 +166,7 @@ describe('createGoogleOAuthDependencies', () => {
     const setSession = vi.fn(async () => ({ error: null }));
     const dependencies = createGoogleOAuthDependencies({
       platform: 'android',
-      redirectTo: 'homechef://auth/callback',
+      redirectTo: 'decisioneats://auth/callback',
       signInWithOAuth: vi.fn(async () => ({ data: {}, error: null })),
       setSession,
       openAuthSessionAsync: vi.fn(),
@@ -210,14 +210,14 @@ describe('createGoogleOAuthDependencies', () => {
     const getQueryParamsMock = vi.mocked(QueryParams.getQueryParams);
     const setSessionMock = vi.mocked(supabase.auth.setSession);
     platformState.os = 'android';
-    makeRedirectUriMock.mockReturnValue('homechef://auth/callback');
+    makeRedirectUriMock.mockReturnValue('decisioneats://auth/callback');
     signInWithOAuthMock.mockResolvedValue({
       data: { provider: 'google', url: 'https://project.supabase.co/auth/v1/authorize' },
       error: null,
     });
     openAuthSessionAsyncMock.mockResolvedValue({
       type: 'success',
-      url: 'homechef://auth/callback#access_token=session-access&refresh_token=session-refresh',
+      url: 'decisioneats://auth/callback#access_token=session-access&refresh_token=session-refresh',
     });
     getQueryParamsMock.mockReturnValue({
       errorCode: null,
@@ -229,7 +229,7 @@ describe('createGoogleOAuthDependencies', () => {
 
     expect(signInWithOAuthMock).toHaveBeenCalledWith({
       provider: 'google',
-      options: { redirectTo: 'homechef://auth/callback', skipBrowserRedirect: true },
+      options: { redirectTo: 'decisioneats://auth/callback', skipBrowserRedirect: true },
     });
     expect(setSessionMock).toHaveBeenCalledWith({
       access_token: 'session-access',

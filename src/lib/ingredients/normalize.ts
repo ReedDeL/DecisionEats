@@ -18,6 +18,22 @@
  * Mirrors SYNONYMS in tools/catalog/normalize.py.
  */
 export const SYNONYMS: Readonly<Record<string, string>> = {
+  carrot: 'carrots',
+  eggs: 'egg',
+  chicken_breasts: 'chicken_breast',
+  onions: 'onion',
+  lemons: 'lemon',
+  buns: 'bun',
+  chestnuts: 'chestnut',
+  chive: 'chives',
+  pistachios: 'pistachio',
+  apple: 'apples',
+  dried_apricot: 'dried_apricots',
+  egg_yolk: 'egg_yolks',
+  red_onion: 'red_onions',
+  sweet_potato: 'sweet_potatoes',
+  turnip: 'turnips',
+  tomatoes: 'tomato',
   scallion: 'green_onion',
   scallions: 'green_onion',
   spring_onion: 'green_onion',
@@ -101,9 +117,21 @@ export function slugify(name: string): string {
 export function canonicalSlug(rawName: string): string {
   let slug = slugify(rawName);
   if (!slug) return '';
+  // Preparation and whole-grain identity change what the user can cook.
+  const preserved = [
+    'cooked_rice',
+    'cooked_brown_rice',
+    'cooked_chicken',
+    'cooked_ham',
+    'whole_wheat_flour',
+    'whole_wheat_spaghetti',
+    'ground_turkey',
+  ];
+  if (preserved.includes(slug)) return slug;
 
   let parts = slug.split('_');
   while (parts.length > 1 && LEADING_MODIFIERS.has(parts[0]!)) {
+    if (preserved.includes(parts.join('_'))) break;
     parts = parts.slice(1);
   }
   slug = parts.join('_');

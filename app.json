@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "HomeChef",
-    "version": "0.1.1",
-    "slug": "homechef",
-    "scheme": "homechef",
+    "name": "DecisionEats",
+    "version": "0.2.0",
+    "slug": "decisioneats",
+    "scheme": "decisioneats",
     "plugins": [
       "expo-router",
       "expo-secure-store",
@@ -11,8 +11,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow HomeChef to access your photos so you can add pantry items from your library.",
-          "cameraPermission": "Allow HomeChef to access your camera to photograph your fridge and pantry.",
+          "photosPermission": "Allow DecisionEats to access your photos so you can add pantry items from your library.",
+          "cameraPermission": "Allow DecisionEats to access your camera to photograph your fridge and pantry.",
           "microphonePermission": false
         }
       ],
@@ -31,13 +31,13 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "com.application42.homechef",
+      "bundleIdentifier": "com.application42.decisioneats",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.application42.homechef"
+      "package": "com.application42.decisioneats"
     }
   }
 }

@@ -1,6 +1,6 @@
 import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import homeChefMark from '../../assets/brand/homechef-mark.png';
+import decisionEatsMark from '../../assets/brand/decisioneats-mark.png';
 
 import { Text } from '@/components/ui/Text';
 import { space } from '@/theme/tokens';
@@ -16,7 +16,7 @@ export function BrandLockup({ compact = false, style }: BrandLockupProps) {
     <View style={[styles.lockup, style]}>
       <Image
         accessible={false}
-        source={homeChefMark}
+        source={decisionEatsMark}
         resizeMode="contain"
         style={compact ? styles.compactMark : styles.mark}
       />
@@ -25,7 +25,7 @@ export function BrandLockup({ compact = false, style }: BrandLockupProps) {
         variant={compact ? 'heading' : 'title'}
         style={styles.wordmark}
       >
-        HomeChef
+        DecisionEats
       </Text>
     </View>
   );

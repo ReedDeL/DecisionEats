@@ -1,6 +1,6 @@
-# HomeChef — Shared Style Guide
+# DecisionEats — Shared Style Guide
 
-**Company:** Application42 · **Product:** HomeChef
+**Company:** Application42 · **Product:** DecisionEats
 **Version:** 0.1.0 · **Date:** August 3, 2026
 **Applies to:** every line of code, every commit, every pull request.
 
@@ -423,4 +423,4 @@ This is a living document. To change a rule: open a PR against this file, state 
 
 ---
 
-*Application42 · HomeChef · Shared Style Guide v0.1.0 · August 3, 2026*
+*Application42 · DecisionEats · Shared Style Guide v0.1.0 · August 3, 2026*

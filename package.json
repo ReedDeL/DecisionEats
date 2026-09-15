@@ -1,6 +1,6 @@
 {
-  "name": "homechef",
-  "version": "0.1.1",
+  "name": "decisioneats",
+  "version": "0.2.0",
   "main": "expo-router/entry",
   "private": true,
   "scripts": {
@@ -18,9 +18,10 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "check": "npm run lint && npm run typecheck && npm test && npm run format:check",
+    "check": "npm run lint && npm run typecheck && npm test && npm run format:check && npm run test:supabase",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:supabase": "node supabase/tests/catalog_structural_verification.mjs && node supabase/tests/pantry_scan_structural_verification.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "15.0.3",

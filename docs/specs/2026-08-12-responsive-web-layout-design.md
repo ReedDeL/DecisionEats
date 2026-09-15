@@ -1,22 +1,22 @@
 > **Supporting layout design.** Responsive workspace rules remain useful. Cook-mode references are superseded by the current recipe-page direction in `../04_UIUX_SPEC.md`.
 
-# HomeChef Responsive Web Layout Design
+# DecisionEats Responsive Web Layout Design
 
 **Date:** August 12, 2026  
 **Status:** Implemented — `src/components/ui/responsive-layout.ts`, consumed by
 `MobileViewport` and `Screen`. **Supersedes UI/UX Spec §13.1.**  
-**Scope:** Responsive web presentation for the existing HomeChef app
+**Scope:** Responsive web presentation for the existing DecisionEats app
 
 ## Goal
 
-Improve the current web UI so HomeChef feels intentional and usable on both a
+Improve the current web UI so DecisionEats feels intentional and usable on both a
 desktop browser and a phone-sized viewport. Preserve the existing product
 flow, decision-first UX, and feature set while allowing desktop layouts to use
 available width instead of letterboxing the entire app at 430px.
 
 ## Design direction
 
-HomeChef uses a warm, focused “kitchen workspace” presentation. On desktop,
+DecisionEats uses a warm, focused “kitchen workspace” presentation. On desktop,
 the app sits in a centered workspace with generous gutters, a quiet page
 canvas, and responsive multi-column content. On mobile, the workspace collapses
 to an edge-to-edge single-column flow optimized for thumb reach and vertical

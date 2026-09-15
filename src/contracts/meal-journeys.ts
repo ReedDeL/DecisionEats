@@ -270,7 +270,7 @@ export type DualMealJourneysFixture = z.infer<typeof dualMealJourneysFixtureSche
 
 const portableSemanticValidationContract = {
   version: 2,
-  validator: 'homechef.dual-meal-journeys.v2',
+  validator: 'decisioneats.dual-meal-journeys.v2',
   rules: [
     {
       id: 'prompt_state_lifecycle',
@@ -316,7 +316,7 @@ const portableSemanticValidationContract = {
 
 export const mealJourneysJsonSchema = {
   ...z.toJSONSchema(dualMealJourneysFixtureSchema),
-  'x-homechef-semanticValidation': portableSemanticValidationContract,
+  'x-decisioneats-semanticValidation': portableSemanticValidationContract,
 };
 
 export interface PortableSemanticValidationResult {

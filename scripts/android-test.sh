@@ -7,7 +7,7 @@ export TMPDIR=/tmp
 readonly mode="${1:-build}"
 readonly source_dir="/workspace"
 readonly artifacts_dir="/artifacts"
-readonly work_dir="$(mktemp -d /tmp/homechef-android.XXXXXX)"
+readonly work_dir="$(mktemp -d /tmp/decisioneats-android.XXXXXX)"
 emulator_pid=""
 
 cleanup() {
@@ -50,7 +50,7 @@ wait_for_emulator() {
     fi
 
     if ! kill -0 "$emulator_pid" 2>/dev/null; then
-      cat /tmp/homechef-emulator.log >&2
+      cat /tmp/decisioneats-emulator.log >&2
       exit 1
     fi
 
@@ -73,7 +73,7 @@ readonly apk_path="$work_dir/android/app/build/outputs/apk/debug/app-debug.apk"
 test -f "$apk_path"
 
 if [[ -d "$artifacts_dir" ]]; then
-  cp "$apk_path" "$artifacts_dir/homechef-debug.apk"
+  cp "$apk_path" "$artifacts_dir/decisioneats-debug.apk"
 fi
 
 if [[ "$mode" == "build" ]]; then
@@ -97,7 +97,7 @@ emulator \
   -no-boot-anim \
   -no-snapshot \
   -no-window \
-  -wipe-data > /tmp/homechef-emulator.log 2>&1 &
+  -wipe-data > /tmp/decisioneats-emulator.log 2>&1 &
 emulator_pid="$!"
 
 wait_for_emulator
@@ -120,7 +120,7 @@ if [[ -z "$process_id" ]]; then
 fi
 
 if [[ -d "$artifacts_dir" ]]; then
-  adb exec-out screencap -p > "$artifacts_dir/homechef-emulator.png"
+  adb exec-out screencap -p > "$artifacts_dir/decisioneats-emulator.png"
 fi
 
 echo "Android emulator smoke test passed for $application_id (PID $process_id)."

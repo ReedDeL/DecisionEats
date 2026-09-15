@@ -63,7 +63,7 @@ export default function RestrictionsScreen() {
       <View style={styles.intro}>
         <Text variant="display">Anything to avoid?</Text>
         <Text variant="body" tone="muted">
-          Select allergies and dietary needs that HomeChef should always respect.
+          Select allergies and dietary needs that DecisionEats should always respect.
         </Text>
       </View>
 

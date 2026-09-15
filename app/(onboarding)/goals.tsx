@@ -152,8 +152,8 @@ export default function GoalsScreen() {
       <View style={styles.intro}>
         <Text variant="display">What&apos;s your goal?</Text>
         <Text variant="body" tone="muted">
-          This helps HomeChef choose meals that fit what you want right now. It never changes your
-          allergies, dietary needs, or kitchen constraints.
+          This helps DecisionEats choose meals that fit what you want right now. It never changes
+          your allergies, dietary needs, or kitchen constraints.
         </Text>
       </View>
 

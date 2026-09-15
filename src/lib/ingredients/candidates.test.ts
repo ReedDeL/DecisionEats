@@ -35,9 +35,8 @@ describe('toCandidates', () => {
   });
 
   it('does not pre-accept a confident item whose name only partially matched', () => {
-    // The two failure modes are independent: the model can be certain it sees
-    // oat milk while our vocabulary only has "milk".
-    const [candidate] = toCandidates([detected({ name: 'oat milk', confidence: 1 })]);
+    // A confident detection with unknown product qualifiers still needs review.
+    const [candidate] = toCandidates([detected({ name: 'barista oat milk', confidence: 1 })]);
 
     expect(candidate?.match).toBe('partial');
     expect(candidate?.accepted).toBe(false);

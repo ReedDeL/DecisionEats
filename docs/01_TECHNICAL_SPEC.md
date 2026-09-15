@@ -1,7 +1,7 @@
-# HomeChef — Technical Specification
+# DecisionEats — Technical Specification
 
 **Company:** Application42
-**Product:** HomeChef
+**Product:** DecisionEats
 **Version:** 0.1.0 · **Updated:** August 26, 2026
 **Scope:** Current MVP. Version 1.0 has no fixed release date.
 
@@ -166,7 +166,7 @@ any downstream layer for offline operation protects a state that cannot occur.
 
 ### 2.3 Recipe sources — bundled catalog and optional live expansion
 
-**The bundled catalog is owned and offline.** TheMealDB data and HomeChef seed recipes are
+**The bundled catalog is owned and offline.** TheMealDB data and DecisionEats seed recipes are
 normalized by `tools/catalog/` into `src/data/`. The decision engine receives
 plain `Recipe[]` values and never knows their source.
 
@@ -633,4 +633,4 @@ See `../README.md` for current routes and commands.
 
 ---
 
-*Application42 · HomeChef · Technical Specification v0.1.0 · August 3, 2026*
+*Application42 · DecisionEats · Technical Specification v0.1.0 · August 3, 2026*

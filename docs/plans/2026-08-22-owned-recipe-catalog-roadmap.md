@@ -1,97 +1,93 @@
 # Owned recipe catalog roadmap
 
-**Date:** 2026-08-22
-**Status:** Active — source pipeline foundation in place; Wikibooks candidate registered
+Updated September 10, 2026. This document replaces the older starter-catalog
+roadmap. Product direction remains in [00_PRODUCT_DIRECTION.md](../00_PRODUCT_DIRECTION.md).
 
-## Outcome
+## Current release
 
-Replace live recipe-provider dependencies with a rights-first, HomeChef-owned
-hosted catalog and curated offline fallback without weakening the pure decision
-engine or hard constraints.
+The local app catalog contains **2,278 complete recipe records and 946 canonical
+ingredients**. Its composition is 33 original DecisionEats recipes, 72 Wikibooks
+adaptations, 13 public-domain cookbook adaptations and 2,160 DecisionEats
+meal-template variations.
 
-The current 812-recipe/897-ingredient provider-derived bundle remains a
-transitional, non-rebuildable artifact with its attribution until approved
-replacement parity. Its 76 `unclassified` recipes continue to exclude rather
-than admit.
+The template variations are complete meal preparations, not independently
+published recipes. They expand ingredient combinations while the published
+recipe collection grows. They have not each been kitchen-tested.
+They currently cover stove meals at 45 minutes; quick and microwave coverage
+still comes primarily from the original seed recipes.
 
-## Current implementation state
+Now, Plan and recipe details continue to use the full bundled catalog.
+No provider API, runtime model generation, new screen or decision-engine rewrite
+is required for these additions. The hosted release's separate 100-recipe offline
+subset is not a cap on the full catalog.
 
-| Area | State | Evidence and next gate |
-|---|---|---|
-| Documentation and legacy cleanup | In progress | The owned-catalog design governs new work; provider-era runtime guidance and residue still need removal. |
-| Build pipeline | In progress | The rights manifest, checksum boundary, quarantine, deterministic release builder, and protected loader exist. The first source extractor does not. |
-| Hosted catalog contract | Repository implementation complete | Protected release tables, RLS, read RPCs, and activation functions exist. No candidate source has been activated. |
-| Client integration | Partial | Hosted query hooks exist, but the home decision path still runs from the transitional offline bundle. |
-| Transition audit | Not complete | Provider-era commands, names, docs, and data remain until replacement parity is proven. |
-| Release verification | Blocked on an approved source | There is no approved external source in the manifest yet. |
+## Implemented
 
-## Current source gate
+Hosted release `873e2700-d896-4d05-b9c5-4a2fb156b21f` was activated on
+September 10, 2026 at 05:55 UTC with 2,278 recipes, 946 ingredients, five sources
+and a 100-recipe protected offline subset. Recipe instructions and all 19,728
+ingredient rows were fingerprint-checked against the local build before activation.
+The previous 39-recipe release is retained for rollback. Application version is 0.2.0.
 
-`wikibooks-cookbook` is registered in
-`tools/catalog/rights-manifest.json` as a **candidate**, not an approved
-release source. The recorded `latest` Wikimedia URL is discovery metadata and
-is mutable. Candidate sources deliberately have no SHA-256 and are excluded
-from download, ingestion, and release activation.
+- Checksum-verified streaming extraction of the official Wikibooks XML dump.
+- Extraction of public-domain-labeled historical cookbook archives.
+- Exact-source review fingerprints, retained original text and revision attribution.
+- Reviewed publication of 79 additional source recipes.
+- Deterministic generation of 2,160 complete DecisionEats meal variations.
+- Explicit meal slots and servings in source ingestion.
+- Separate prepared-food identities so canned/cooked ingredients do not match raw ones.
+- Preservation of the broad pantry vocabulary during rebuilds.
+- Offline USDA bulk import with 24 explicit FDC mappings.
+- Regression checks for source boundaries and existing engine constraints.
 
-Promotion requires all of the following:
+## Next priorities
 
-1. Resolve the discovery URL to an immutable dated Wikimedia dump.
-2. Record and independently verify its SHA-256.
-3. Stream the Cookbook namespace into the source-neutral JSONL contract.
-4. Preserve page-level source and license evidence through normalization.
-5. Pass parser, attribution, equipment, allergen, dietary, and parity gates.
-6. Change the manifest entry to the release-grade JSONL archive only after
-   review.
+1. **Grow independently sourced dishes into the thousands.** The current
+   immutable snapshots contain 3,767 Wikibooks candidates and 54,843 historical
+   candidates. These counts include incomplete, duplicated and unsuitable
+   preparations. Improve parsing and review complete modern meals, keeping
+   source evidence and reporting accepted counts separately from candidates.
+2. **Improve coverage, not just total count.** Prioritize breakfast, microwave-only,
+   no-cook and short-preparation recipes, cuisines, dietary requirements and
+   realistic pantry coverage. Template variations alone do not solve these gaps.
+3. **Validate preparations.** Kitchen-test representative template components and
+   combinations. Add compatibility exclusions if a combination is impractical.
+4. **Complete nutrition mapping.** The current release has zero complete
+   per-serving calorie estimates. Add reviewed portion-to-mass conversions and
+   broader USDA mappings before enabling calorie-based guidance.
+5. **Move large catalogs out of the bundle when measured size warrants it.**
+   Hosted hooks exist, but the active user journeys still read bundled recipes.
+   The current hosted schema does not yet persist meal slots, servings or
+   per-recipe attribution URLs; carry those fields before switching the journeys.
+   Integrate hosted candidates and detail fallback behind the same engine
+   contract, with performance and offline coverage checks before switching.
+6. **Retire provider-era tooling.** The optional TheMealDB refresh code is still
+   legacy tooling. The supported release command is the local rights-manifest
+   pipeline, which performs no provider requests.
 
-## Work sequence
+## Source decisions
 
-1. **Documentation and legacy cleanup.** Establish the canonical design,
-   retire provider-era plans/specs, repair links, and update project guidance.
-2. **Build pipeline.** Replace provider-shaped ingestion with a source-neutral,
-   checksum-verified rights manifest, deterministic normalization,
-   quarantine, and explicit ingest/validate/build-offline/load/activate
-   boundaries. Do not overwrite the transitional bundle.
-3. **Hosted catalog contract.** Add releases, sources, ingredients, recipes,
-   and ordered recipe ingredients with RLS; add bounded authenticated candidate,
-   detail, and attribution RPCs; update local generated types without contacting
-   the live project.
-4. **Client integration.** Rename bundled data to offline terminology, render
-   offline answers first, merge hosted candidates safely, resolve detail from
-   cache/hosted/offline data, and use active attribution data in Settings.
-5. **Transition audit.** Remove active provider API semantics and keys, inspect
-   the abandoned provider worktree read-only, and document any legal, parity,
-   or remote-operation gate that remains.
-6. **Release verification.** Run TypeScript, Python, formatting, lint, type,
-   migration, security, performance-smoke, link, and residue checks. Confirm
-   the full hosted catalog does not enter the Metro bundle.
+- **Wikibooks:** accepted under CC BY-SA 4.0 with revision attribution and
+  change notices. Images require separate rights review.
+- **Historical cookbooks:** accepted only after checking the underlying work;
+  modernize incomplete preparation details explicitly and preserve provenance.
+- **USDA FoodData Central:** free bulk ingredient/nutrition data under CC0;
+  it does not provide meal instructions.
+- **DataHive recipes-with-nutrition:** researched and excluded. The dataset's
+  39,447 rows use CC BY-NC 4.0 and lack cooking instructions, equipment and
+  preparation time. Public availability does not establish commercial reuse rights.
 
-## Non-negotiable checks
+## Release gates
 
-- No recipe-provider API, key, endpoint, quota guard, live fallback, or tier
-  semantic remains active.
-- Only approved, checksum-pinned sources enter a release.
-- A mutable discovery URL can never become release input.
-- The engine remains synchronous and pure; it receives `Recipe[]` only.
-- Equipment, allergens, and dietary restrictions never relax; unknown status
-  excludes.
-- The product leads with a few answers, reveals more only on request, and never becomes a recipe
-  browser.
-- Hosted failure retains offline results. No empty results screen.
-- Every catalog table has RLS in the same migration and no direct client writes.
-- No remote migration, source download, or Supabase mutation occurs without
-  explicit target-specific authorization.
+The engine stays pure and synchronous over Recipe[]. Equipment, allergies,
+dietary requirements and meal-slot suitability remain hard constraints.
+Unknown metadata excludes a recipe. Source text is never executable input.
+No candidate count may be presented as the count of usable meals.
 
-## Completion evidence
+Hosted releases must load while inactive, verify counts and provenance, and
+activate atomically. Preserve the previous release for rollback. App access must
+remain read-only through the existing RLS/RPC boundary. No paid recipe service
+or recurring model generation is introduced.
 
-The change is ready for handoff when the new catalog path is reproducible from
-the approved manifest, release activation is auditable, the hosted-plus-offline
-client path keeps hard constraints invariant, attribution is active-release
-data, and the transitional bundle's remaining parity or legal gate is stated
-plainly.
-
-## Related documents
-
-- [Owned catalog design](../specs/2026-08-22-owned-recipe-catalog-design.md)
-- [Wikibooks source design](../specs/2026-08-13-wikibooks-catalog-design.md)
-- [Wikibooks implementation plan](2026-08-13-wikibooks-catalog.md)
-- [Technical specification](../01_TECHNICAL_SPEC.md)
+See [catalog build instructions and source evidence](../../tools/catalog/README.md)
+for exact sources, checksums, reproduction commands and current limitations.

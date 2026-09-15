@@ -32,7 +32,7 @@ import {
   trackPantryFilterSubmitted,
   trackRecommendationsShown,
 } from '@/lib/analytics';
-import { TimeTile } from '@/components/ui/TimeTile';
+import { TimeSlider } from '@/components/ui/TimeSlider';
 import {
   recordDislike,
   removeDislike,
@@ -53,13 +53,6 @@ import { useTheme } from '@/theme/useTheme';
  * the layout.
  */
 
-/** Spec §4: three tiles, not a slider. A slider is a decision. */
-const TIME_CHOICES: readonly { minutes: Minutes; openEnded: boolean }[] = [
-  { minutes: 15, openEnded: false },
-  { minutes: 30, openEnded: false },
-  { minutes: 60, openEnded: true },
-];
-
 const BUCKET_ORDER: readonly Bucket[] = ['ready', 'missing_few', 'missing_some', 'grocery_run'];
 
 export default function HomeScreen() {
@@ -74,6 +67,7 @@ export default function HomeScreen() {
   const skippedRecipes = useKitchenStore((state) => state.skippedRecipes);
   const bodyGoal = useKitchenStore((state) => state.bodyGoal);
 
+  const [selectedTime, setSelectedTime] = useState<Minutes>(30);
   const [timeLimit, setTimeLimit] = useState<Minutes | null>(null);
   const [cuisine, setCuisine] = useState<string | null>(null);
   /**
@@ -131,6 +125,7 @@ export default function HomeScreen() {
   }, [decision, totalResults]);
 
   const submitPantryFilter = (minutes: Minutes) => {
+    setSelectedTime(minutes);
     trackPantryFilterSubmitted({ time_limit_minutes: minutes });
     setTimeLimit(minutes);
   };
@@ -188,6 +183,8 @@ export default function HomeScreen() {
       <TimePrompt
         pantryCount={pantry.length}
         cuisine={cuisine}
+        selectedTime={selectedTime}
+        onSelectTime={setSelectedTime}
         onSelectCuisine={setCuisine}
         onChooseTime={submitPantryFilter}
         onOpenPantry={() => router.push('/pantry')}
@@ -307,6 +304,8 @@ export default function HomeScreen() {
 interface TimePromptProps {
   pantryCount: number;
   cuisine: string | null;
+  selectedTime: Minutes;
+  onSelectTime: (minutes: Minutes) => void;
   onSelectCuisine: (cuisine: string | null) => void;
   onChooseTime: (minutes: Minutes) => void;
   onOpenPantry: () => void;
@@ -315,6 +314,8 @@ interface TimePromptProps {
 function TimePrompt({
   pantryCount,
   cuisine,
+  selectedTime,
+  onSelectTime,
   onSelectCuisine,
   onChooseTime,
   onOpenPantry,
@@ -345,17 +346,7 @@ function TimePrompt({
 
           <Text variant="display">How much time do you have?</Text>
 
-          <View style={styles.tileRow}>
-            {TIME_CHOICES.map((choice) => (
-              <TimeTile
-                key={choice.minutes}
-                minutes={choice.minutes}
-                openEnded={choice.openEnded}
-                selected={false}
-                onPress={onChooseTime}
-              />
-            ))}
-          </View>
+          <TimeSlider value={selectedTime} onChange={onSelectTime} />
 
           <View style={styles.optional}>
             <Text variant="caption" tone="muted">
@@ -380,8 +371,12 @@ function TimePrompt({
           <PrimaryButton
             label="Show me meals"
             icon="meal"
-            onPress={() => onChooseTime(30)}
-            accessibilityHint="Shows meals you can make in 30 minutes"
+            onPress={() => onChooseTime(selectedTime)}
+            accessibilityHint={
+              selectedTime === 60
+                ? 'Shows meals you can make in 60 minutes or more'
+                : `Shows meals you can make in ${selectedTime} minutes`
+            }
           />
 
           {!responsive.isDesktop ? (
@@ -404,7 +399,7 @@ function TimePrompt({
           <Card variant="alt" style={styles.contextPanel}>
             <Text variant="heading">Your kitchen, ready when you are</Text>
             <Text variant="body" tone="muted">
-              HomeChef filters every suggestion against the {pantryCount} ingredient
+              DecisionEats filters every suggestion against the {pantryCount} ingredient
               {pantryCount === 1 ? '' : 's'} in your pantry.
             </Text>
             <Pressable
@@ -469,7 +464,6 @@ const styles = StyleSheet.create({
   promptPanel: { gap: space.lg, minWidth: 0 },
   desktopPanel: { flex: 1, padding: space.xl, borderRadius: radius.lg, minWidth: 0 },
   contextPanel: { flex: 1, justifyContent: 'center', minHeight: 260, minWidth: 0 },
-  tileRow: { flexDirection: 'row', gap: space.sm },
   optional: { gap: space.sm },
   cuisineRow: { flexDirection: 'row', gap: space.sm, paddingRight: space.lg },
   cuisineScroll: { width: '100%', maxWidth: '100%', minWidth: 0 },

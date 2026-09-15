@@ -28,7 +28,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="theme-color" content={palette.light.bg} media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content={palette.dark.bg} media="(prefers-color-scheme: dark)" />
         <link rel="icon" type="image/png" href="/favicon.png" />
-        <title>HomeChef</title>
+        <title>DecisionEats</title>
 
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />

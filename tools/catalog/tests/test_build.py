@@ -43,7 +43,7 @@ def make_meal(**overrides: Any) -> dict[str, Any]:
 class TestExtractIngredients:
     def test_unrolls_populated_slots(self) -> None:
         ingredients = extract_ingredients(make_meal())
-        assert [i.id for i in ingredients] == ["eggs", "butter"]
+        assert [i.id for i in ingredients] == ["egg", "butter"]
 
     def test_skips_blank_slots(self) -> None:
         assert len(extract_ingredients(make_meal())) == 2
@@ -51,7 +51,7 @@ class TestExtractIngredients:
     def test_attaches_allergen_groups(self) -> None:
         by_id = {i.id: i for i in extract_ingredients(make_meal())}
         assert "dairy" in by_id["butter"].allergen_groups
-        assert "egg" in by_id["eggs"].allergen_groups
+        assert "egg" in by_id["egg"].allergen_groups
 
     def test_deduplicates_ingredients_that_normalize_together(self) -> None:
         meal = make_meal(strIngredient1="Scallion", strIngredient2="spring onions")
@@ -176,7 +176,7 @@ class TestBuildVocabulary:
     def test_collects_every_ingredient_once(self) -> None:
         recipes = [to_catalog_recipe(make_meal()), to_catalog_recipe(make_meal(idMeal="2"))]
         vocabulary = build_vocabulary(recipes)
-        assert [entry.id for entry in vocabulary] == ["butter", "eggs"]
+        assert [entry.id for entry in vocabulary] == ["butter", "egg"]
 
     def test_is_deduplicated_by_id(self) -> None:
         recipes = [to_catalog_recipe(make_meal()) for _ in range(5)]

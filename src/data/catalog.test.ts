@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import recipesJson from '@/data/recipes.json';
 import { INGREDIENT_VOCABULARY, BUNDLED_CATALOG, lookupIngredient } from '@/data/catalog';
 import { decideWithRelaxation } from '@/engine/relax';
@@ -166,7 +167,24 @@ describe('microwave coverage', () => {
     const claimingNone = BUNDLED_CATALOG.filter(
       (r) => r.equipmentRequired.includes('none') && !r.id.startsWith('hc-staple-')
     );
-    expect(claimingNone).toEqual([]);
+    const reviews = readFileSync(
+      new URL('../../tools/catalog/reviews/wikibooks-2026-09/reviews.jsonl', import.meta.url),
+      'utf8'
+    )
+      .trim()
+      .split('\n')
+      .map(
+        (line) =>
+          JSON.parse(line) as {
+            candidate_id: string;
+            recipe: { equipment: string[] };
+          }
+      );
+    for (const recipe of claimingNone) {
+      expect(recipe.attribution?.sourceId).toBe('wikibooks-expanded');
+      const review = reviews.find((row) => row.candidate_id === recipe.attribution?.sourceRecipeId);
+      expect(review?.recipe.equipment).toEqual(['none']);
+    }
   });
 
   it('allows verified curated staple recipes to claim no equipment ("none")', () => {

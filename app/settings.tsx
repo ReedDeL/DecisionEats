@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import appConfig from '../app.json';
 import { useState } from 'react';
 import {
   Alert,
@@ -301,7 +302,7 @@ export default function SettingsScreen() {
     clearReminders();
     Alert.alert(
       'Reminders are off',
-      'You can enable notifications for HomeChef in your device settings.'
+      'You can enable notifications for DecisionEats in your device settings.'
     );
   };
 
@@ -312,7 +313,7 @@ export default function SettingsScreen() {
       }
     } else {
       Alert.alert(
-        'Reset HomeChef',
+        'Reset DecisionEats',
         'This will clear your pantry items, kitchen setup, and preferences, and restart onboarding.',
         [
           { text: 'Cancel', style: 'cancel' },
@@ -397,7 +398,7 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text variant="heading">Appearance</Text>
         <Text variant="caption" tone="muted">
-          Choose how HomeChef looks on your screen.
+          Choose how DecisionEats looks on your screen.
         </Text>
 
         <View
@@ -438,7 +439,7 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text variant="heading">Allergies & Dietary Restrictions</Text>
         <Text variant="caption" tone="muted">
-          Select anything HomeChef should always exclude from recommendations.
+          Select anything DecisionEats should always exclude from recommendations.
         </Text>
 
         <Text variant="bodyStrong">Allergens</Text>
@@ -457,7 +458,7 @@ export default function SettingsScreen() {
 
         <Text variant="bodyStrong">Dietary Presets</Text>
         <Text variant="caption" tone="muted">
-          Select the eating patterns you want HomeChef to use when choosing recipes.
+          Select the eating patterns you want DecisionEats to use when choosing recipes.
         </Text>
         <View style={styles.chipRow}>
           {DIETARY_PRESETS.map((preset) => (
@@ -663,9 +664,19 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text variant="heading">About & Attribution</Text>
         <Card variant="alt">
-          <Text variant="bodyStrong">HomeChef</Text>
+          <Text variant="bodyStrong">DecisionEats</Text>
           <Text variant="caption" tone="muted">
-            Photo-based meal decision engine. Version 0.1.0
+            Photo-based meal decision engine. Version {appConfig.expo.version}
+          </Text>
+          <Text variant="bodyStrong">Safety & privacy</Text>
+          <Text variant="caption" tone="muted">
+            DecisionEats is a meal-planning tool, not medical advice. Check every ingredient
+            yourself, especially for allergies or dietary restrictions. Photo scanning is intended
+            for adults; do not include people, documents, or personal details in a photo.
+          </Text>
+          <Text variant="caption" tone="muted">
+            Photo results are suggestions. DecisionEats does not save scan photos after the request,
+            but its third-party photo-recognition provider&apos;s data-handling terms apply.
           </Text>
           {attributions.map((item) =>
             item.url && isHttpsUrl(item.url) ? (

@@ -1,7 +1,7 @@
-# How to Test HomeChef on Your iPhone (Web)
+# How to Test DecisionEats on Your iPhone (Web)
 
 > [!NOTE]
-> This opens the **web version** of HomeChef in Safari on your iPhone. It does not install an iOS app — that requires a Mac and an Apple Developer account.
+> This opens the **web version** of DecisionEats in Safari on your iPhone. It does not install an iOS app — that requires a Mac and an Apple Developer account.
 
 ---
 
@@ -33,7 +33,7 @@ Set-NetFirewallHyperVVMSetting -Name '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -D
 ## Part 2 — Every Time You Want to Test
 
 1. Put your iPhone and your PC on the **same Wi-Fi network**.
-2. On your PC (inside `/home/rjdel/Projects/HomeChef`), start the web app:
+2. On your PC (inside `/home/rjdel/Projects/DecisionEats`), start the web app:
 
    ```bash
    npm run web

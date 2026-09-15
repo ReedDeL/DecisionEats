@@ -249,6 +249,16 @@ export default function ScanScreen() {
           </Text>
         </View>
 
+        <Card variant="alt">
+          <Text variant="bodyStrong">Photo safety</Text>
+          <Text variant="caption" tone="muted">
+            Photos are sent to a third-party photo-recognition provider for this request.
+            DecisionEats does not save the photos after the request, but the provider&apos;s
+            data-handling terms apply. Do not include people, documents, or personal details. Always
+            review the results: this feature is not medical or allergy-safety advice.
+          </Text>
+        </Card>
+
         {error ? (
           <Card variant="alt">
             <Text variant="body" tone="near">
@@ -299,8 +309,8 @@ export default function ScanScreen() {
               ))}
             </ScrollView>
             <Text variant="caption" tone="muted">
-              Tap a photo to remove it. Photos are read and discarded — we store the ingredients,
-              never the pictures.
+              Tap a photo to remove it. DecisionEats does not save photos after the request; only
+              the ingredients you confirm continue into your pantry.
             </Text>
           </View>
         ) : null}

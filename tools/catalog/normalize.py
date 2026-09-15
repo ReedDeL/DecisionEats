@@ -17,6 +17,22 @@ import unicodedata
 # two genuinely different ingredients is worse than leaving a near-duplicate,
 # because it produces confidently wrong recommendations.
 SYNONYMS: dict[str, str] = {
+    "carrot": "carrots",
+    "eggs": "egg",
+    "chicken_breasts": "chicken_breast",
+    "onions": "onion",
+    "lemons": "lemon",
+    "buns": "bun",
+    "chestnuts": "chestnut",
+    "chive": "chives",
+    "pistachios": "pistachio",
+    "apple": "apples",
+    "dried_apricot": "dried_apricots",
+    "egg_yolk": "egg_yolks",
+    "red_onion": "red_onions",
+    "sweet_potato": "sweet_potatoes",
+    "turnip": "turnips",
+    "tomatoes": "tomato",
     "scallion": "green_onion",
     "scallions": "green_onion",
     "spring_onion": "green_onion",
@@ -81,6 +97,28 @@ _LEADING_MODIFIERS: frozenset[str] = frozenset(
 # Allergen groups by canonical id. The engine treats these as a set operation,
 # which is what keeps "egg" from matching "eggplant".
 ALLERGEN_GROUPS: dict[str, list[str]] = {
+    "ground_turkey": [],
+    # Reviewed expansion ingredients, including conservative compound-product tags.
+    "cottage_cheese": ["dairy"],
+    "half_and_half": ["dairy"],
+    "muenster_cheese": ["dairy"],
+    "tahini": ["sesame"],
+    "almond_milk": ["nut", "tree_nut"],
+    "soy_milk": ["soy"],
+    "english_muffins": ["gluten", "wheat", "dairy", "soy"],
+    "hot_dog_buns": ["gluten", "wheat", "dairy", "egg", "soy", "sesame"],
+    "ciabatta_roll": ["gluten", "wheat", "soy"],
+    "whole_wheat_flour": ["gluten", "wheat"],
+    "whole_wheat_spaghetti": ["gluten", "wheat"],
+    "semolina": ["gluten", "wheat"],
+    "smoked_salmon": ["fish"],
+    "smoked_sausage": ["gluten", "wheat", "soy", "dairy"],
+    "pork_sausages": ["gluten", "wheat", "soy", "dairy"],
+    "hot_dogs": ["gluten", "wheat", "soy", "dairy"],
+    "pepperoni": ["soy", "dairy"],
+    "pizza_sauce": ["dairy", "soy"],
+    "tomato_pasta_sauce": ["dairy", "soy"],
+    "cooked_ham": ["soy"],
     "egg": ["egg"],
     "eggs": ["egg"],
     "egg_white": ["egg"],
@@ -114,7 +152,7 @@ ALLERGEN_GROUPS: dict[str, list[str]] = {
     "wheat_flour": ["gluten", "wheat"],
     "pasta": ["gluten", "wheat"],
     "bread": ["gluten", "wheat"],
-    "soy_sauce": ["soy", "gluten"],
+    "soy_sauce": ["soy", "gluten", "wheat"],
     "soybean": ["soy"],
     "tofu": ["soy"],
     "fish_sauce": ["fish"],
@@ -264,8 +302,25 @@ def canonical_id(raw_name: str) -> str:
     if not slug:
         return ""
 
+    # These preparations change pantry identity: raw rice/chicken cannot stand
+    # in for ready-to-eat food in an assembly-only recipe. Whole-wheat products
+    # also retain their explicit identity instead of losing the leading word.
+    preserved = {
+        "cooked_rice",
+        "cooked_brown_rice",
+        "cooked_chicken",
+        "cooked_ham",
+        "whole_wheat_flour",
+        "whole_wheat_spaghetti",
+        "ground_turkey",
+    }
+    if slug in preserved:
+        return slug
+
     parts = slug.split("_")
     while len(parts) > 1 and parts[0] in _LEADING_MODIFIERS:
+        if "_".join(parts) in preserved:
+            break
         parts = parts[1:]
     slug = "_".join(parts)
 

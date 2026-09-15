@@ -1,4 +1,4 @@
-# HomeChef agent bootstrap
+# DecisionEats agent bootstrap
 
 This is the repository discovery entry point for coding agents. The canonical
 operating system is `docs/agentic/OPERATING_SYSTEM.md`; read it before

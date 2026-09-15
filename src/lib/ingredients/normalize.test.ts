@@ -28,6 +28,11 @@ describe('slugify', () => {
 });
 
 describe('canonicalSlug', () => {
+  it('preserves cooked-food and whole-grain identity after cosmetic modifiers', () => {
+    expect(canonicalSlug('fresh cooked chicken')).toBe('cooked_chicken');
+    expect(canonicalSlug('whole wheat flour')).toBe('whole_wheat_flour');
+    expect(canonicalSlug('ground turkey')).toBe('ground_turkey');
+  });
   it('strips leading modifiers', () => {
     expect(canonicalSlug('fresh chopped garlic')).toBe('garlic');
     expect(canonicalSlug('finely diced onion')).toBe('onion');

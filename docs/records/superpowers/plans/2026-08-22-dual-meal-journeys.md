@@ -1,10 +1,10 @@
 > **Historical execution plan.** It records the implementation boundary agreed on August 22. Current product behavior and release scope are governed by `../../00_PRODUCT_DIRECTION.md` and `../../04_UIUX_SPEC.md`.
 
-# HomeChef Dual Meal Journeys Implementation Plan
+# DecisionEats Dual Meal Journeys Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make HomeChef offer two explicit decisions—make a meal now or plan one seven-day week—while preserving hard safety constraints, private personal data, bounded results, and plan-only grocery needs.
+**Goal:** Make DecisionEats offer two explicit decisions—make a meal now or plan one seven-day week—while preserving hard safety constraints, private personal data, bounded results, and plan-only grocery needs.
 
 **Architecture:** Plain-data contracts and deterministic policy stay outside React and I/O; `src/engine/` consumes bundled `Recipe[]` values and emits capped now decisions, one weekly proposal, grocery needs, and portion guidance. Supabase stores personal profile/signal/onboarding/weekly state behind `user_id` RLS, Zustand coordinates the device experience, and local notifications are scheduled only after confirmation. The repository has no Swift target or toolchain, so checked-in JSON fixtures and an iOS handoff document are the parity boundary for Harshal's separate SwiftUI implementation.
 

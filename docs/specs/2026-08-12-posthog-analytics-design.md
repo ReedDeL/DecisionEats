@@ -1,6 +1,6 @@
 > **Historical analytics design.** Cook-mode milestones are legacy. Current events should describe the Now, Plan, Pantry, Show more, recipe, and What to get journeys.
 
-# HomeChef PostHog Analytics Integration Design
+# DecisionEats PostHog Analytics Integration Design
 
 **Date:** 2026-08-12
 **Status:** Approved for implementation

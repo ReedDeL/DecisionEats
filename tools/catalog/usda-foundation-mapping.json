@@ -1,0 +1,32 @@
+{
+  "archive_sha256": "186e988ec542e913f51ef62b86a47758e8cdd0d1dc3889e7b055581f3c09c77a",
+  "source_version": "USDA Foundation Foods 2026-04-30",
+  "calculated_at": "2026-09-09T00:00:00+00:00",
+  "archive_member": "FoodData_Central_foundation_food_json_2026-04-30.json",
+  "foods": {
+    "garlic": 1104647,
+    "chicken_breast": 2646170,
+    "ground_turkey": 2514747,
+    "strawberries": 2346409,
+    "broccoli": 747447,
+    "carrots": 2258586,
+    "cauliflower": 2685573,
+    "zucchini": 2685568,
+    "cabbage": 2346407,
+    "celery": 2346405,
+    "cucumber": 2346406,
+    "canned_chickpeas": 2644288,
+    "canned_black_beans": 2644285,
+    "canned_cannellini_beans": 2644287,
+    "soy_milk": 1999630,
+    "almond_milk": 1999631,
+    "peanut_butter": 2262072,
+    "tahini": 2262073,
+    "whole_wheat_flour": 790085,
+    "rice": 2512381,
+    "banana": 1105314,
+    "asparagus": 2710823,
+    "mushrooms": 1999629,
+    "tomato_paste": 2685580
+  }
+}

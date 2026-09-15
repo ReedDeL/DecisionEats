@@ -1,4 +1,4 @@
-# HomeChef Cloudflare Pages and Supabase Deployment Design
+# DecisionEats Cloudflare Pages and Supabase Deployment Design
 
 **Date:** 2026-08-27
 **Status:** Approved for implementation
@@ -7,7 +7,7 @@
 ## Goal
 
 Publish the existing Expo Router static web build through a new Cloudflare
-Pages project and connect that build to the existing hosted HomeChef Supabase
+Pages project and connect that build to the existing hosted DecisionEats Supabase
 project. Production deploys should run automatically from GitHub's `master`
 branch. Branch previews remain disabled so non-production branches cannot write
 to the production database.
@@ -20,7 +20,7 @@ service-role credential.
 ## Selected approach
 
 Use Cloudflare Pages' native GitHub integration. Create a Pages project named
-`homechef`, connect `ReedDeL/HomeChef`, and make `master` the production branch.
+`homechef`, connect `ReedDeL/DecisionEats`, and make `master` the production branch.
 This provides automatic production deploys without adding a repository
 workflow or storing a Cloudflare API token in GitHub.
 
@@ -43,7 +43,7 @@ Configure the Pages project with:
 
 | Setting | Value |
 |---|---|
-| Git repository | `ReedDeL/HomeChef` |
+| Git repository | `ReedDeL/DecisionEats` |
 | Production branch | `master` |
 | Framework preset | None |
 | Root directory | `/` |
@@ -73,7 +73,7 @@ returned origin rather than assuming the hostname.
 
 ## Supabase and OAuth configuration
 
-The repository is already linked to the hosted `HomeChef` Supabase project.
+The repository is already linked to the hosted `DecisionEats` Supabase project.
 The hosted database is healthy and contains all seven repository migrations,
 all 20 public tables have RLS enabled, and `analyze-pantry-photo` is active.
 This deployment makes no schema or RLS changes.
@@ -82,7 +82,7 @@ After the Pages origin is known:
 
 1. Set the hosted Supabase Auth site URL to the production Pages origin.
 2. Add the exact production Pages origin to the Auth redirect allowlist while
-   preserving `http://localhost:8081` and `homechef://**`.
+   preserving `http://localhost:8081` and `decisioneats://**`.
 3. Add the production Pages origin to the Google Web OAuth client's authorized
    JavaScript origins. Keep the existing Supabase Auth callback as the Google
    authorized redirect URI.
@@ -146,7 +146,7 @@ Deployment verification:
 2. Confirm branch preview deployments are disabled.
 3. Load the home route and directly refresh recipe and cook-mode routes.
 4. Complete Google sign-in, reload, and confirm the session persists.
-5. Exercise an authenticated HomeChef read and write through the existing UI
+5. Exercise an authenticated DecisionEats read and write through the existing UI
    using an owner-approved test account, confirming RLS-backed persistence.
 6. Invoke the pantry-photo flow with a synthetic image and confirm the browser
    receives the Edge Function response without a CORS error.
