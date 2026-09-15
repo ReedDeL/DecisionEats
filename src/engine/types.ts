@@ -119,7 +119,7 @@ export interface UserPreferences {
   dislikedRecipeIds: Set<string>;
   /** Weak negative signal — de-rank, do not eliminate. */
   skippedRecipeIds: Set<string>;
-  /** Soft preference; the first thing dropped during relaxation after time. */
+  /** Soft cuisine or broad food-style preference; dropped during relaxation after time. */
   preferredCuisine: string | null;
   /** Optional goal used only as a soft ranking signal. */
   bodyGoal?: BodyGoal | null;

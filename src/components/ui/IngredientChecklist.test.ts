@@ -46,6 +46,21 @@ describe('IngredientChecklist', () => {
     expect(markup).not.toContain('chip');
   });
 
+  it('uses category symbols instead of ingredient photos', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IngredientChecklist, {
+        ids: ['rice', 'onion'],
+        selectedIds: [],
+        onToggle: () => undefined,
+        emptyMessage: 'No ingredients found.',
+      })
+    );
+
+    expect(markup).toContain('data-icon="package-variant-closed"');
+    expect(markup).toContain('data-icon="leaf"');
+    expect(markup).not.toContain('<img');
+  });
+
   it('renders the empty message when no ids match', () => {
     const markup = renderToStaticMarkup(
       createElement(IngredientChecklist, {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUNDLED_CATALOG } from '@/data/catalog';
-import { CANDIDATES, CUISINE_OPTIONS, normalizeCuisine } from '@/lib/cuisines';
+import { FOOD_GENRE_OPTIONS, normalizeCuisine } from '@/lib/cuisines';
+import { matchesCuisinePreference } from '@/engine/cuisine-preference';
 import { decide } from '@/engine/decide';
 import { toEnginePreferences } from '@/store/kitchen';
 import { decideWithRelaxation } from '@/engine/relax';
@@ -66,59 +67,41 @@ describe('normalizeCuisine', () => {
   });
 });
 
-describe('CANDIDATES', () => {
-  it('contains canonical values and display labels for expected cuisines', () => {
-    const expected = [
-      { value: 'italian', label: 'Italian' },
-      { value: 'chinese', label: 'Chinese' },
-      { value: 'thai', label: 'Thai' },
-      { value: 'indian', label: 'Indian' },
-      { value: 'british', label: 'British' },
-      { value: 'french', label: 'French' },
-      { value: 'spanish', label: 'Spanish' },
+describe('FOOD_GENRE_OPTIONS', () => {
+  it('offers broad food styles instead of country-specific chips', () => {
+    expect(FOOD_GENRE_OPTIONS).toEqual([
       { value: 'american', label: 'American' },
-    ];
-    expect(CANDIDATES).toEqual(expected);
-  });
-
-  it('uses canonical slugs instead of raw source country aliases', () => {
-    const values = CANDIDATES.map((c) => c.value);
-    expect(values).not.toContain('united states');
-    expect(values).not.toContain('india');
-    expect(values).not.toContain('france');
-  });
-});
-
-describe('CUISINE_OPTIONS', () => {
-  it('yields at least four non-Any cuisines backed by the production catalog', () => {
-    expect(CUISINE_OPTIONS.length).toBeGreaterThanOrEqual(4);
-    const labels = CUISINE_OPTIONS.map((c) => c.label);
-    expect(labels).toContain('Italian');
-    expect(labels).toContain('American');
-    expect(labels).toContain('British');
-    expect(labels).toContain('Indian');
-    expect(labels).not.toContain('Chinese');
-  });
-
-  it('contains no dead options: every visible cuisine has at least one candidate recipe', () => {
-    for (const option of CUISINE_OPTIONS) {
-      const matching = BUNDLED_CATALOG.filter((recipe) => recipe.cuisine === option.value);
-      expect(matching.length).toBeGreaterThanOrEqual(1);
-    }
-  });
-
-  it('never fabricates an unbacked mapping', () => {
-    // French, Spanish, Thai are candidates but have no matching recipes in the current catalog
-    const unbacked = CANDIDATES.filter(
-      (candidate) => !BUNDLED_CATALOG.some((recipe) => recipe.cuisine === candidate.value)
-    );
-    for (const missing of unbacked) {
-      expect(CUISINE_OPTIONS.some((opt) => opt.value === missing.value)).toBe(false);
-    }
+      { value: 'british', label: 'British' },
+      { value: 'chinese', label: 'Chinese' },
+      { value: 'japanese', label: 'Japanese' },
+      { value: 'korean', label: 'Korean' },
+      { value: 'hispanic/latin', label: 'Hispanic/Latin' },
+      { value: 'african', label: 'African' },
+      { value: 'indian', label: 'Indian' },
+      { value: 'mediterranean', label: 'Mediterranean' },
+      { value: 'european', label: 'European' },
+    ]);
   });
 });
 
 describe('cuisine preference and engine relaxation ladder', () => {
+  it('matches regional dishes inside their broad food styles', () => {
+    expect(matchesCuisinePreference('nigerian', 'african')).toBe(true);
+    expect(matchesCuisinePreference('kenyan', 'african')).toBe(true);
+    expect(matchesCuisinePreference('mexican', 'hispanic/latin')).toBe(true);
+    expect(matchesCuisinePreference('spanish', 'hispanic/latin')).toBe(true);
+    expect(matchesCuisinePreference('chinese', 'asian')).toBe(true);
+    expect(matchesCuisinePreference('indian', 'asian')).toBe(false);
+    expect(matchesCuisinePreference('italian', 'mediterranean')).toBe(true);
+    expect(matchesCuisinePreference('russian', 'european')).toBe(true);
+    expect(matchesCuisinePreference('nigerian', 'italian')).toBe(false);
+  });
+
+  it('keeps unclassified recipes out of selected genres and preserves Any', () => {
+    expect(matchesCuisinePreference(null, 'asian')).toBe(false);
+    expect(matchesCuisinePreference(null, null)).toBe(true);
+  });
+
   const pantry = new Set([
     'bread',
     'peanut_butter',

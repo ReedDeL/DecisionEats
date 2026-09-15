@@ -51,6 +51,38 @@ const artwork: Record<IconName, ReactNode> = {
     </>
   ),
   moon: <path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z" />,
+  produce: <path d="M20 4C12 4 5 8 5 16c0 2.2 1.8 4 4 4 8 0 11-7 11-16ZM4 20c3-4 7-7 12-10" />,
+  protein: (
+    <>
+      <path d="M5 19c-2.5-2.5-2.5-6.5 0-9l3-3 8 8-3 3c-2.5 2.5-6.5 2.5-8 0Z" />
+      <path d="M15 5a3 3 0 0 1 4-1 3 3 0 0 1 1 4l-4 4-4-4Z" />
+    </>
+  ),
+  dairy: (
+    <>
+      <path d="M7 5h10l-1 15H8L7 5Z" />
+      <path d="M8 9h8" />
+    </>
+  ),
+  'dry-pantry': (
+    <>
+      <path d="M5 7h14v13H5zM7 4h10v3H7z" />
+      <path d="M9 12h6" />
+    </>
+  ),
+  seasoning: (
+    <>
+      <path d="M8 9h8l1 11H7L8 9Z" />
+      <path d="M9 4h6v5H9zM10 2h4" />
+      <path d="M10 13h4" />
+    </>
+  ),
+  ingredient: (
+    <>
+      <path d="M5 6h14v14H5z" />
+      <path d="M8 3h8v3M9 11h6m-6 4h4" />
+    </>
+  ),
 };
 
 /** Inline geometry stays visible when web fonts fail, are blocked, or are still loading. */

@@ -11,7 +11,13 @@ export type IconName =
   | 'pantry'
   | 'sunrise'
   | 'sun'
-  | 'moon';
+  | 'moon'
+  | 'produce'
+  | 'protein'
+  | 'dairy'
+  | 'dry-pantry'
+  | 'seasoning'
+  | 'ingredient';
 
 export interface IconProps {
   name: IconName;

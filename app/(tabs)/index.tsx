@@ -25,7 +25,7 @@ import { decide } from '@/engine/decide';
 import { decideWithRelaxation } from '@/engine/relax';
 import type { Bucket, Minutes } from '@/engine/types';
 import { getResponsiveLayout } from '@/components/ui/responsive-layout';
-import { CUISINE_OPTIONS } from '@/lib/cuisines';
+import { FOOD_GENRE_OPTIONS } from '@/lib/cuisines';
 import { formatDuration } from '@/lib/format';
 import {
   trackConstraintRelaxed,
@@ -354,7 +354,7 @@ function TimePrompt({
             </Text>
             {responsive.cuisineFilter === 'wrap' ? (
               <View style={[styles.cuisineRow, styles.desktopCuisineRow]}>
-                <CuisineOptions cuisine={cuisine} onSelectCuisine={onSelectCuisine} />
+                <FoodGenreOptions cuisine={cuisine} onSelectCuisine={onSelectCuisine} />
               </View>
             ) : (
               <ScrollView
@@ -363,7 +363,7 @@ function TimePrompt({
                 style={styles.cuisineScroll}
                 contentContainerStyle={styles.cuisineRow}
               >
-                <CuisineOptions cuisine={cuisine} onSelectCuisine={onSelectCuisine} />
+                <FoodGenreOptions cuisine={cuisine} onSelectCuisine={onSelectCuisine} />
               </ScrollView>
             )}
           </View>
@@ -421,29 +421,29 @@ function TimePrompt({
   );
 }
 
-interface CuisineOptionsProps {
+interface FoodGenreOptionsProps {
   cuisine: string | null;
   onSelectCuisine: (cuisine: string | null) => void;
 }
 
-function CuisineOptions({ cuisine, onSelectCuisine }: CuisineOptionsProps) {
+function FoodGenreOptions({ cuisine, onSelectCuisine }: FoodGenreOptionsProps) {
   return (
     <>
       <Chip
         label="Any"
         selected={cuisine === null}
         onPress={() => onSelectCuisine(null)}
-        accessibilityLabel="Any cuisine"
-        accessibilityHint="Removes the cuisine preference"
+        accessibilityLabel="Any food style"
+        accessibilityHint="Removes the food-style preference"
       />
-      {CUISINE_OPTIONS.map((option) => (
+      {FOOD_GENRE_OPTIONS.map((option) => (
         <Chip
           key={option.value}
           label={option.label}
           selected={cuisine === option.value}
           onPress={() => onSelectCuisine(cuisine === option.value ? null : option.value)}
           accessibilityLabel={option.label}
-          accessibilityHint="Prefers this cuisine, but never at the cost of an empty screen"
+          accessibilityHint="Prefers this food style, but never at the cost of an empty screen"
         />
       ))}
     </>

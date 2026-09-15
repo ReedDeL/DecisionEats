@@ -38,17 +38,16 @@ export function TimeTile({ minutes, openEnded = false, selected, onPress }: Time
       style={({ pressed }) => [
         styles.tile,
         {
-          backgroundColor: selected ? color.accent : color.surface,
+          backgroundColor: selected ? color.surfaceAlt : color.surface,
           borderColor: selected ? color.accent : color.border,
+          borderWidth: selected ? 2 : 1,
           opacity: pressed ? 0.85 : 1,
         },
         shadow.sm,
       ]}
     >
-      <Text variant="title" tone={selected ? 'onAccent' : 'default'}>
-        {openEnded ? `${minutes}+` : minutes}
-      </Text>
-      <Text variant="caption" tone={selected ? 'onAccent' : 'muted'}>
+      <Text variant="title">{openEnded ? `${minutes}+` : minutes}</Text>
+      <Text variant="caption" tone="muted">
         min
       </Text>
     </Pressable>
