@@ -13,6 +13,7 @@ import {
 
 import { getIngredientPresentation } from '@/data/ingredient-presentation';
 import { INGREDIENT_ART } from '@/data/ingredient-art';
+import { foodImageSource, ingredientPhoto } from '@/data/food-images';
 import { lookupIngredient } from '@/data/catalog';
 import type { IngredientId } from '@/engine/types';
 import { radius, space, touchTarget } from '@/theme/tokens';
@@ -31,6 +32,8 @@ interface IngredientChecklistProps {
 
 export function IngredientThumbnail({ id }: { id: IngredientId }) {
   const { color } = useTheme();
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
+  const photo = ingredientPhoto(id);
   const presentation = getIngredientPresentation(id);
   const artKey = (
     presentation.art in INGREDIENT_ART ? presentation.art : 'fallback'
@@ -42,6 +45,15 @@ export function IngredientThumbnail({ id }: { id: IngredientId }) {
       style={[styles.thumbnail, { backgroundColor: color.surfaceAlt, borderColor: color.border }]}
     >
       <Image source={INGREDIENT_ART[artKey]} style={styles.thumbnail} accessible={false} />
+      {photo && failedPhoto !== photo.key ? (
+        <Image
+          source={foodImageSource(photo.key)}
+          style={[StyleSheet.absoluteFill, styles.thumbnailPhoto]}
+          resizeMode="cover"
+          accessible={false}
+          onError={() => setFailedPhoto(photo.key)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -152,11 +164,13 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: 44,
     height: 44,
+    overflow: 'hidden',
     borderWidth: 1,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  thumbnailPhoto: { width: 44, height: 44, borderRadius: radius.sm },
   copy: { flex: 1, gap: space.xs },
   checkbox: {
     width: touchTarget.standard,

@@ -661,6 +661,20 @@ export default function SettingsScreen() {
       </View>
 
       {/* Attribution & About Section */}
+      <Card>
+        <Text
+          variant="bodyStrong"
+          tone="accent"
+          accessibilityRole="link"
+          onPress={() => router.push('/image-credits')}
+          style={{ minHeight: 44, paddingVertical: 12 }}
+        >
+          Image credits
+        </Text>
+        <Text variant="caption" tone="muted">
+          Photographers, image sources, and licenses.
+        </Text>
+      </Card>
       <View style={styles.section}>
         <Text variant="heading">About & Attribution</Text>
         <Card variant="alt">

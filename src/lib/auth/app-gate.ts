@@ -9,6 +9,7 @@ const APP_ROUTE_NAMES = [
   'recipe/[id]',
   'scan',
   'settings',
+  'image-credits',
   'kitchen-setup',
   'reminders',
   // Saved cook-mode links remain gated like recipe links, then redirect.
