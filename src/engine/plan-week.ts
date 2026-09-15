@@ -7,6 +7,7 @@ import {
   type WeeklyMealPlan,
 } from '@/contracts/meal-journeys';
 import { BUCKET_ORDER } from '@/engine/bucket';
+import { matchesCuisinePreference } from '@/engine/cuisine-preference';
 import { hasAllergen, isEquipmentSatisfied, satisfiesDietary } from '@/engine/filter-hard';
 import { derivePlanLinkedGroceryNeeds, type PlanGroceryEntry } from '@/engine/plan-grocery-needs';
 import { getPortionGuidance, type PortionGuidanceInput } from '@/engine/portion-guidance';
@@ -107,7 +108,7 @@ function chooseMeal(
         recipe.totalTimeMinutes <= stage.timeLimit &&
         (stage.cuisineDropped ||
           input.preferences.preferredCuisine === null ||
-          recipe.cuisine === input.preferences.preferredCuisine)
+          matchesCuisinePreference(recipe.cuisine, input.preferences.preferredCuisine))
     );
     const stage = stages[stageIndex];
     if (!stage) continue;

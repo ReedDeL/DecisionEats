@@ -1,4 +1,5 @@
 import { BUCKET_ORDER, PER_BUCKET_RESULT_CAP } from '@/engine/bucket';
+import { matchesCuisinePreference } from '@/engine/cuisine-preference';
 import { hasAllergen, isEquipmentSatisfied, satisfiesDietary } from '@/engine/filter-hard';
 import { scoreRecipe } from '@/engine/score-recipe';
 import type {
@@ -37,7 +38,7 @@ export function decide(
       !hasAllergen(r, prefs.allergens) &&
       satisfiesDietary(r, prefs.dietary) &&
       r.totalTimeMinutes <= timeLimit &&
-      (prefs.preferredCuisine === null || r.cuisine === prefs.preferredCuisine)
+      matchesCuisinePreference(r.cuisine, prefs.preferredCuisine)
   );
 
   const buckets = emptyBuckets();

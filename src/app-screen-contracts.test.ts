@@ -122,17 +122,17 @@ describe('responsive Kitchen Setup contract', () => {
   });
 });
 
-describe('Home screen cuisine choices contract', () => {
-  it('renders CuisineOptions with wrapping on desktop and horizontal scroll on phone', () => {
+describe('Home screen food-style choices contract', () => {
+  it('renders broad food styles with wrapping on desktop and horizontal scroll on phone', () => {
     expect(homeSource).toContain("responsive.cuisineFilter === 'wrap'");
     expect(homeSource).toContain('styles.desktopCuisineRow');
     expect(homeSource).toContain('styles.cuisineScroll');
     expect(homeSource).toContain('horizontal');
   });
 
-  it('provides Any cuisine chip and never auto-advances on cuisine selection', () => {
+  it('provides Any food style and never auto-advances on selection', () => {
     expect(homeSource).toContain('label="Any"');
-    expect(homeSource).toContain('CUISINE_OPTIONS.map');
+    expect(homeSource).toContain('FOOD_GENRE_OPTIONS.map');
     expect(homeSource).toContain('onSelectCuisine(cuisine === option.value ? null : option.value)');
   });
 });

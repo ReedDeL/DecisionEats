@@ -1,8 +1,7 @@
-import { Icon } from '@/components/ui/Icon';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { useMemo, useState } from 'react';
 import {
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   type ListRenderItemInfo,
@@ -11,9 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { getIngredientPresentation } from '@/data/ingredient-presentation';
-import { INGREDIENT_ART } from '@/data/ingredient-art';
-import { foodImageSource, ingredientPhoto } from '@/data/food-images';
+import { getIngredientPresentation, type IngredientCategory } from '@/data/ingredient-presentation';
 import { lookupIngredient } from '@/data/catalog';
 import type { IngredientId } from '@/engine/types';
 import { radius, space, touchTarget } from '@/theme/tokens';
@@ -30,30 +27,25 @@ interface IngredientChecklistProps {
   testID?: string;
 }
 
+const CATEGORY_SYMBOL: Readonly<Record<IngredientCategory, IconName>> = {
+  produce: 'produce',
+  protein: 'protein',
+  dairy: 'dairy',
+  'dry pantry': 'dry-pantry',
+  seasoning: 'seasoning',
+  ingredient: 'ingredient',
+};
+
 export function IngredientThumbnail({ id }: { id: IngredientId }) {
   const { color } = useTheme();
-  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
-  const photo = ingredientPhoto(id);
   const presentation = getIngredientPresentation(id);
-  const artKey = (
-    presentation.art in INGREDIENT_ART ? presentation.art : 'fallback'
-  ) as keyof typeof INGREDIENT_ART;
 
   return (
     <View
       accessible={false}
       style={[styles.thumbnail, { backgroundColor: color.surfaceAlt, borderColor: color.border }]}
     >
-      <Image source={INGREDIENT_ART[artKey]} style={styles.thumbnail} accessible={false} />
-      {photo && failedPhoto !== photo.key ? (
-        <Image
-          source={foodImageSource(photo.key)}
-          style={[StyleSheet.absoluteFill, styles.thumbnailPhoto]}
-          resizeMode="cover"
-          accessible={false}
-          onError={() => setFailedPhoto(photo.key)}
-        />
-      ) : null}
+      <Icon name={CATEGORY_SYMBOL[presentation.category]} size={24} color={color.textMuted} />
     </View>
   );
 }
@@ -170,7 +162,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  thumbnailPhoto: { width: 44, height: 44, borderRadius: radius.sm },
   copy: { flex: 1, gap: space.xs },
   checkbox: {
     width: touchTarget.standard,

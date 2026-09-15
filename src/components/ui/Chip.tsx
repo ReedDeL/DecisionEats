@@ -37,7 +37,7 @@ export function Chip({
 }: ChipProps) {
   const { color } = useTheme();
 
-  const background = selected ? color.accent : color.surfaceAlt;
+  const background = color.surfaceAlt;
   const border = selected ? color.accent : color.border;
 
   if (readOnly) {
@@ -63,10 +63,15 @@ export function Chip({
       onLongPress={onLongPress}
       style={({ pressed }) => [
         styles.chip,
-        { backgroundColor: background, borderColor: border, opacity: pressed ? 0.75 : 1 },
+        {
+          backgroundColor: background,
+          borderColor: border,
+          borderWidth: selected ? 2 : 1,
+          opacity: pressed ? 0.75 : 1,
+        },
       ]}
     >
-      <Text variant="caption" tone={selected ? 'onAccent' : 'default'} style={styles.label}>
+      <Text variant="caption" style={styles.label}>
         {label}
       </Text>
     </Pressable>

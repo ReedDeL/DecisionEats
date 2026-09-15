@@ -22,6 +22,12 @@ const names: IconName[] = [
   'sunrise',
   'sun',
   'moon',
+  'produce',
+  'protein',
+  'dairy',
+  'dry-pantry',
+  'seasoning',
+  'ingredient',
 ];
 
 describe('web icons without font loading', () => {

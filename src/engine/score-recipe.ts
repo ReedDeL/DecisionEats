@@ -1,4 +1,5 @@
 import { bucketFor } from '@/engine/bucket';
+import { matchesCuisinePreference } from '@/engine/cuisine-preference';
 import type { IngredientId, Minutes, Recipe, ScoredRecipe, UserPreferences } from '@/engine/types';
 
 /**
@@ -40,7 +41,10 @@ export function scoreRecipe(
   const timeFit = timeLimit <= 0 ? 0 : clamp01(1 - recipe.totalTimeMinutes / timeLimit);
 
   const cuisineMatch =
-    prefs.preferredCuisine !== null && recipe.cuisine === prefs.preferredCuisine ? 1 : 0;
+    prefs.preferredCuisine !== null &&
+    matchesCuisinePreference(recipe.cuisine, prefs.preferredCuisine)
+      ? 1
+      : 0;
 
   const skipped = prefs.skippedRecipeIds.has(recipe.id) ? 1 : 0;
   const calorieGoal = calorieGoalFit(recipe, prefs);

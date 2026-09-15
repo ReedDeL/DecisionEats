@@ -19,6 +19,12 @@ const iconNames: Record<IconName, ComponentProps<typeof MaterialCommunityIcons>[
   sunrise: 'weather-sunset-up',
   sun: 'white-balance-sunny',
   moon: 'moon-waning-crescent',
+  produce: 'leaf',
+  protein: 'food-drumstick-outline',
+  dairy: 'cup-outline',
+  'dry-pantry': 'package-variant-closed',
+  seasoning: 'shaker-outline',
+  ingredient: 'food-outline',
 };
 
 /** Shared Expo-compatible vector icons for controls and status affordances. */
