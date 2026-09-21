@@ -346,6 +346,50 @@ describe('planWeek deterministic ranking', () => {
 });
 
 describe('planWeek grocery cap and portion guidance', () => {
+  it('counts shared and duplicate canonical IDs once while excluding pantry staples', () => {
+    const missing = Array.from({ length: 12 }, (_, index) => ingredient(`custom-${index}`));
+    const firstIngredients = missing.slice(0, 8);
+    const secondIngredients = missing.slice(5);
+    const plan = planWeek(
+      makePlanInput({
+        recipes: [
+          makeRecipe({
+            id: 'a',
+            ingredients: [...firstIngredients, ...firstIngredients, ingredient('salt')],
+          }),
+          makeRecipe({
+            id: 'b',
+            ingredients: [...secondIngredients, ...secondIngredients, ingredient('salt')],
+          }),
+        ],
+        pantry: pantry('salt'),
+      })
+    );
+
+    expect(new Set(concreteRecipeIds(plan))).toEqual(new Set(['a', 'b']));
+    expect(plan.groceryNeeds.map((need) => need.ingredientId)).toEqual(
+      missing.map(({ id }) => id).sort()
+    );
+    expect(plan.groceryNeeds.find((need) => need.ingredientId === 'custom-5')).toEqual({
+      ingredientId: 'custom-5',
+      recipeIds: ['a', 'b'],
+      dates: [...DATES],
+    });
+  });
+
+  it('returns no swap when pantry corrections put the remaining plan over the grocery cap', () => {
+    const ingredients = Array.from({ length: 13 }, (_, index) => ingredient(`custom-${index}`));
+    const input = makePlanInput({
+      recipes: [makeRecipe({ id: 'a', ingredients }), makeRecipe({ id: 'b', ingredients })],
+      pantry: pantry('custom-12'),
+    });
+    const plan = planWeek(input);
+
+    expect(plan.groceryNeeds).toHaveLength(12);
+    expect(swapPlanMeal(plan, `${DATES[0]}:dinner`, { ...input, pantry: pantry() })).toBeNull();
+    expect(plan.groceryNeeds).toHaveLength(12);
+  });
+
   it('rejects an over-cap top candidate and tries the next ranked candidate', () => {
     const overCap = makeRecipe({
       id: 'a-over-cap',

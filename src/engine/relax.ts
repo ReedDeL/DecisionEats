@@ -53,7 +53,7 @@ export function decideWithRelaxation(
     return { ...base, shouldFetchSpoonacular: false };
   }
 
-  const chosen = findFirstNonEmpty(catalog, pantry, prefs, timeLimit) ?? {
+  const chosen = findFirstNonEmpty(catalog, pantry, prefs, timeLimit, base) ?? {
     result: base,
     timeLimit,
     cuisineDropped: false,
@@ -104,7 +104,8 @@ function findFirstNonEmpty(
   catalog: readonly Recipe[],
   pantry: ReadonlySet<IngredientId>,
   prefs: UserPreferences,
-  timeLimit: Minutes
+  timeLimit: Minutes,
+  base: DecisionResult
 ): Candidate | null {
   const tiers = [timeLimit, ...TIME_TIERS.filter((t) => t > timeLimit)];
   const cuisineOptions = prefs.preferredCuisine === null ? [false] : [false, true];
@@ -113,7 +114,10 @@ function findFirstNonEmpty(
     const effectivePrefs = cuisineDropped ? { ...prefs, preferredCuisine: null } : prefs;
 
     for (const tier of tiers) {
-      const result = decide(catalog, pantry, effectivePrefs, tier);
+      const result =
+        !cuisineDropped && tier === timeLimit
+          ? base
+          : decide(catalog, pantry, effectivePrefs, tier);
       if (isNonEmpty(result)) {
         return { result, timeLimit: tier, cuisineDropped };
       }

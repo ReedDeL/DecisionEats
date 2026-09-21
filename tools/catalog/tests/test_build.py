@@ -16,7 +16,7 @@ from tools.catalog.build import (
     load_catalog_recipes,
     to_catalog_recipe,
 )
-from tools.catalog.models import EQUIPMENT_VALUES, CatalogRecipe
+from tools.catalog.models import EQUIPMENT_VALUES, CatalogRecipe, VocabularyEntry
 
 
 def make_meal(**overrides: Any) -> dict[str, Any]:
@@ -208,3 +208,22 @@ def test_load_catalog_recipes_validates_the_committed_shape(tmp_path: Path) -> N
     recipes = load_catalog_recipes(path)
 
     assert [recipe.id for recipe in recipes] == ["52959"]
+
+
+def test_vocabulary_preserves_seed_only_entries_and_canonicalizes_recipe_ingredients() -> None:
+    seeds = [
+        VocabularyEntry(id="egg", display_name="Old egg label", allergen_groups=[]),
+        VocabularyEntry(id="broccoli", display_name="Broccoli (pantry)", is_staple=True),
+    ]
+    original = [entry.model_dump() for entry in seeds]
+    recipes = [to_catalog_recipe(make_meal())]
+
+    vocabulary = build_vocabulary(recipes, seeds)
+
+    assert [entry.id for entry in vocabulary] == ["broccoli", "butter", "egg"]
+    assert vocabulary[0].model_dump() == original[1]
+    assert vocabulary[1:] == build_vocabulary(recipes)
+    assert vocabulary[2].allergen_groups == ["egg"]
+    assert vocabulary[2].display_name != "Old egg label"
+    assert [entry.model_dump() for entry in seeds] == original
+    assert [entry.id for entry in build_vocabulary([], seeds)] == ["broccoli", "egg"]

@@ -11,11 +11,9 @@ pages. CC BY and CC BY-SA images retain their respective licenses; public-domain
 and CC0 records retain their source evidence. The app crops thumbnails to fit
 its display. No ownership of these photographs is claimed.
 
-These are ingredient references. Meal previews assemble up to three photos of
-ingredients explicitly listed in that recipe. They are labeled **Ingredients**;
-they are not photographs of cooked HomeChef recipes. Existing recipe-specific
-serving illustrations take precedence over ingredient previews. Unknown recipes
-and failed images retain the neutral fallback.
+These photos appear in pantry ingredient controls. Recipe cards and detail pages
+use recipe photos, serving illustrations, or labeled meal-type illustrations.
+Ingredient photos do not represent the finished meal.
 
 ## Updating the collection
 

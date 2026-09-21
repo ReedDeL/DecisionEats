@@ -10,6 +10,25 @@ const total = (r: ReturnType<typeof decideWithRelaxation>): number =>
   Object.values(r.buckets).flat().length;
 
 describe('decideWithRelaxation — the ladder', () => {
+  it('keeps a thin nonempty result without widening to additional ready meals', () => {
+    const catalog = [
+      makeRecipe({ id: 'quick', totalTimeMinutes: 10, ingredients: [ingredient('egg')] }),
+      ...Array.from({ length: 3 }, (_, index) =>
+        makeRecipe({
+          id: `slower-${index}`,
+          totalTimeMinutes: 30,
+          ingredients: [ingredient('egg')],
+        })
+      ),
+    ];
+
+    const result = decideWithRelaxation(catalog, pantry('egg'), makePrefs(), 15);
+
+    expect(result.buckets.ready.map(({ recipe }) => recipe.id)).toEqual(['quick']);
+    expect(result.appliedRelaxations).toEqual([]);
+    expect(result.shouldFetchSpoonacular).toBe(true);
+  });
+
   it('concedes nothing when the unrelaxed result is already good', () => {
     const catalog = Array.from({ length: 3 }, (_, i) =>
       makeRecipe({ id: `r${i}`, totalTimeMinutes: 10, ingredients: [ingredient('egg')] })

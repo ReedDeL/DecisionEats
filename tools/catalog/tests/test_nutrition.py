@@ -13,6 +13,7 @@ from tools.catalog.nutrition import (
     MAX_SAFE_INTEGER,
     UsdaCache,
     enrich_recipe,
+    enrich_recipes,
     load_usda_cache,
     refresh_usda_cache,
     serialize_usda_cache,
@@ -323,3 +324,65 @@ def test_confidence_is_always_finite_and_bounded(cache: UsdaCache) -> None:
         provenance = enriched.nutrition_provenance
         if provenance is not None:
             assert 0.0 <= provenance.confidence <= 1.0
+
+
+def test_batch_enrichment_preserves_order_inputs_and_match_confidence(cache: UsdaCache) -> None:
+    recipes = [
+        make_recipe(CatalogIngredient(id="egg", measure="100 g")),
+        make_recipe(CatalogIngredient(id="flour", measure="100 g")),
+        make_recipe(CatalogIngredient(id="mystery", measure="100 g")),
+        make_recipe(CatalogIngredient(id="flour", measure="1 cup")),
+        make_recipe(
+            CatalogIngredient(id="flour", measure="100 g"),
+            CatalogIngredient(id="mystery", measure="100 g"),
+        ),
+    ]
+    for index, recipe in enumerate(recipes):
+        recipe.id = str(index)
+    original = [recipe.model_dump() for recipe in recipes]
+    original_cache = cache.model_dump()
+
+    enriched = enrich_recipes(recipes, cache)
+
+    assert [recipe.id for recipe in enriched] == ["0", "1", "2", "3", "4"]
+    assert [recipe.energy_kcal_per_serving for recipe in enriched] == [
+        143.0,
+        364.0,
+        None,
+        None,
+        None,
+    ]
+    assert [recipe.nutrition_confidence for recipe in enriched] == [
+        "medium",
+        "high",
+        "unavailable",
+        "unavailable",
+        "low",
+    ]
+    assert [recipe.model_dump() for recipe in recipes] == original
+    assert cache.model_dump() == original_cache
+
+
+def test_batch_enrichment_rebuilds_indexes_after_cache_changes(cache: UsdaCache) -> None:
+    recipes = [make_recipe(CatalogIngredient(id="egg", measure="100 g"))]
+    assert enrich_recipes(recipes, cache)[0].energy_kcal_per_serving == 143.0
+
+    for food in cache.foods:
+        food.aliases = []
+
+    enriched = enrich_recipes(recipes, cache)[0]
+    assert enriched.energy_kcal_per_serving is None
+    assert enriched.nutrition_provenance is None
+    assert enriched.nutrition_confidence == "unavailable"
+
+
+def test_batch_enrichment_rejects_borrowed_recipes(cache: UsdaCache) -> None:
+    recipe = make_recipe(CatalogIngredient(id="flour", measure="100 g"))
+    borrowed = recipe.model_copy(update={"source": "spoonacular"})
+    original = recipe.model_dump()
+
+    with pytest.raises(ValueError, match="bundled catalog"):
+        enrich_recipes([recipe, borrowed], cache)
+
+    assert recipe.model_dump() == original
+    assert enrich_recipes([], cache) == []

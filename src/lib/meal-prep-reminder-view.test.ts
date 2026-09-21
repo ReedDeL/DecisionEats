@@ -53,6 +53,24 @@ describe('toMealPrepReminderEntries', () => {
 
     expect(toMealPrepReminderEntries(plan, [recipe])).toHaveLength(6);
     expect(toMealPrepReminderEntries({ ...plan, status: 'draft' }, [recipe])).toEqual([]);
+    expect(toMealPrepReminderEntries(null, [recipe])).toEqual([]);
+    expect(toMealPrepReminderEntries(plan, [])).toEqual([]);
+
+    // Duplicate catalog IDs retain the first entry's title and duration.
+    const replacement = {
+      id: 'recipe-1',
+      title: 'Replacement pasta',
+      totalTimeMinutes: 45,
+    } as never;
+    expect(toMealPrepReminderEntries(plan, [recipe, replacement])[0]).toMatchObject({
+      recipeTitle: 'Tomato pasta',
+      totalTimeMinutes: 30,
+    });
+    // A later projection observes the supplied catalog; no stale cross-call cache.
+    expect(toMealPrepReminderEntries(plan, [replacement])[0]).toMatchObject({
+      recipeTitle: 'Replacement pasta',
+      totalTimeMinutes: 45,
+    });
   });
 
   it('includes date, meal slot, and recipe ID in reminder identity for multi-slot plans', () => {

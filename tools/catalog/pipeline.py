@@ -10,6 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
+from tools.catalog.build import build_vocabulary
 from tools.catalog.equipment import coerce_equipment
 from tools.catalog.measurements import parse_measure
 from tools.catalog.models import (
@@ -24,8 +25,6 @@ from tools.catalog.normalize import (
     allergen_groups_for,
     canonical_cuisine,
     canonical_id,
-    display_name,
-    is_staple,
 )
 from tools.catalog.nutrition import enrich_recipes, load_usda_cache
 from tools.catalog.rights import ReleaseSource, RightsManifest, RightsSource
@@ -151,7 +150,7 @@ def build_release(manifest: RightsManifest, archives: Mapping[str, Path]) -> Rel
     recipes = merge_seed(recipes, load_seed_recipes())
     recipes = sorted(recipes, key=lambda recipe: recipe.id)
     offline = _build_offline_subset(recipes)
-    vocabulary = _build_vocabulary(recipes, load_seed_vocabulary())
+    vocabulary = build_vocabulary(recipes, load_seed_vocabulary())
     authored_source = authored_release_source()
     if any(source.id == authored_source.id for source in approved):
         raise ValueError(
@@ -247,7 +246,7 @@ def validate_release(release: ReleaseBuild) -> None:
         raise ValueError("offline recipes differ from the canonical offline subset")
 
     if [entry.model_dump() for entry in release.vocabulary] != [
-        entry.model_dump() for entry in _build_vocabulary(release.recipes, load_seed_vocabulary())
+        entry.model_dump() for entry in build_vocabulary(release.recipes, load_seed_vocabulary())
     ]:
         raise ValueError("release vocabulary does not match recipes")
 
@@ -445,23 +444,6 @@ def _validate_recipe_hard_constraints(recipe: CatalogRecipe) -> None:
         raise ValueError(f"recipe {recipe.id!r} has no ingredients")
     if recipe.dietary_tags != sorted(set(recipe.dietary_tags)):
         raise ValueError(f"recipe {recipe.id!r} has non-canonical dietary tags")
-
-
-def _build_vocabulary(
-    recipes: list[CatalogRecipe],
-    seed_vocabulary: list[VocabularyEntry] | None = None,
-) -> list[VocabularyEntry]:
-    """Merge the broad pantry language with ingredients used by this release."""
-    by_id = {entry.id: entry for entry in seed_vocabulary or []}
-    ingredient_ids = {item.id for recipe in recipes for item in recipe.ingredients}
-    for ingredient_id in ingredient_ids:
-        by_id[ingredient_id] = VocabularyEntry(
-            id=ingredient_id,
-            display_name=display_name(ingredient_id),
-            allergen_groups=allergen_groups_for(ingredient_id),
-            is_staple=is_staple(ingredient_id),
-        )
-    return [by_id[ingredient_id] for ingredient_id in sorted(by_id)]
 
 
 def _sorted_quarantine(entries: list[QuarantineEntry]) -> list[QuarantineEntry]:

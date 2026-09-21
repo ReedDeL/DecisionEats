@@ -23,6 +23,8 @@ import { isHardSafePlanRecipe, swapPlanMeal, type PlanWeekInput } from '@/engine
 import type { DailyPlanPreference } from '@/engine/types';
 import { formatDuration, formatFriendlyDate } from '@/lib/format';
 import { syncMealPrepReminders } from '@/lib/meal-prep-notifications';
+import { toMealPrepReminderEntries } from '@/lib/meal-prep-reminder-view';
+import type { MealPrepReminderLeadMinutes } from '@/lib/meal-prep-reminder';
 import { buildWeekDays } from '@/lib/plan-week-days';
 import { toEnginePreferences, useKitchenStore } from '@/store/kitchen';
 import { radius, space } from '@/theme/tokens';
@@ -759,24 +761,9 @@ function PlanSummary({
 async function syncReminders(
   plan: WeeklyMealPlan | null,
   enabled: boolean,
-  leadMinutes: 0 | 10 | 15 | 30 | 60
+  leadMinutes: MealPrepReminderLeadMinutes
 ) {
-  const entries =
-    plan?.entries.flatMap((entry) => {
-      if (entry.kind !== 'recipe') return [];
-      const recipe = BUNDLED_CATALOG.find((candidate) => candidate.id === entry.recipeId);
-      return recipe
-        ? [
-            {
-              id: `${entry.date}:${entry.mealSlot}:${entry.recipeId}`,
-              recipeId: recipe.id,
-              recipeTitle: recipe.title,
-              totalTimeMinutes: recipe.totalTimeMinutes,
-              plannedMealTime: new Date(entry.plannedMealTime),
-            },
-          ]
-        : [];
-    }) ?? [];
+  const entries = toMealPrepReminderEntries(plan, BUNDLED_CATALOG);
   try {
     await syncMealPrepReminders(entries, { enabled, leadMinutes });
   } catch (error: unknown) {

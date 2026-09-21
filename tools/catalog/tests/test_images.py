@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
-from tools.catalog.images import ImageAsset, load_manifest, trusted_url, verify_bytes
+from tools.catalog.images import ImageAsset, build, load_manifest, trusted_url, verify_bytes
 
 
 def approved() -> ImageAsset:
@@ -82,3 +83,53 @@ def test_bundled_files_match_reviewed_checksums() -> None:
     root = Path(__file__).resolve().parents[3]
     for asset in load_manifest():
         verify_bytes(asset, (root / "assets/food-images" / asset.local_file).read_bytes())
+
+
+@pytest.fixture
+def image_build_root(tmp_path: Path) -> Path:
+    root = Path(__file__).resolve().parents[3]
+    (tmp_path / "tools/catalog").mkdir(parents=True)
+    (tmp_path / "src/data").mkdir(parents=True)
+    shutil.copyfile(
+        root / "tools/catalog/image-manifest.json", tmp_path / "tools/catalog/image-manifest.json"
+    )
+    shutil.copyfile(root / "src/data/ingredients.json", tmp_path / "src/data/ingredients.json")
+    shutil.copytree(root / "assets/food-images", tmp_path / "assets/food-images")
+    return tmp_path
+
+
+def test_build_preserves_image_sources_and_credits_without_recipe_catalog(
+    image_build_root: Path,
+) -> None:
+    root = Path(__file__).resolve().parents[3]
+    summary = build(image_build_root)
+
+    for name in ("food-image-sources.ts", "food-image-credits.json"):
+        assert (image_build_root / "src/data" / name).read_bytes() == (
+            root / "src/data" / name
+        ).read_bytes()
+    assert sorted(path.name for path in (image_build_root / "src/data").iterdir()) == [
+        "food-image-credits.json",
+        "food-image-sources.ts",
+        "ingredients.json",
+    ]
+    assets = load_manifest()
+    assert summary == {
+        "photos": len(assets),
+        "ingredients": sum(len(asset.ingredient_ids) for asset in assets),
+        "bytes": sum(
+            (root / "assets/food-images" / asset.local_file).stat().st_size for asset in assets
+        ),
+    }
+
+
+def test_build_rejects_changed_asset_before_writing_outputs(image_build_root: Path) -> None:
+    asset = approved()
+    path = image_build_root / "assets/food-images" / asset.local_file
+    path.write_bytes(path.read_bytes() + b"changed")
+
+    with pytest.raises(ValueError, match="checksum"):
+        build(image_build_root)
+
+    assert not (image_build_root / "src/data/food-image-sources.ts").exists()
+    assert not (image_build_root / "src/data/food-image-credits.json").exists()

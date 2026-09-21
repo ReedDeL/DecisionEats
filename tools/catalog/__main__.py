@@ -88,9 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     # Pantry recognition must not shrink to only ingredients used by recipes.
-    vocabulary_by_id = {entry.id: entry for entry in load_seed_vocabulary()}
-    vocabulary_by_id.update({entry.id: entry for entry in build_vocabulary(recipes)})
-    vocabulary = [vocabulary_by_id[key] for key in sorted(vocabulary_by_id)]
+    vocabulary = build_vocabulary(recipes, load_seed_vocabulary())
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     _write(args.output_dir / "recipes.json", [r.model_dump(by_alias=True) for r in recipes])

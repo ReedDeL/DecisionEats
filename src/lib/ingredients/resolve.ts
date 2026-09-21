@@ -89,8 +89,6 @@ const INDEX: readonly IndexEntry[] = INGREDIENT_VOCABULARY.map((entry) => ({
   slug: slugify(entry.displayName),
 }));
 
-const BY_ID = new Map(INGREDIENT_VOCABULARY.map((entry) => [entry.id, entry]));
-
 const BY_SLUG = new Map<string, VocabularyEntry>();
 for (const { entry, slug } of INDEX) {
   BY_SLUG.set(entry.id, preferred(entry));
@@ -101,7 +99,7 @@ for (const { entry, slug } of INDEX) {
 function preferred(entry: VocabularyEntry): VocabularyEntry {
   const target = DUPLICATE_SPELLINGS[entry.id];
   if (target === undefined) return entry;
-  return BY_ID.get(target) ?? entry;
+  return lookupIngredient(target) ?? entry;
 }
 
 /**
