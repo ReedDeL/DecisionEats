@@ -120,23 +120,22 @@ def to_catalog_recipe(raw: dict[str, object]) -> CatalogRecipe:
     )
 
 
-def build_vocabulary(recipes: list[CatalogRecipe]) -> list[VocabularyEntry]:
+def build_vocabulary(
+    recipes: list[CatalogRecipe], seed_vocabulary: list[VocabularyEntry] | None = None
+) -> list[VocabularyEntry]:
     """Collect the canonical ingredient vocabulary across the whole catalog.
 
-    Output is sorted and deduplicated by id, so the file is stable across runs
-    and produces an empty diff when nothing changed.
+    Keep seed-only pantry entries and canonicalize ingredients used by recipes.
+    Output is sorted and deduplicated by id, so unchanged input is byte stable.
     """
-    by_id: dict[str, VocabularyEntry] = {}
-
-    for recipe in recipes:
-        for ingredient in recipe.ingredients:
-            if ingredient.id in by_id:
-                continue
-            by_id[ingredient.id] = VocabularyEntry(
-                id=ingredient.id,
-                display_name=display_name(ingredient.id),
-                allergen_groups=allergen_groups_for(ingredient.id),
-                is_staple=is_staple(ingredient.id),
-            )
+    by_id = {entry.id: entry for entry in seed_vocabulary or []}
+    ingredient_ids = {item.id for recipe in recipes for item in recipe.ingredients}
+    for ingredient_id in ingredient_ids:
+        by_id[ingredient_id] = VocabularyEntry(
+            id=ingredient_id,
+            display_name=display_name(ingredient_id),
+            allergen_groups=allergen_groups_for(ingredient_id),
+            is_staple=is_staple(ingredient_id),
+        )
 
     return [by_id[key] for key in sorted(by_id)]

@@ -8,7 +8,7 @@ import {
 } from '@/contracts/meal-journeys';
 import { BUCKET_ORDER } from '@/engine/bucket';
 import { matchesCuisinePreference } from '@/engine/cuisine-preference';
-import { hasAllergen, isEquipmentSatisfied, satisfiesDietary } from '@/engine/filter-hard';
+import { isRecipeHardConstraintSatisfied } from '@/engine/filter-hard';
 import { derivePlanLinkedGroceryNeeds, type PlanGroceryEntry } from '@/engine/plan-grocery-needs';
 import { getPortionGuidance, type PortionGuidanceInput } from '@/engine/portion-guidance';
 import { scoreRecipe } from '@/engine/score-recipe';
@@ -57,11 +57,8 @@ export function buildCandidateTimeTiers(selectedLimit: number): number[] {
 export function isHardSafePlanRecipe(recipe: Recipe, preferences: UserPreferences): boolean {
   return (
     recipe.source === 'bundled' &&
-    recipe.ingredients.length > 0 &&
     !preferences.dislikedRecipeIds.has(recipe.id) &&
-    isEquipmentSatisfied(recipe.equipmentRequired, preferences.equipment) &&
-    !hasAllergen(recipe, preferences.allergens) &&
-    satisfiesDietary(recipe, preferences.dietary)
+    isRecipeHardConstraintSatisfied(recipe, preferences)
   );
 }
 function stagesFor(day: DailyPlanPreference, cuisine: string | null): SelectionStage[] {
@@ -70,15 +67,6 @@ function stagesFor(day: DailyPlanPreference, cuisine: string | null): SelectionS
   return cuisine === null
     ? exact
     : [...exact, ...tiers.map((timeLimit) => ({ timeLimit, cuisineDropped: true }))];
-}
-function fitsNeeds(entries: readonly PlanGroceryEntry[], pantry: ReadonlySet<string>): boolean {
-  try {
-    derivePlanLinkedGroceryNeeds(entries, pantry, GROCERY_NEED_LIMIT);
-    return true;
-  } catch (error: unknown) {
-    if (error instanceof RangeError) return false;
-    throw error;
-  }
 }
 function chooseMeal(
   input: PlanWeekInput,
@@ -94,6 +82,13 @@ function chooseMeal(
   const avoidIds = neighborIds ?? new Set(lastId ? [lastId] : []);
   const tastes = new Set(input.tasteSignals.map((signal) => signal.recipeId));
   const stages = stagesFor(day, input.preferences.preferredCuisine);
+  // Candidate admission needs only the union size. Build the dated grocery
+  // explanation once for the chosen plan, rather than for every recipe tried.
+  const existingNeeds = new Set(
+    groceryEntries.flatMap(({ recipe }) =>
+      recipe.ingredients.filter(({ id }) => !input.pantry.has(id)).map(({ id }) => id)
+    )
+  );
   let eligible = false;
   const candidates: Candidate[] = [];
   for (const recipe of input.recipes) {
@@ -113,14 +108,15 @@ function chooseMeal(
     const stage = stages[stageIndex];
     if (!stage) continue;
     eligible = true;
-    if (!fitsNeeds([...groceryEntries, { date: day.date, recipe }], input.pantry)) continue;
+    const scored = scoreRecipe(recipe, input.pantry, input.preferences, stage.timeLimit);
+    if (new Set([...existingNeeds, ...scored.missing]).size > GROCERY_NEED_LIMIT) continue;
     candidates.push({
       recipe,
       stage,
       stageIndex,
       count: counts.get(recipe.id) ?? 0,
       taste: tastes.has(recipe.id),
-      scored: scoreRecipe(recipe, input.pantry, input.preferences, stage.timeLimit),
+      scored,
     });
   }
   const repeats = input.variety === 'repeats';

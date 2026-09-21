@@ -1,6 +1,6 @@
 import { BUCKET_ORDER, PER_BUCKET_RESULT_CAP } from '@/engine/bucket';
 import { matchesCuisinePreference } from '@/engine/cuisine-preference';
-import { hasAllergen, isEquipmentSatisfied, satisfiesDietary } from '@/engine/filter-hard';
+import { isRecipeHardConstraintSatisfied } from '@/engine/filter-hard';
 import { scoreRecipe } from '@/engine/score-recipe';
 import type {
   Bucket,
@@ -30,13 +30,8 @@ export function decide(
 ): DecisionResult {
   const survivors = catalog.filter(
     (r) =>
-      // A recipe with no ingredients is a catalog defect, not a zero-effort
-      // meal. Admitting it would put it straight into `ready`.
-      r.ingredients.length > 0 &&
       !prefs.dislikedRecipeIds.has(r.id) &&
-      isEquipmentSatisfied(r.equipmentRequired, prefs.equipment) &&
-      !hasAllergen(r, prefs.allergens) &&
-      satisfiesDietary(r, prefs.dietary) &&
+      isRecipeHardConstraintSatisfied(r, prefs) &&
       r.totalTimeMinutes <= timeLimit &&
       matchesCuisinePreference(r.cuisine, prefs.preferredCuisine)
   );

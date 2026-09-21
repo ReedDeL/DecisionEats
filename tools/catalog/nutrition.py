@@ -12,6 +12,7 @@ import json
 import math
 import os
 import re
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal, Self
@@ -173,11 +174,26 @@ def serialize_usda_cache(cache: UsdaCache) -> str:
 
 def enrich_recipe(recipe: CatalogRecipe, cache: UsdaCache) -> CatalogRecipe:
     """Add safe per-serving energy without ever processing borrowed data."""
+    exact, aliases = _food_indexes(cache)
+    return _enrich_recipe(recipe, cache, exact, aliases)
+
+
+def _food_indexes(cache: UsdaCache) -> tuple[dict[str, UsdaFood], dict[str, UsdaFood]]:
+    return (
+        {food.ingredient_id: food for food in cache.foods},
+        {alias: food for food in cache.foods for alias in food.aliases},
+    )
+
+
+def _enrich_recipe(
+    recipe: CatalogRecipe,
+    cache: UsdaCache,
+    exact: Mapping[str, UsdaFood],
+    aliases: Mapping[str, UsdaFood],
+) -> CatalogRecipe:
     if recipe.source != "bundled":
         raise ValueError("USDA enrichment accepts bundled catalog recipes only")
 
-    exact = {food.ingredient_id: food for food in cache.foods}
-    aliases = {alias: food for food in cache.foods for alias in food.aliases}
     accepted: list[tuple[UsdaFood, float, Literal["exact", "alias"]]] = []
 
     for ingredient in recipe.ingredients:
@@ -186,8 +202,10 @@ def enrich_recipe(recipe: CatalogRecipe, cache: UsdaCache) -> CatalogRecipe:
         if food is None:
             food = aliases.get(ingredient.id)
             match_method = "alias"
+        if food is None:
+            continue
         grams = _measure_grams(ingredient.measure)
-        if food is not None and grams is not None:
+        if grams is not None:
             accepted.append((food, grams, match_method))
 
     if not accepted or not recipe.ingredients:
@@ -231,7 +249,8 @@ def enrich_recipe(recipe: CatalogRecipe, cache: UsdaCache) -> CatalogRecipe:
 
 def enrich_recipes(recipes: list[CatalogRecipe], cache: UsdaCache) -> list[CatalogRecipe]:
     """Enrich an owned catalog without mutating its recipe ordering."""
-    return [enrich_recipe(recipe, cache) for recipe in recipes]
+    exact, aliases = _food_indexes(cache)
+    return [_enrich_recipe(recipe, cache, exact, aliases) for recipe in recipes]
 
 
 def refresh_usda_cache(

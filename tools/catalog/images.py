@@ -137,21 +137,6 @@ def build(root: Path = ROOT) -> dict[str, int]:
                 raise ValueError(f"Unknown ingredient: {ingredient_id}")
             ingredient_photos[ingredient_id] = asset.key
 
-    recipes = json.loads((root / "src/data/recipes.json").read_text())
-    previews: dict[str, list[str]] = {}
-    # Use explicit ingredient IDs in recipe order, never a title guess.
-    minor = {"olive_oil", "salt", "black_pepper", "garlic"}
-    for recipe in recipes:
-        keys = list(
-            dict.fromkeys(
-                ingredient_photos[item["id"]]
-                for item in recipe["ingredients"]
-                if item["id"] in ingredient_photos and item["id"] not in minor
-            )
-        )[:3]
-        if keys:
-            previews[recipe["id"]] = keys
-
     imports = [
         f"import {asset.key} from '../../assets/food-images/{asset.local_file}';"
         for asset in assets
@@ -163,17 +148,9 @@ def build(root: Path = ROOT) -> dict[str, int]:
     (root / "src/data/food-image-credits.json").write_text(
         json.dumps([asset.model_dump() for asset in assets], ensure_ascii=False, indent=2) + "\n"
     )
-    (root / "src/data/recipe-image-previews.json").write_text(
-        "{\n"
-        + ",\n".join(
-            f"  {json.dumps(key)}: {json.dumps(value)}" for key, value in sorted(previews.items())
-        )
-        + "\n}\n"
-    )
     return {
         "photos": len(assets),
         "ingredients": len(ingredient_photos),
-        "recipe_previews": len(previews),
         "bytes": sum(
             (root / "assets/food-images" / asset.local_file).stat().st_size for asset in assets
         ),
