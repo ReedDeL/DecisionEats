@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { IngredientChip } from '@/components/ui/IngredientChip';
-import { RecipeImage } from '@/components/ui/RecipeImage';
 import { Text } from '@/components/ui/Text';
 import type { ScoredRecipe } from '@/engine/types';
 import { formatDuration, formatEquipment } from '@/lib/format';
@@ -13,8 +12,6 @@ interface RecipeCardProps {
   onPress: (recipeId: string) => void;
   onDislike?: (recipeId: string) => void;
 }
-
-const THUMBNAIL = 96;
 
 /**
  * One answer (Technical Spec §4.1, B4).
@@ -47,28 +44,18 @@ export function RecipeCard({ scored, onPress, onDislike }: RecipeCardProps) {
         onPress={() => onPress(recipe.id)}
         style={({ pressed }) => [styles.main, { opacity: pressed ? 0.9 : 1 }]}
       >
-        <View style={styles.row}>
-          <RecipeImage
-            recipeId={recipe.id}
-            uri={recipe.imageUrl}
-            title={recipe.title}
-            size={THUMBNAIL}
-          />
-
-          <View style={styles.copy}>
-            <Text variant="bodyStrong" numberOfLines={2}>
-              {recipe.title}
+        <View style={styles.copy}>
+          <Text variant="bodyStrong" numberOfLines={2}>
+            {recipe.title}
+          </Text>
+          <Text variant="caption" tone="muted">
+            {formatDuration(recipe.totalTimeMinutes)} · {formatEquipment(recipe.equipmentRequired)}
+          </Text>
+          {missing.length === 0 ? (
+            <Text variant="caption" tone="ready">
+              You have it all
             </Text>
-            <Text variant="caption" tone="muted">
-              {formatDuration(recipe.totalTimeMinutes)} ·{' '}
-              {formatEquipment(recipe.equipmentRequired)}
-            </Text>
-            {missing.length === 0 ? (
-              <Text variant="caption" tone="ready">
-                You have it all
-              </Text>
-            ) : null}
-          </View>
+          ) : null}
         </View>
 
         {missing.length > 0 ? (
@@ -116,22 +103,7 @@ const styles = StyleSheet.create({
   main: {
     gap: space.sm,
   },
-  row: {
-    flexDirection: 'row',
-    gap: space.md,
-    alignItems: 'center',
-  },
-  thumbnail: {
-    width: THUMBNAIL,
-    height: THUMBNAIL,
-    borderRadius: radius.sm,
-  },
-  placeholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  copy: { flex: 1, gap: 2 },
+  copy: { gap: 2 },
   missing: {
     flexDirection: 'row',
     flexWrap: 'wrap',

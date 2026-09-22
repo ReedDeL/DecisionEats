@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/Card';
 import { Header } from '@/components/ui/Header';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import { RecipeImage } from '@/components/ui/RecipeImage';
 import { Screen } from '@/components/ui/Screen';
 import { SelectableCard } from '@/components/ui/SelectableCard';
 import { SettingsAction } from '@/components/ui/SettingsAction';
@@ -628,12 +627,6 @@ function PlanSummary({
                       accessibilityHint="Shows the planned meal, time, and pantry fit"
                       style={styles.mealRow}
                     >
-                      <RecipeImage
-                        recipeId={recipe?.id}
-                        uri={recipe?.imageUrl}
-                        title={recipe?.title ?? slotLabel}
-                        size={80}
-                      />
                       <View style={styles.mealCopy}>
                         <Text variant="caption" tone="accent">
                           {slotLabel}
@@ -777,7 +770,7 @@ const styles = StyleSheet.create({
   dateGroup: { gap: space.xs, marginTop: space.xs },
   desktopDays: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start' },
   desktopDay: { width: '48%', flexGrow: 1 },
-  mealRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  mealRow: { gap: space.xs },
   mealCopy: { flex: 1, gap: 2 },
   swapButton: {
     minWidth: 64,

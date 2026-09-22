@@ -58,6 +58,7 @@ export default tseslint.config(
       'web-build/**',
       'coverage/**',
       'output/**',
+      'DecisionEats/**',
       // Worktrees carry their own build output, which the bare 'dist/**' glob
       // does not reach. Linting a sibling branch's bundle fails CI on code that
       // is not even in this checkout.

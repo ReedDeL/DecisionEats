@@ -14,12 +14,19 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IngredientChecklist } from '@/components/ui/IngredientChecklist';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { getResponsiveLayout } from '@/components/ui/responsive-layout';
 import { Screen } from '@/components/ui/Screen';
 import { SettingsAction } from '@/components/ui/SettingsAction';
 import { Text } from '@/components/ui/Text';
+import { PANTRY_STARTER_IDS } from '@/data/ingredient-presentation';
 import type { IngredientId } from '@/engine/types';
-import { getChecklistIngredientIds } from '@/lib/ingredients/suggestions';
+import {
+  getChecklistIngredientIds,
+  getPantryRecommendationCandidates,
+  INITIAL_PANTRY_RECOMMENDATIONS,
+  PANTRY_RECOMMENDATION_BATCH_SIZE,
+} from '@/lib/ingredients/suggestions';
 import { useKitchenStore } from '@/store/kitchen';
 import { radius, space, touchTarget } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
@@ -55,7 +62,70 @@ export default function PantryScreen({ remoteSyncHandler }: PantryScreenProps = 
     };
   }, []);
 
-  const ids = useMemo(() => getChecklistIngredientIds(query, pantry), [pantry, query]);
+  const [recommendationLimit, setRecommendationLimit] = useState(INITIAL_PANTRY_RECOMMENDATIONS);
+
+  const recommendationCandidates = useMemo(
+    () => getPantryRecommendationCandidates(pantry, PANTRY_STARTER_IDS),
+    [pantry]
+  );
+  const hasMoreRecommendations =
+    !query.trim() && recommendationLimit < recommendationCandidates.length;
+  const visibleRecommendationCount = Math.min(recommendationLimit, recommendationCandidates.length);
+
+  const ids = useMemo(
+    () =>
+      getChecklistIngredientIds(
+        query,
+        pantry,
+        PANTRY_STARTER_IDS,
+        undefined,
+        query.trim() ? undefined : recommendationLimit
+      ),
+    [pantry, query, recommendationLimit]
+  );
+
+  const handleShowMore = useCallback(() => {
+    const next = recommendationLimit + PANTRY_RECOMMENDATION_BATCH_SIZE;
+    setRecommendationLimit(next);
+    const nextShown = Math.min(next, recommendationCandidates.length);
+    AccessibilityInfo.announceForAccessibility?.(
+      nextShown < recommendationCandidates.length
+        ? `Showing ${nextShown} of ${recommendationCandidates.length} recommended ingredients.`
+        : `All ${recommendationCandidates.length} recommended ingredients shown.`
+    );
+  }, [recommendationLimit, recommendationCandidates.length]);
+
+  const checklistFooter = useMemo(() => {
+    if (query.trim()) return null;
+
+    return (
+      <View style={styles.showMoreContainer}>
+        {recommendationLimit > INITIAL_PANTRY_RECOMMENDATIONS ? (
+          <Text accessibilityLiveRegion="polite" variant="caption" tone="muted">
+            {hasMoreRecommendations
+              ? `Showing ${visibleRecommendationCount} of ${recommendationCandidates.length} recommendations.`
+              : `All ${recommendationCandidates.length} recommendations shown.`}
+          </Text>
+        ) : null}
+        {hasMoreRecommendations ? (
+          <PrimaryButton
+            label="Show more ingredients"
+            variant="ghost"
+            onPress={handleShowMore}
+            accessibilityHint={`Shows more ingredient recommendations beyond the current ${visibleRecommendationCount}`}
+            testID="show-more-ingredients-button"
+          />
+        ) : null}
+      </View>
+    );
+  }, [
+    query,
+    hasMoreRecommendations,
+    recommendationLimit,
+    visibleRecommendationCount,
+    recommendationCandidates.length,
+    handleShowMore,
+  ]);
 
   const toggleIngredient = useCallback(
     async (id: IngredientId, overrideSyncHandler?: RemotePantrySyncHandler) => {
@@ -207,6 +277,7 @@ export default function PantryScreen({ remoteSyncHandler }: PantryScreenProps = 
             style={styles.list}
             contentContainerStyle={[styles.listContent, { paddingBottom: bottomPadding }]}
             testID="pantry-checklist"
+            footer={checklistFooter}
           />
         </View>
 
@@ -310,5 +381,9 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  showMoreContainer: {
+    gap: space.sm,
+    paddingTop: space.xs,
   },
 });

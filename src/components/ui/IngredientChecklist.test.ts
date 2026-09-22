@@ -73,4 +73,23 @@ describe('IngredientChecklist', () => {
 
     expect(markup).toContain('No ingredients matching your search.');
   });
+
+  it('renders footer content when provided', () => {
+    const markup = renderToStaticMarkup(
+      createElement(IngredientChecklist, {
+        ids: ['rice'],
+        selectedIds: [],
+        onToggle: () => undefined,
+        emptyMessage: 'No ingredients found.',
+        footer: createElement(
+          'button',
+          { 'data-testid': 'custom-footer' },
+          'Show more ingredients'
+        ),
+      })
+    );
+
+    expect(markup).toContain('data-testid="custom-footer"');
+    expect(markup).toContain('Show more ingredients');
+  });
 });

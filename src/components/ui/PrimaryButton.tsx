@@ -15,6 +15,7 @@ export interface PrimaryButtonProps {
   icon?: IconName;
   /** Secondary actions ("I'll add them manually") share the size, not the fill. */
   variant?: 'primary' | 'secondary' | 'ghost';
+  testID?: string;
 }
 
 /**
@@ -31,6 +32,7 @@ export function PrimaryButton({
   loading = false,
   icon,
   variant = 'primary',
+  testID,
 }: PrimaryButtonProps) {
   const { color } = useTheme();
   const [hovered, setHovered] = useState(false);
@@ -42,6 +44,7 @@ export function PrimaryButton({
 
   return (
     <Pressable
+      testID={testID}
       accessible
       accessibilityRole="button"
       accessibilityLabel={label}

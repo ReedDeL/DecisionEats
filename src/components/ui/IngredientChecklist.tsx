@@ -25,6 +25,7 @@ interface IngredientChecklistProps {
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   testID?: string;
+  footer?: React.ReactNode;
 }
 
 const CATEGORY_SYMBOL: Readonly<Record<IngredientCategory, IconName>> = {
@@ -59,6 +60,7 @@ export function IngredientChecklist({
   style,
   contentContainerStyle,
   testID,
+  footer,
 }: IngredientChecklistProps) {
   const { color } = useTheme();
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -137,6 +139,7 @@ export function IngredientChecklist({
           {emptyMessage}
         </Text>
       }
+      ListFooterComponent={footer ? <View style={styles.footerContainer}>{footer}</View> : null}
     />
   );
 }
@@ -144,6 +147,10 @@ export function IngredientChecklist({
 const styles = StyleSheet.create({
   list: { gap: space.sm, paddingBottom: space.xl },
   emptyList: { flexGrow: 1, justifyContent: 'center' },
+  footerContainer: {
+    marginTop: space.sm,
+    gap: space.sm,
+  },
   row: {
     minHeight: touchTarget.standard,
     flexDirection: 'row',

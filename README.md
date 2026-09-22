@@ -2,6 +2,8 @@
 
 DecisionEats reduces food decision fatigue.
 
+**Live app:** [decisioneats.pages.dev](https://decisioneats.pages.dev)
+
 It helps with two moments:
 
 - **Now:** decide what to make from the kitchen you already have.
