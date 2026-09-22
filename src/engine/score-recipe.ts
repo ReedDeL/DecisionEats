@@ -1,5 +1,6 @@
 import { bucketFor } from '@/engine/bucket';
 import { matchesCuisinePreference } from '@/engine/cuisine-preference';
+import { calculateTargetMealKcal } from '@/engine/portion-guidance';
 import type { IngredientId, Minutes, Recipe, ScoredRecipe, UserPreferences } from '@/engine/types';
 
 /**
@@ -63,7 +64,7 @@ export function scoreRecipe(
  * Calories are a soft preference only. Missing or low-confidence nutrition
  * never removes a recipe and contributes no ranking signal.
  */
-function calorieGoalFit(recipe: Recipe, prefs: UserPreferences): number {
+export function calorieGoalFit(recipe: Recipe, prefs: UserPreferences): number {
   const energy = recipe.energyKcalPerServing;
   if (
     (recipe.nutritionConfidence !== 'high' && recipe.nutritionConfidence !== 'medium') ||
@@ -74,8 +75,37 @@ function calorieGoalFit(recipe: Recipe, prefs: UserPreferences): number {
     return 0;
 
   // Missing and explicit null preferences are neutral and leave standard ranking.
-  const goal = prefs.bodyGoal ?? null;
-  if (goal === null || goal === 'maintain') return 0;
+  const goal = prefs.bodyProfile?.goal ?? prefs.bodyGoal ?? null;
+  if (goal === null) return 0;
+
+  const targetMealKcal = calculateTargetMealKcal(
+    prefs.bodyProfile,
+    prefs.bodyGoal,
+    prefs.bodyMetrics
+  );
+
+  if (targetMealKcal !== null) {
+    if (goal === 'maintain') {
+      const deviation = Math.abs(energy - targetMealKcal) / targetMealKcal;
+      return clamp01(1 - deviation);
+    }
+    if (goal === 'lose') {
+      if (energy <= targetMealKcal) {
+        return 0.7 + 0.3 * (energy / targetMealKcal);
+      }
+      const excess = (energy - targetMealKcal) / targetMealKcal;
+      return clamp01(1 - excess);
+    }
+    if (goal === 'gain') {
+      if (energy >= targetMealKcal) {
+        const overage = (energy - targetMealKcal) / targetMealKcal;
+        return overage > 0.5 ? clamp01(1.5 - overage) : 1;
+      }
+      return clamp01(energy / targetMealKcal);
+    }
+  }
+
+  if (goal === 'maintain') return 0;
 
   const normalized = Math.min(1, Math.max(0, energy / 1_000));
   return goal === 'lose' ? 1 - normalized : normalized;
