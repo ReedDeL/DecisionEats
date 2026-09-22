@@ -333,6 +333,10 @@ describe('useKitchenStore body goals and metrics', () => {
       weightKilograms: 68.5,
     });
     expect(toEnginePreferences(useKitchenStore.getState()).bodyGoal).toBe('lose');
+    expect(toEnginePreferences(useKitchenStore.getState()).bodyMetrics).toEqual({
+      heightCentimeters: 168,
+      weightKilograms: 68.5,
+    });
 
     useKitchenStore.getState().clearBodyData();
     expect(useKitchenStore.getState().bodyGoal).toBeNull();

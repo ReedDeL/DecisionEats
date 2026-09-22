@@ -101,8 +101,12 @@ export default function PlanScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const preferences = useMemo(
-    () => toEnginePreferences({ equipment, allergens, dietary, dislikedRecipes, bodyGoal }, null),
-    [equipment, allergens, dietary, dislikedRecipes, bodyGoal]
+    () =>
+      toEnginePreferences(
+        { equipment, allergens, dietary, dislikedRecipes, bodyGoal, bodyMetrics },
+        null
+      ),
+    [equipment, allergens, dietary, dislikedRecipes, bodyGoal, bodyMetrics]
   );
   const pantrySet = useMemo(() => new Set(pantry), [pantry]);
   const currentPlan = step === 'proposal' ? proposal : weeklyPlan;

@@ -98,31 +98,57 @@ export function getPortionGuidance(input: PortionGuidanceInput): PortionGuidance
   };
 }
 
+export function isValidPortionMetrics(
+  metrics: PortionBodyMetrics | null | undefined
+): metrics is { heightCentimeters: number; weightKilograms: number } {
+  return (
+    metrics !== null &&
+    metrics !== undefined &&
+    metrics.heightCentimeters !== null &&
+    metrics.weightKilograms !== null &&
+    Number.isFinite(metrics.heightCentimeters) &&
+    Number.isFinite(metrics.weightKilograms) &&
+    metrics.heightCentimeters >= 120 &&
+    metrics.heightCentimeters <= 230 &&
+    metrics.weightKilograms >= 35 &&
+    metrics.weightKilograms <= 300
+  );
+}
+
+export function calculateTargetMealKcal(
+  profile: BodyProfile | null | undefined,
+  goal: BodyGoal | null | undefined,
+  metrics: PortionBodyMetrics | null | undefined
+): number | null {
+  if (profile && isValidBodyProfile(profile) && !profile.pregnant && !profile.breastfeeding) {
+    const restingKcal =
+      10 * profile.weightKilograms +
+      6.25 * profile.heightCentimeters -
+      5 * profile.ageYears +
+      SEX_OFFSETS[profile.calculationSex];
+    const targetDailyKcal =
+      restingKcal * ACTIVITY_FACTORS[profile.activityLevel] + GOAL_ADJUSTMENTS[profile.goal];
+    return targetDailyKcal / 3;
+  }
+
+  const effectiveGoal = profile?.goal ?? goal;
+  if (!effectiveGoal || !isValidPortionMetrics(metrics)) {
+    return null;
+  }
+
+  const restingKcal = 10 * metrics.weightKilograms + 6.25 * metrics.heightCentimeters - 200;
+  const maintenanceDailyKcal = restingKcal * 1.35;
+  const goalAdjustment = GOAL_ADJUSTMENTS[effectiveGoal];
+  return (maintenanceDailyKcal + goalAdjustment) / 3;
+}
+
 function calculateEnergyBasedServings(profile: BodyProfile, energyKcalPerServing: number): number {
-  const restingKcal =
-    10 * profile.weightKilograms +
-    6.25 * profile.heightCentimeters -
-    5 * profile.ageYears +
-    SEX_OFFSETS[profile.calculationSex];
-  const targetDailyKcal =
-    restingKcal * ACTIVITY_FACTORS[profile.activityLevel] + GOAL_ADJUSTMENTS[profile.goal];
-  const targetMealKcal = targetDailyKcal / 3;
+  const targetMealKcal = calculateTargetMealKcal(profile, profile.goal, null) ?? 0;
   return targetMealKcal / energyKcalPerServing;
 }
 
 function getBodyMetricsServingAdjustment(metrics: PortionBodyMetrics | null | undefined): number {
-  if (
-    metrics?.heightCentimeters === null ||
-    metrics?.weightKilograms === null ||
-    metrics?.heightCentimeters === undefined ||
-    metrics?.weightKilograms === undefined ||
-    !Number.isFinite(metrics.heightCentimeters) ||
-    !Number.isFinite(metrics.weightKilograms) ||
-    metrics.heightCentimeters < 120 ||
-    metrics.heightCentimeters > 230 ||
-    metrics.weightKilograms < 35 ||
-    metrics.weightKilograms > 300
-  ) {
+  if (!isValidPortionMetrics(metrics)) {
     return 0;
   }
 

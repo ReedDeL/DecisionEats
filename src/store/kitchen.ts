@@ -356,6 +356,7 @@ export function toEnginePreferences(
     dislikedRecipes?: readonly string[];
     skippedRecipes?: readonly string[];
     bodyGoal?: BodyGoal | null;
+    bodyMetrics?: BodyMetrics;
   },
   preferredCuisine: string | null = null
 ): UserPreferences {
@@ -381,6 +382,7 @@ export function toEnginePreferences(
     skippedRecipeIds: skipped,
     preferredCuisine,
     bodyGoal: state.bodyGoal,
+    bodyMetrics: state.bodyMetrics,
   };
 }
 

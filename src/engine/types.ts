@@ -5,7 +5,13 @@
  * The data layer converts into these types (src/lib/adapters/) and the engine
  * never learns where a recipe came from — the bundled catalog or a live catalog result.
  */
-import type { BodyGoal, NutritionConfidence, NutritionProvenance } from '@/contracts/meal-journeys';
+import type {
+  BodyGoal,
+  BodyProfile,
+  NutritionConfidence,
+  NutritionProvenance,
+} from '@/contracts/meal-journeys';
+import type { PortionBodyMetrics } from '@/engine/portion-guidance';
 import type { MealSlot } from '@/contracts/meal-slots';
 
 /**
@@ -123,6 +129,10 @@ export interface UserPreferences {
   preferredCuisine: string | null;
   /** Optional goal used only as a soft ranking signal. */
   bodyGoal?: BodyGoal | null;
+  /** Optional body metrics used for personalized portion and caloric sizing. */
+  bodyMetrics?: PortionBodyMetrics | null;
+  /** Optional full body profile used for personalized energy calculations. */
+  bodyProfile?: BodyProfile | null;
 }
 
 export interface DailyPlanPreference {
