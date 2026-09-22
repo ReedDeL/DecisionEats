@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
+import type { PointerEvent as RNPointerEvent } from 'react-native';
+import { LayoutAnimation, PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
@@ -44,7 +45,7 @@ const THUMB_SIZE = 32;
 const TRACK_HEIGHT = 8;
 const TICK_SIZE = 12;
 
-function getClosestOptionIndex(minutes: Minutes): number {
+export function getClosestOptionIndex(minutes: Minutes): number {
   let closestIdx = 1;
   let minDiff = Infinity;
   for (let i = 0; i < TIME_SLIDER_OPTIONS.length; i++) {
@@ -58,75 +59,171 @@ function getClosestOptionIndex(minutes: Minutes): number {
   return closestIdx;
 }
 
+export function getClosestOptionIndexFromRatio(ratio: number): number {
+  const clamped = Math.max(0, Math.min(1, ratio));
+  if (clamped < 0.25) return 0;
+  if (clamped > 0.75) return 2;
+  return 1;
+}
+
+export function getPercentForOptionIndex(index: number): number {
+  if (index <= 0) return 0;
+  if (index >= TIME_SLIDER_OPTIONS.length - 1) return 100;
+  return (index / (TIME_SLIDER_OPTIONS.length - 1)) * 100;
+}
+
 export function TimeSlider({ value, onChange }: TimeSliderProps) {
   const { color, shadow } = useTheme();
   const [trackWidth, setTrackWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragX, setDragX] = useState(0);
 
-  const activeIndex = getClosestOptionIndex(value);
-  const currentOption = TIME_SLIDER_OPTIONS[activeIndex] ?? TIME_SLIDER_OPTIONS[1]!;
-  const percent = activeIndex === 0 ? 0 : activeIndex === 1 ? 50 : 100;
-
+  const containerRef = useRef<View>(null);
   const trackWidthRef = useRef(trackWidth);
   trackWidthRef.current = trackWidth;
 
+  const isDraggingRef = useRef(isDragging);
+  isDraggingRef.current = isDragging;
+
+  const dragXRef = useRef(dragX);
+  dragXRef.current = dragX;
+
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
   const initialTouchXRef = useRef(0);
+  const containerRectRef = useRef<{ left: number; width: number } | null>(null);
 
-  const updateFromPosition = (x: number) => {
-    const width = trackWidthRef.current;
+  const activeIndex = getClosestOptionIndex(value);
+  const currentOption = TIME_SLIDER_OPTIONS[activeIndex] ?? TIME_SLIDER_OPTIONS[1]!;
+  const percent = getPercentForOptionIndex(activeIndex);
+
+  const usableWidth = Math.max(0, trackWidth - THUMB_SIZE);
+  const activePercent =
+    isDragging && usableWidth > 0
+      ? Math.max(0, Math.min(100, (dragX / usableWidth) * 100))
+      : percent;
+
+  const updateFromPosition = (positionX: number, containerWidth?: number) => {
+    const width = containerWidth ?? trackWidthRef.current;
     if (width <= THUMB_SIZE) return;
-    const usableWidth = width - THUMB_SIZE;
-    const clamped = Math.max(0, Math.min(usableWidth, x - THUMB_SIZE / 2));
+    const currentUsableWidth = width - THUMB_SIZE;
+    const clamped = Math.max(0, Math.min(currentUsableWidth, positionX - THUMB_SIZE / 2));
     setDragX(clamped);
+    dragXRef.current = clamped;
 
-    const ratio = clamped / usableWidth;
-    let targetIndex = 1;
-    if (ratio < 0.25) {
-      targetIndex = 0;
-    } else if (ratio < 0.75) {
-      targetIndex = 1;
-    } else {
-      targetIndex = 2;
-    }
-
+    const ratio = clamped / currentUsableWidth;
+    const targetIndex = getClosestOptionIndexFromRatio(ratio);
     const nextOption = TIME_SLIDER_OPTIONS[targetIndex];
-    if (nextOption && nextOption.minutes !== value) {
+    if (nextOption && nextOption.minutes !== valueRef.current) {
       onChange(nextOption.minutes);
     }
+  };
+
+  const snapToNearest = (containerWidth?: number) => {
+    setIsDragging(false);
+    isDraggingRef.current = false;
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    const width = containerWidth ?? trackWidthRef.current;
+    if (width > THUMB_SIZE) {
+      const currentUsableWidth = width - THUMB_SIZE;
+      const ratio = dragXRef.current / currentUsableWidth;
+      const targetIndex = getClosestOptionIndexFromRatio(ratio);
+      const nextOption = TIME_SLIDER_OPTIONS[targetIndex];
+      if (nextOption && nextOption.minutes !== valueRef.current) {
+        onChange(nextOption.minutes);
+      }
+    }
+  };
+
+  const handlePointerDown = (e: RNPointerEvent) => {
+    const ne = e.nativeEvent;
+    if (ne.button !== undefined && ne.button !== 0 && ne.pointerType === 'mouse') return;
+    const target = e.currentTarget as unknown as HTMLElement;
+    if (typeof target?.setPointerCapture === 'function') {
+      try {
+        target.setPointerCapture(ne.pointerId);
+      } catch {
+        // ignore
+      }
+    }
+    const rect = target.getBoundingClientRect();
+    containerRectRef.current = { left: rect.left, width: rect.width };
+    trackWidthRef.current = rect.width;
+    setTrackWidth(rect.width);
+    setIsDragging(true);
+    isDraggingRef.current = true;
+
+    const relativeX = ne.clientX - rect.left;
+    updateFromPosition(relativeX, rect.width);
+  };
+
+  const handlePointerMove = (e: RNPointerEvent) => {
+    if (!isDraggingRef.current) return;
+    const rect = containerRectRef.current;
+    if (!rect) return;
+    const relativeX = e.nativeEvent.clientX - rect.left;
+    updateFromPosition(relativeX, rect.width);
+  };
+
+  const handlePointerUp = (e: RNPointerEvent) => {
+    if (!isDraggingRef.current) return;
+    const target = e.currentTarget as unknown as HTMLElement;
+    if (typeof target?.releasePointerCapture === 'function') {
+      try {
+        target.releasePointerCapture(e.nativeEvent.pointerId);
+      } catch {
+        // ignore
+      }
+    }
+    const rect = containerRectRef.current;
+    snapToNearest(rect?.width);
   };
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_evt, gestureState) => {
+        return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onPanResponderTerminationRequest: () => false,
+      onShouldBlockNativeResponder: () => true,
       onPanResponderGrant: (evt) => {
         setIsDragging(true);
+        isDraggingRef.current = true;
         const touchX = evt.nativeEvent.locationX;
         initialTouchXRef.current = touchX;
         updateFromPosition(touchX);
       },
-      onPanResponderMove: (evt, gestureState) => {
+      onPanResponderMove: (_evt, gestureState) => {
         const touchX = initialTouchXRef.current + gestureState.dx;
         updateFromPosition(touchX);
       },
       onPanResponderRelease: () => {
-        setIsDragging(false);
+        snapToNearest();
       },
       onPanResponderTerminate: () => {
-        setIsDragging(false);
+        snapToNearest();
       },
     })
   ).current;
 
   const handleIncrement = () => {
     if (activeIndex < TIME_SLIDER_OPTIONS.length - 1) {
+      if (Platform.OS !== 'web') {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
       onChange(TIME_SLIDER_OPTIONS[activeIndex + 1]!.minutes);
     }
   };
 
   const handleDecrement = () => {
     if (activeIndex > 0) {
+      if (Platform.OS !== 'web') {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
       onChange(TIME_SLIDER_OPTIONS[activeIndex - 1]!.minutes);
     }
   };
@@ -153,16 +250,35 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
         } as const)
       : {};
 
-  const thumbLeftStyle = isDragging
-    ? { left: dragX }
-    : {
-        left: `${percent}%` as const,
-        marginLeft: -THUMB_SIZE * (percent / 100),
-      };
+  const gestureProps =
+    Platform.OS === 'web'
+      ? {
+          onPointerDown: handlePointerDown,
+          onPointerMove: handlePointerMove,
+          onPointerUp: handlePointerUp,
+          onPointerCancel: handlePointerUp,
+        }
+      : panResponder.panHandlers;
 
-  const fillWidthStyle = isDragging
-    ? { width: Math.max(0, dragX + THUMB_SIZE / 2) }
-    : { width: `${percent}%` as const };
+  const thumbLeftStyle = {
+    left: `${activePercent}%` as const,
+    marginLeft: -THUMB_SIZE * (activePercent / 100),
+    ...(Platform.OS === 'web' && !isDragging
+      ? {
+          transition:
+            'left 160ms cubic-bezier(0.2, 0.8, 0.2, 1), margin-left 160ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+        }
+      : {}),
+  };
+
+  const fillWidthStyle = {
+    width: `${activePercent}%` as const,
+    ...(Platform.OS === 'web' && !isDragging
+      ? {
+          transition: 'width 160ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+        }
+      : {}),
+  };
 
   return (
     <Card variant="alt" style={styles.card}>
@@ -178,6 +294,7 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
       </View>
 
       <View
+        ref={containerRef}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel="How much time do you have?"
@@ -204,11 +321,11 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
         }}
         style={styles.sliderContainer}
         onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-        {...panResponder.panHandlers}
+        {...gestureProps}
         {...webAccessibilityProps}
       >
         {/* Track bar */}
-        <View style={[styles.track, { backgroundColor: color.border, pointerEvents: 'none' }]}>
+        <View style={[styles.track, { backgroundColor: color.border }]}>
           {/* Active fill */}
           <View style={[styles.fill, fillWidthStyle, { backgroundColor: color.accent }]} />
 
@@ -244,7 +361,6 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
             {
               backgroundColor: color.surface,
               borderColor: color.accent,
-              pointerEvents: 'none',
             },
             shadow.sm,
           ]}
@@ -265,7 +381,12 @@ export function TimeSlider({ value, onChange }: TimeSliderProps) {
               accessibilityState={{ selected: isSelected }}
               accessibilityLabel={opt.accessibilityLabel}
               accessibilityHint="Selects this time limit"
-              onPress={() => onChange(opt.minutes)}
+              onPress={() => {
+                if (Platform.OS !== 'web') {
+                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                }
+                onChange(opt.minutes);
+              }}
               style={[
                 styles.labelTarget,
                 idx === 0
@@ -309,6 +430,13 @@ const styles = StyleSheet.create({
     height: touchTarget.standard,
     justifyContent: 'center',
     position: 'relative',
+    ...(Platform.OS === 'web'
+      ? ({
+          cursor: 'pointer',
+          userSelect: 'none',
+          touchAction: 'none',
+        } as const)
+      : {}),
   },
   track: {
     height: TRACK_HEIGHT,
@@ -317,6 +445,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     justifyContent: 'center',
+    pointerEvents: 'none',
   },
   fill: {
     position: 'absolute',
@@ -324,6 +453,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: radius.full,
+    pointerEvents: 'none',
   },
   tick: {
     position: 'absolute',
@@ -331,6 +461,7 @@ const styles = StyleSheet.create({
     height: TICK_SIZE,
     borderRadius: radius.full,
     top: -(TICK_SIZE - TRACK_HEIGHT) / 2,
+    pointerEvents: 'none',
   },
   tickLeft: {
     left: 2,
@@ -351,11 +482,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     top: (touchTarget.standard - THUMB_SIZE) / 2,
+    pointerEvents: 'none',
   },
   thumbDot: {
     width: 10,
     height: 10,
     borderRadius: radius.full,
+    pointerEvents: 'none',
   },
   labelsRow: {
     flexDirection: 'row',
