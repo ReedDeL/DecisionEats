@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { INGREDIENT_VOCABULARY, lookupIngredient } from '@/data/catalog';
 import {
   DEFAULT_SUGGESTION_COUNT,
+  INITIAL_PANTRY_RECOMMENDATIONS,
   MAX_SEARCH_RESULTS,
+  PANTRY_RECOMMENDATION_BATCH_SIZE,
   RANKED_SUGGESTION_VOCABULARY,
   filterSafeStarterIngredients,
   getChecklistIngredientIds,
+  getPantryRecommendationCandidates,
   getReplenishingSuggestions,
   searchIngredientSuggestions,
 } from '@/lib/ingredients/suggestions';
@@ -172,6 +175,62 @@ describe('getChecklistIngredientIds', () => {
     expect(getChecklistIngredientIds('  nonexistent_xyz_ingredient_123  ', ['milk'], [])).toEqual(
       []
     );
+  });
+
+  it('respects suggestionLimit for progressive recommendation disclosure', () => {
+    const defaultBatch = getChecklistIngredientIds(
+      '',
+      ['garlic'],
+      ['rice', 'salt', 'pasta', 'pepper'],
+      24,
+      3
+    );
+    // 1 checked ('garlic') + 3 suggested recommendations
+    expect(defaultBatch).toHaveLength(4);
+    expect(defaultBatch[0]).toBe('garlic');
+
+    const expandedBatch = getChecklistIngredientIds(
+      '',
+      ['garlic'],
+      ['rice', 'salt', 'pasta', 'pepper'],
+      24,
+      4
+    );
+    expect(expandedBatch).toHaveLength(5);
+    expect(expandedBatch[0]).toBe('garlic');
+  });
+});
+
+describe('getPantryRecommendationCandidates', () => {
+  it('defines the initial recommendation count as 3 and batch size as 3', () => {
+    expect(INITIAL_PANTRY_RECOMMENDATIONS).toBe(3);
+    expect(PANTRY_RECOMMENDATION_BATCH_SIZE).toBe(3);
+  });
+
+  it('returns unowned candidates with unowned starters prioritized first', () => {
+    const candidates = getPantryRecommendationCandidates(['rice']);
+    expect(candidates).not.toContain('rice');
+    // Common starters like porridge_oats, pasta appear early
+    expect(candidates[0]).toBe('porridge_oats');
+    expect(candidates[1]).toBe('pasta');
+    // Does not contain duplicates
+    expect(new Set(candidates).size).toBe(candidates.length);
+  });
+
+  it('continually yields candidates when all starters are owned', () => {
+    const candidates = getPantryRecommendationCandidates([
+      'rice',
+      'porridge_oats',
+      'pasta',
+      'all_purpose_flour',
+      'olive_oil',
+      'salt',
+      'black_pepper',
+    ]);
+    expect(candidates.length).toBeGreaterThan(10);
+    // Non-starter common pantry items like egg, milk appear
+    expect(candidates).toContain('egg');
+    expect(candidates).toContain('milk');
   });
 });
 

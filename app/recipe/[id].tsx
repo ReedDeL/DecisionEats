@@ -5,7 +5,6 @@ import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'reac
 import { Card } from '@/components/ui/Card';
 import { Header } from '@/components/ui/Header';
 import { IngredientChip } from '@/components/ui/IngredientChip';
-import { RecipeImage } from '@/components/ui/RecipeImage';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { getResponsiveLayout } from '@/components/ui/responsive-layout';
 import { Screen } from '@/components/ui/Screen';
@@ -96,25 +95,6 @@ export default function RecipeScreen() {
         ]}
       >
         <View style={styles.recipePrimary}>
-          <RecipeImage
-            recipeId={recipe.id}
-            uri={recipe.imageUrl}
-            title={recipe.title}
-            style={[styles.hero, responsive.isDesktop && styles.desktopHero]}
-          />
-          <Text variant="caption" tone="muted">
-            Meal-type illustrations are shared serving examples, not photos of this recipe. Follow
-            the ingredients listed below.
-          </Text>
-          <Text
-            variant="caption"
-            tone="accent"
-            accessibilityRole="link"
-            onPress={() => router.push('/image-credits')}
-            style={{ minHeight: 44, paddingVertical: 12 }}
-          >
-            Image credits
-          </Text>
           <View style={styles.intro}>
             <Text variant="title">{recipe.title}</Text>
             <Text variant="caption" tone="muted">
@@ -213,8 +193,6 @@ const styles = StyleSheet.create({
   desktopRecipeLayout: { flexDirection: 'row', alignItems: 'flex-start' },
   recipePrimary: { flex: 1, gap: space.lg },
   recipeDetails: { flex: 1, gap: space.lg },
-  hero: { width: '100%', height: 200, borderRadius: radius.md },
-  desktopHero: { height: 300 },
   intro: { gap: space.xs },
   group: { gap: space.sm },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },

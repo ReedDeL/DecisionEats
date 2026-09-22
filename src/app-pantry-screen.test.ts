@@ -256,4 +256,28 @@ describe('Pantry screen & image checklist (Prompt 7)', () => {
       expect(useKitchenStore.getState().pantry).toEqual(['garlic', 'rice', 'onion']);
     });
   });
+
+  describe('Progressive recommendation disclosure', () => {
+    it('includes Show more ingredients action and progressive disclosure controls', () => {
+      expect(pantrySource).toContain('Show more ingredients');
+      expect(pantrySource).toContain('testID="show-more-ingredients-button"');
+      expect(pantrySource).toContain('INITIAL_PANTRY_RECOMMENDATIONS');
+      expect(pantrySource).toContain('PANTRY_RECOMMENDATION_BATCH_SIZE');
+      expect(pantrySource).toContain('getPantryRecommendationCandidates');
+    });
+
+    it('limits initial unowned recommendations to 3 before Show more is tapped', () => {
+      const initialIds = getChecklistIngredientIds('', ['rice'], PANTRY_STARTER_IDS, 24, 3);
+      // 1 owned ('rice') + 3 top recommendations
+      expect(initialIds).toHaveLength(4);
+      expect(initialIds[0]).toBe('rice');
+    });
+
+    it('reveals additional recommendations when limit is expanded', () => {
+      const initialIds = getChecklistIngredientIds('', ['rice'], PANTRY_STARTER_IDS, 24, 3);
+      const expandedIds = getChecklistIngredientIds('', ['rice'], PANTRY_STARTER_IDS, 24, 6);
+      expect(expandedIds.length).toBeGreaterThan(initialIds.length);
+      expect(expandedIds.slice(0, initialIds.length)).toEqual(initialIds);
+    });
+  });
 });

@@ -74,4 +74,16 @@ describe('RecipeCard', () => {
 
     expect(markup).not.toContain('I don&#x27;t like this');
   });
+
+  it('does not render inaccurate meal images', () => {
+    const markup = renderToStaticMarkup(
+      createElement(RecipeCard, {
+        scored: scoredRecipe,
+        onPress: () => undefined,
+      })
+    );
+
+    expect(markup).not.toContain('<img');
+    expect(markup).not.toContain('data-testid="recipe-image"');
+  });
 });

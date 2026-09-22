@@ -164,6 +164,26 @@ export function searchIngredientSuggestions(
   return results.slice(0, limit);
 }
 
+/** Initial count of recommended ingredients shown in the pantry before progressive disclosure. */
+export const INITIAL_PANTRY_RECOMMENDATIONS = 3;
+
+/** Number of additional recommendations revealed per "Show more ingredients" tap. */
+export const PANTRY_RECOMMENDATION_BATCH_SIZE = 3;
+
+/**
+ * Returns candidate ingredient recommendations for the pantry, unowned by the user.
+ * Unowned starter items come first, followed by ranked vocabulary suggestions.
+ */
+export function getPantryRecommendationCandidates(
+  pantry: ReadonlyArray<IngredientId> | ReadonlySet<IngredientId>,
+  starterIds: readonly IngredientId[] = PANTRY_STARTER_IDS
+): IngredientId[] {
+  const owned = pantry instanceof Set ? pantry : new Set(pantry);
+  const unownedStarters = starterIds.filter((id) => !owned.has(id));
+  const replenishing = getReplenishingSuggestions(owned, RANKED_SUGGESTION_VOCABULARY.length);
+  return [...new Set([...unownedStarters, ...replenishing])];
+}
+
 /**
  * Checklist results deliberately retain owned ingredients: a checked search
  * result is how someone corrects a pantry without first clearing the query.
@@ -172,7 +192,8 @@ export function getChecklistIngredientIds(
   query: string,
   pantry: ReadonlyArray<IngredientId> | ReadonlySet<IngredientId>,
   starterIds: readonly IngredientId[] = PANTRY_STARTER_IDS,
-  limit: number = MAX_SEARCH_RESULTS
+  limit: number = MAX_SEARCH_RESULTS,
+  suggestionLimit?: number
 ): IngredientId[] {
   const owned = pantry instanceof Set ? pantry : new Set(pantry);
   const term = query.trim();
@@ -187,9 +208,13 @@ export function getChecklistIngredientIds(
   }
 
   const checked = [...owned];
-  const unownedStarters = starterIds.filter((id) => !owned.has(id));
+  const candidates = getPantryRecommendationCandidates(owned, starterIds);
   const suggested =
-    unownedStarters.length > 0 ? unownedStarters : getReplenishingSuggestions(owned, 8);
+    suggestionLimit !== undefined
+      ? candidates.slice(0, suggestionLimit)
+      : starterIds.filter((id) => !owned.has(id)).length > 0
+        ? starterIds.filter((id) => !owned.has(id))
+        : getReplenishingSuggestions(owned, 8);
   return [...new Set([...checked, ...suggested])];
 }
 

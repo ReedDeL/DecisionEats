@@ -74,9 +74,9 @@ describe('PlanScreen contract and flow requirements', () => {
     expect(planSource).not.toContain('swap(index: number)');
   });
 
-  it('reuses the shared RecipeImage primitive with fallback placeholder', () => {
-    expect(planSource).toContain('<RecipeImage');
-    expect(planSource).toContain('uri={recipe?.imageUrl}');
+  it('does not render inaccurate meal images in the meal plan', () => {
+    expect(planSource).not.toContain('<RecipeImage');
+    expect(planSource).not.toContain('recipe?.imageUrl');
   });
 });
 
