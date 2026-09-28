@@ -28,31 +28,25 @@ import {
   PANTRY_RECOMMENDATION_BATCH_SIZE,
 } from '@/lib/ingredients/suggestions';
 import { useKitchenStore } from '@/store/kitchen';
+import { usePantrySyncState } from '@/lib/pantry-sync-live';
+import { PantrySyncStatus } from '@/components/PantrySyncStatus';
 import { radius, space, touchTarget } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
-export type RemotePantrySyncHandler = (id: IngredientId, action: 'add' | 'remove') => Promise<void>;
-
-export interface PantryScreenProps {
-  remoteSyncHandler?: RemotePantrySyncHandler;
-}
-
-export default function PantryScreen({ remoteSyncHandler }: PantryScreenProps = {}) {
+export default function PantryScreen() {
   const router = useRouter();
   const { color, shadow } = useTheme();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const responsive = getResponsiveLayout(Platform.OS === 'web' ? width : 0);
   const pantry = useKitchenStore((state) => state.pantry);
+  const pantrySyncState = usePantrySyncState();
   const togglePantryItem = useKitchenStore((state) => state.togglePantryItem);
+  const pantryLocked =
+    pantrySyncState.phase === 'loading' ||
+    (pantrySyncState.userId !== null && pantrySyncState.householdId === null);
   const [query, setQuery] = useState('');
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [syncError, setSyncError] = useState<{
-    id: IngredientId;
-    action: 'add' | 'remove';
-    message: string;
-  } | null>(null);
-
   useEffect(() => {
     const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true));
     const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
@@ -128,46 +122,24 @@ export default function PantryScreen({ remoteSyncHandler }: PantryScreenProps = 
   ]);
 
   const toggleIngredient = useCallback(
-    async (id: IngredientId, overrideSyncHandler?: RemotePantrySyncHandler) => {
-      const activeHandler = overrideSyncHandler ?? remoteSyncHandler;
+    (id: IngredientId) => {
+      if (pantryLocked) return;
       const checked = pantry.includes(id);
-      const targetAction: 'add' | 'remove' = checked ? 'remove' : 'add';
-
       togglePantryItem(id);
       AccessibilityInfo.announceForAccessibility?.(
         `${checked ? 'Removed' : 'Added'} ${id.replaceAll('_', ' ')} ${checked ? 'from' : 'to'} pantry.`
       );
-      setSyncError(null);
-
-      if (activeHandler) {
-        try {
-          await activeHandler(id, targetAction);
-        } catch (error) {
-          // Revert local store on remote failure
-          togglePantryItem(id);
-          const message = error instanceof Error ? error.message : 'Sync failed';
-          setSyncError({ id, action: targetAction, message });
-          AccessibilityInfo.announceForAccessibility?.(
-            `Failed to save ${id.replaceAll('_', ' ')}. Change was rolled back.`
-          );
-        }
-      }
     },
-    [pantry, togglePantryItem, remoteSyncHandler]
+    [pantry, pantryLocked, togglePantryItem]
   );
-
-  const retrySync = useCallback(() => {
-    if (!syncError) return;
-    const { id } = syncError;
-    setSyncError(null);
-    void toggleIngredient(id);
-  }, [syncError, toggleIngredient]);
 
   const emptyMessage = query.trim()
     ? `Nothing matching “${query.trim()}” in our ingredient list yet.`
     : 'Your pantry is empty. Search above to add an ingredient.';
 
-  const scan = () => router.push('/scan');
+  const scan = () => {
+    if (!pantryLocked) router.push('/scan');
+  };
 
   const bottomPadding = responsive.isDesktop ? space.xl : 88 + Math.max(space.md, insets.bottom);
 
@@ -226,6 +198,8 @@ export default function PantryScreen({ remoteSyncHandler }: PantryScreenProps = 
               accessibilityRole="button"
               accessibilityLabel="Scan pantry with a photo"
               accessibilityHint="Opens camera options. Nothing is added until you confirm it."
+              disabled={pantryLocked}
+              accessibilityState={{ disabled: pantryLocked }}
               onPress={scan}
               style={({ pressed }) => [
                 styles.scanAction,
@@ -244,35 +218,13 @@ export default function PantryScreen({ remoteSyncHandler }: PantryScreenProps = 
             </Pressable>
           ) : null}
 
-          {syncError ? (
-            <View
-              accessibilityRole="alert"
-              style={[
-                styles.errorBanner,
-                { backgroundColor: color.surfaceAlt, borderColor: color.accent },
-              ]}
-            >
-              <Text variant="caption" tone="accent" style={styles.errorText}>
-                Could not save {syncError.id.replaceAll('_', ' ')}.
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Retry saving ${syncError.id.replaceAll('_', ' ')}`}
-                accessibilityHint="Retries saving the ingredient to your pantry"
-                onPress={retrySync}
-                style={styles.retryAction}
-              >
-                <Text variant="bodyStrong" tone="accent">
-                  Retry
-                </Text>
-              </Pressable>
-            </View>
-          ) : null}
+          <PantrySyncStatus />
 
           <IngredientChecklist
             ids={ids}
             selectedIds={pantry}
             onToggle={toggleIngredient}
+            disabled={pantryLocked}
             emptyMessage={emptyMessage}
             style={styles.list}
             contentContainerStyle={[styles.listContent, { paddingBottom: bottomPadding }]}
@@ -290,6 +242,8 @@ export default function PantryScreen({ remoteSyncHandler }: PantryScreenProps = 
               accessibilityRole="button"
               accessibilityLabel="Scan pantry with a photo"
               accessibilityHint="Opens camera options. Nothing is added until you confirm it."
+              disabled={pantryLocked}
+              accessibilityState={{ disabled: pantryLocked }}
               onPress={scan}
               style={({ pressed }) => [
                 styles.fab,
@@ -349,21 +303,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: space.sm,
     paddingHorizontal: space.md,
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: space.sm,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    gap: space.sm,
-  },
-  errorText: { flex: 1 },
-  retryAction: {
-    paddingHorizontal: space.sm,
-    paddingVertical: space.xs,
-    borderRadius: radius.sm,
   },
   list: { flex: 1 },
   listContent: { paddingBottom: space.xl },

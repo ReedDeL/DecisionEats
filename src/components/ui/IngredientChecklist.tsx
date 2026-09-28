@@ -22,6 +22,7 @@ interface IngredientChecklistProps {
   selectedIds: readonly IngredientId[];
   onToggle: (id: IngredientId) => void;
   emptyMessage: string;
+  disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   testID?: string;
@@ -57,6 +58,7 @@ export function IngredientChecklist({
   selectedIds,
   onToggle,
   emptyMessage,
+  disabled = false,
   style,
   contentContainerStyle,
   testID,
@@ -81,7 +83,8 @@ export function IngredientChecklist({
         accessibilityHint={
           checked ? 'Double tap to remove from your pantry' : 'Double tap to add to your pantry'
         }
-        accessibilityState={{ checked }}
+        accessibilityState={{ checked, disabled }}
+        disabled={disabled}
         aria-checked={checked}
         onPress={() => onToggle(id)}
         onFocus={() => setFocusedId(id)}
@@ -91,7 +94,7 @@ export function IngredientChecklist({
           {
             backgroundColor: checked ? color.surfaceAlt : color.surface,
             borderColor: focused ? color.accent : color.border,
-            opacity: pressed ? 0.84 : 1,
+            opacity: disabled ? 0.5 : pressed ? 0.84 : 1,
           },
         ]}
       >

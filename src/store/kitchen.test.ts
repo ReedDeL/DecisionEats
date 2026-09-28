@@ -10,7 +10,9 @@ import {
 } from '@/lib/equipment';
 import {
   COMMON_ALLERGENS,
+  GUEST_PANTRY_KEY,
   mergePlanTasteSignals,
+  migrateKitchenState,
   recordDislike,
   removeDislike,
   toEnginePreferences,
@@ -18,6 +20,7 @@ import {
 } from '@/store/kitchen';
 import { INGREDIENT_VOCABULARY, BUNDLED_CATALOG } from '@/data/catalog';
 import { decide } from '@/engine/decide';
+import { storage } from '@/lib/storage';
 
 type Constraints = Parameters<typeof toEnginePreferences>[0];
 
@@ -26,6 +29,19 @@ const base: Constraints = {
   allergens: [],
   dietary: [],
 };
+
+describe('legacy pantry migration', () => {
+  it('stashes guest ingredients while hiding them until account identity is checked', () => {
+    storage.remove(GUEST_PANTRY_KEY);
+    try {
+      const migrated = migrateKitchenState({ pantry: ['rice'], onboardingDone: true });
+      expect(migrated.pantry).toEqual([]);
+      expect(JSON.parse(storage.getString(GUEST_PANTRY_KEY)!)).toEqual(['rice']);
+    } finally {
+      storage.remove(GUEST_PANTRY_KEY);
+    }
+  });
+});
 
 describe('toEnginePreferences', () => {
   it('normalizes the owned equipment set', () => {

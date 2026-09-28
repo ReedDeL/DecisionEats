@@ -110,6 +110,11 @@ export interface PlanTasteSignal {
 
 const DISLIKED_KEY = 'homechef-disliked';
 const SKIPPED_KEY = 'homechef-skipped';
+export const GUEST_PANTRY_KEY = 'decisioneats-guest-pantry-v1';
+let pantryMutationSink: ((id: IngredientId, present: boolean) => void) | null = null;
+export function installPantryMutationSink(sink: typeof pantryMutationSink): void {
+  pantryMutationSink = sink;
+}
 
 interface KitchenState {
   equipment: SelectableEquipment[];
@@ -159,6 +164,7 @@ interface KitchenState {
   setWeeklyPlan: (plan: WeeklyMealPlan | null) => void;
   togglePlanGroceryNeed: (ingredientId: string) => void;
   clearPlanGroceryChecks: () => void;
+  replacePantryFromSync: (ids: readonly IngredientId[]) => void;
   reset: () => void;
 }
 
@@ -204,8 +210,11 @@ export function mergePlanTasteSignals(
 
 export function migrateKitchenState(persisted: unknown): Record<string, unknown> {
   const migrated = migrateEquipmentState(persisted);
+  if (getJSON(GUEST_PANTRY_KEY) === null && Array.isArray(migrated.pantry))
+    setJSON(GUEST_PANTRY_KEY, migrated.pantry);
   return {
     ...migrated,
+    pantry: [],
     weeklyPlan: migrateWeeklyPlan(migrated.weeklyPlan),
     pantryStarterInitialized:
       typeof migrated.pantryStarterInitialized === 'boolean'
@@ -240,18 +249,33 @@ export const useKitchenStore = create<KitchenState>()(
         set((state) => ({ equipment: toggleOwnedEquipment(state.equipment, equipment) })),
       toggleAllergen: (id) => set((s) => ({ allergens: toggle(s.allergens, id) })),
       toggleDietary: (tag) => set((s) => ({ dietary: toggle(s.dietary, tag) })),
-      togglePantryItem: (id) => set((s) => ({ pantry: toggle(s.pantry, id) })),
-      initializePantryStarter: (ids) =>
-        set((state) =>
-          state.pantryStarterInitialized
-            ? state
-            : { pantry: [...new Set([...state.pantry, ...ids])], pantryStarterInitialized: true }
-        ),
-      removePantryItem: (id) => set((s) => ({ pantry: s.pantry.filter((item) => item !== id) })),
+      togglePantryItem: (id) => {
+        const present = !useKitchenStore.getState().pantry.includes(id);
+        set((s) => ({ pantry: toggle(s.pantry, id) }));
+        pantryMutationSink?.(id, present);
+      },
+      initializePantryStarter: (ids) => {
+        if (useKitchenStore.getState().pantryStarterInitialized) return;
+        useKitchenStore.getState().addPantryItems(ids);
+        set({ pantryStarterInitialized: true });
+      },
+      removePantryItem: (id) => {
+        if (!useKitchenStore.getState().pantry.includes(id)) return;
+        set((s) => ({ pantry: s.pantry.filter((item) => item !== id) }));
+        pantryMutationSink?.(id, false);
+      },
       // Mirrors the `unique (household_id, ingredient_id)` constraint the
       // Postgres pantry enforces: a second carton of milk is the same row, not
       // a new one.
-      addPantryItems: (ids) => set((s) => ({ pantry: [...new Set([...s.pantry, ...ids])] })),
+      addPantryItems: (ids) => {
+        const added = [...new Set(ids)].filter(
+          (id) => !useKitchenStore.getState().pantry.includes(id)
+        );
+        if (!added.length) return;
+        set((s) => ({ pantry: [...s.pantry, ...added] }));
+        for (const id of added) pantryMutationSink?.(id, true);
+      },
+      replacePantryFromSync: (ids) => set({ pantry: [...new Set(ids)] }),
       completeOnboarding: () => set({ onboardingDone: true }),
       setThemeMode: (themeMode) => set({ themeMode }),
       setMealPrepRemindersEnabled: (mealPrepRemindersEnabled) => set({ mealPrepRemindersEnabled }),
@@ -338,8 +362,9 @@ export const useKitchenStore = create<KitchenState>()(
     {
       name: 'homechef-kitchen',
       storage: zustandStorage,
-      version: 2,
+      version: 3,
       migrate: migrateKitchenState,
+      partialize: ({ pantry: _pantry, ...state }) => state,
     }
   )
 );
