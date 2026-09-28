@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 
+import { PantrySyncStatus } from '@/components/PantrySyncStatus';
+import { pantrySync } from '@/lib/pantry-sync-live';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { Header } from '@/components/ui/Header';
@@ -116,7 +118,7 @@ const DEFAULT_ATTRIBUTIONS: readonly CatalogAttribution[] = BUNDLED_CATALOG_ATTR
 export default function SettingsScreen() {
   const router = useRouter();
   const { color } = useTheme();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuthSession();
+  const { isAuthenticated, isLoading: isAuthLoading, email } = useAuthSession();
 
   const attributionsQuery = useCatalogAttributions();
   const attributions = mergeAttributions(attributionsQuery.data ?? [], DEFAULT_ATTRIBUTIONS);
@@ -278,6 +280,7 @@ export default function SettingsScreen() {
     clearReminders();
     trackSettingsUpdated({ setting: 'reset', value: 'confirmed' });
     reset();
+    pantrySync.resetLocal();
     router.replace('/(onboarding)/equipment');
   };
 
@@ -308,17 +311,21 @@ export default function SettingsScreen() {
 
   const handleReset = () => {
     if (Platform.OS === 'web') {
-      if (window.confirm('Reset all pantry items and onboarding preferences?')) {
+      if (
+        window.confirm(
+          'Reset the guest pantry and local preferences? Your account pantry and pending saves will be kept.'
+        )
+      ) {
         confirmReset();
       }
     } else {
       Alert.alert(
         'Reset DecisionEats',
-        'This will clear your pantry items, kitchen setup, and preferences, and restart onboarding.',
+        'This clears the guest pantry, local preferences and body data, and restarts onboarding. Account pantry ingredients and pending saves are kept.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Reset All',
+            text: 'Reset local data',
             style: 'destructive',
             onPress: confirmReset,
           },
@@ -355,32 +362,31 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text variant="heading">Account & Sync</Text>
+        <Text variant="heading">Account</Text>
         <Card variant="alt">
           {isAuthLoading ? (
             <Text variant="caption" tone="muted">
-              Checking sync status…
+              Checking your account…
             </Text>
           ) : isAuthenticated ? (
             <>
-              <Text variant="bodyStrong">Sync account connected</Text>
+              <Text variant="bodyStrong">{email ?? 'Signed in'}</Text>
               <Text variant="caption" tone="muted">
-                Your local kitchen stays available on this device. Signing out stops sync without
-                clearing your pantry or preferences here.
+                This is your account identity. Pantry sync status is shown separately below.
               </Text>
               <PrimaryButton
                 label={isSigningOut ? 'Signing out…' : 'Sign out'}
                 onPress={handleSignOut}
-                accessibilityHint="Signs out without clearing local kitchen data"
+                accessibilityHint="Signs out and returns to the local guest pantry"
                 disabled={isSigningOut}
               />
             </>
           ) : (
             <>
-              <Text variant="bodyStrong">Local account</Text>
+              <Text variant="bodyStrong">Guest access</Text>
               <Text variant="caption" tone="muted">
-                Your pantry, kitchen setup, and preferences are stored on this device. Sign in only
-                if you want them synced across devices.
+                Your local kitchen stays on this device. Sign in with Google to use account features
+                and sync pantry ingredients across devices.
               </Text>
               {signInError ? <Text accessibilityLiveRegion="polite">{signInError}</Text> : null}
               <PrimaryButton
@@ -391,6 +397,13 @@ export default function SettingsScreen() {
               />
             </>
           )}
+        </Card>
+      </View>
+
+      <View style={styles.section}>
+        <Text variant="heading">Pantry sync</Text>
+        <Card variant="alt">
+          <PantrySyncStatus />
         </Card>
       </View>
 
@@ -727,7 +740,8 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text variant="heading">Data & Reset</Text>
         <Text variant="caption" tone="muted">
-          Clear your pantry items, kitchen choices, and restart onboarding.
+          Clear the guest pantry, local preferences and body data, and restart onboarding. Your
+          account pantry and pending saves are kept.
         </Text>
 
         {dislikedRecipes.length > 0 ? (
@@ -750,9 +764,9 @@ export default function SettingsScreen() {
         {resetConfirming ? (
           <View style={styles.confirmRow}>
             <PrimaryButton
-              label="Yes, reset everything"
+              label="Yes, reset local data"
               onPress={handleReset}
-              accessibilityHint="Confirms resetting all data"
+              accessibilityHint="Confirms resetting guest pantry and local preferences"
             />
             <PrimaryButton
               label="Cancel"
@@ -763,10 +777,10 @@ export default function SettingsScreen() {
           </View>
         ) : (
           <PrimaryButton
-            label="Reset all data and onboarding"
+            label="Reset local data and onboarding"
             variant="ghost"
             onPress={() => setResetConfirming(true)}
-            accessibilityHint="Asks for confirmation to reset all data"
+            accessibilityHint="Asks for confirmation to reset local data"
           />
         )}
       </View>

@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { PantrySyncStatus } from '@/components/PantrySyncStatus';
+import { usePantrySyncState } from '@/lib/pantry-sync-live';
 import { CameraCapture } from '@/components/CameraCapture';
 import { CandidateRow } from '@/components/ui/CandidateRow';
 import { Card } from '@/components/ui/Card';
@@ -39,6 +41,11 @@ export default function ScanScreen() {
   const router = useRouter();
   const { color } = useTheme();
   const addPantryItems = useKitchenStore((state) => state.addPantryItems);
+  const sync = usePantrySyncState();
+  const pantryLocked =
+    sync.phase === 'loading' || (sync.userId !== null && sync.householdId === null);
+  const [reviewOwner, setReviewOwner] = useState<string | null | undefined>(undefined);
+  const accountChanged = reviewOwner !== undefined && reviewOwner !== sync.userId;
   const onboardingDone = useKitchenStore((state) => state.onboardingDone);
   const fallbackHref = onboardingDone ? '/pantry' : '/(onboarding)/staples';
 
@@ -97,6 +104,7 @@ export default function ScanScreen() {
   }, [pick]);
 
   const analyze = useCallback(async () => {
+    setReviewOwner(sync.userId);
     setPhase('analyzing');
     setError(null);
 
@@ -120,9 +128,10 @@ export default function ScanScreen() {
       );
       setPhase('capture');
     }
-  }, [uris]);
+  }, [uris, sync.userId]);
 
   const confirm = useCallback(() => {
+    if (pantryLocked || accountChanged) return;
     const acceptedIds = acceptedIngredientIds(candidates);
     addPantryItems(acceptedIds);
     if (router.canGoBack()) {
@@ -130,7 +139,7 @@ export default function ScanScreen() {
     } else {
       router.replace(fallbackHref as Parameters<typeof router.replace>[0]);
     }
-  }, [candidates, addPantryItems, router, fallbackHref]);
+  }, [candidates, addPantryItems, router, fallbackHref, pantryLocked, accountChanged]);
 
   const updateCandidate = useCallback(
     (key: string, change: (candidate: PantryCandidate) => PantryCandidate) => {
@@ -158,10 +167,16 @@ export default function ScanScreen() {
         }
         footer={
           <View style={styles.footer}>
+            <PantrySyncStatus />
+            {accountChanged ? (
+              <Text variant="caption">
+                Your account changed. Start over before adding these ingredients.
+              </Text>
+            ) : null}
             <PrimaryButton
               label={acceptedCount === 0 ? 'Nothing selected' : `Add ${acceptedCount} to pantry`}
               onPress={confirm}
-              disabled={acceptedCount === 0}
+              disabled={acceptedCount === 0 || pantryLocked || accountChanged}
               accessibilityHint="Adds the ticked ingredients to your pantry"
             />
             <PrimaryButton

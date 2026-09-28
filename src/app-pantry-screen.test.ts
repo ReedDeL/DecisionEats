@@ -215,21 +215,17 @@ describe('Pantry screen & image checklist (Prompt 7)', () => {
     });
   });
 
-  describe('Remote persistence failure rollback and retry', () => {
-    it('implements rollback and exposes retry when remote persistence is active and fails', () => {
-      expect(pantrySource).toContain('togglePantryItem(id)');
-      expect(pantrySource).toContain('if (activeHandler)');
-      expect(pantrySource).toContain('// Revert local store on remote failure');
-      expect(pantrySource).toContain('setSyncError({ id, action: targetAction, message });');
-      expect(pantrySource).toContain('accessibilityRole="alert"');
-      expect(pantrySource).toContain('Retry');
-      expect(pantrySource).toContain('retrySync');
+  describe('Durable pantry sync controls', () => {
+    it('uses the shared operation status and locks edits until ownership resolves', () => {
+      expect(pantrySource).toContain('<PantrySyncStatus />');
+      expect(pantrySource).toContain('disabled={pantryLocked}');
+      expect(pantrySource).not.toContain('remoteSyncHandler');
     });
   });
 
   describe('Navigation, layout, and keyboard behavior', () => {
     it('navigates to /scan from camera action and does not register camera as a fourth tab', () => {
-      expect(pantrySource).toContain("const scan = () => router.push('/scan');");
+      expect(pantrySource).toContain("router.push('/scan')");
       expect(pantrySource).not.toContain("name: 'scan'");
     });
 

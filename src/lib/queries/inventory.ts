@@ -12,8 +12,11 @@ import type { InventoryRow, InventorySource } from '@/types/database';
 const INVENTORY_COLUMNS =
   'id, household_id, ingredient_id, quantity, unit, purchased_on, source, added_by, updated_at';
 
-export async function fetchInventory(householdId: string): Promise<InventoryRow[]> {
-  const { data, error } = await supabase
+export async function fetchInventory(
+  householdId: string,
+  client = supabase
+): Promise<InventoryRow[]> {
+  const { data, error } = await client
     .from('inventory')
     .select(INVENTORY_COLUMNS)
     .eq('household_id', householdId)
@@ -61,13 +64,33 @@ export async function upsertInventoryItem(item: AddInventoryItem): Promise<void>
  */
 export async function removeInventoryItem(
   householdId: string,
-  ingredientId: string
+  ingredientId: string,
+  client = supabase
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await client
     .from('inventory')
     .delete()
     .eq('household_id', householdId)
     .eq('ingredient_id', ingredientId);
 
+  if (error) throw error;
+}
+
+/** Presence-only add: retain quantity, source and other metadata on duplicates. */
+export async function addInventoryPresence(
+  householdId: string,
+  ingredientId: string,
+  userId: string,
+  client = supabase
+): Promise<void> {
+  const { error } = await client.from('inventory').upsert(
+    {
+      household_id: householdId,
+      ingredient_id: ingredientId,
+      added_by: userId,
+      source: 'manual',
+    },
+    { onConflict: 'household_id,ingredient_id', ignoreDuplicates: true }
+  );
   if (error) throw error;
 }

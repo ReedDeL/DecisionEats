@@ -43,6 +43,9 @@ jobs:
       - name: Verify multi-meal plan persistence and ownership
         run: psql -v ON_ERROR_STOP=1 "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/weekly_slots_verification.sql
 
+      - name: Verify pantry sync and account isolation
+        run: psql -v ON_ERROR_STOP=1 "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/tests/pantry_sync_verification.sql
+
   python:
     runs-on: ubuntu-latest
     steps:

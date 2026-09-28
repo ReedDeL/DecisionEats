@@ -52,8 +52,8 @@ const PLAN_ENTRY_COLUMNS =
 const PLAN_NEED_COLUMNS = 'plan_id, user_id, ingredient_id, recipe_ids, dates';
 const REMINDER_COLUMNS = 'user_id, enabled, lead_minutes, updated_at';
 
-export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
-  const { data, error } = await supabase
+export async function fetchProfile(userId: string, client = supabase): Promise<ProfileRow | null> {
+  const { data, error } = await client
     .from('profiles')
     .select(PROFILE_COLUMNS)
     .eq('id', userId)

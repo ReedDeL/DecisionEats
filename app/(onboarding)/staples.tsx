@@ -17,6 +17,8 @@ import {
   filterSafeStarterIngredients,
   getChecklistIngredientIds,
 } from '@/lib/ingredients/suggestions';
+import { PantrySyncStatus } from '@/components/PantrySyncStatus';
+import { usePantrySyncState } from '@/lib/pantry-sync-live';
 import { useKitchenStore } from '@/store/kitchen';
 import { radius, space, touchTarget } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
@@ -25,6 +27,9 @@ export default function StaplesScreen() {
   const router = useRouter();
   const { color } = useTheme();
   const pantry = useKitchenStore((state) => state.pantry);
+  const sync = usePantrySyncState();
+  const pantryLocked =
+    sync.phase === 'loading' || (sync.userId !== null && sync.householdId === null);
   const allergens = useKitchenStore((state) => state.allergens);
   const dietary = useKitchenStore((state) => state.dietary);
   const togglePantryItem = useKitchenStore((state) => state.togglePantryItem);
@@ -38,8 +43,9 @@ export default function StaplesScreen() {
   );
 
   useEffect(() => {
-    initializePantryStarter(safeStarterIds);
-  }, [initializePantryStarter, safeStarterIds]);
+    // Suggestions are not ownership: entering setup must never enqueue cloud adds.
+    initializePantryStarter([]);
+  }, [initializePantryStarter]);
 
   const ids = useMemo(
     () => getChecklistIngredientIds(query, pantry, safeStarterIds),
@@ -48,6 +54,7 @@ export default function StaplesScreen() {
 
   const toggleIngredient = useCallback(
     (id: IngredientId) => {
+      if (pantryLocked) return;
       const checked = pantry.includes(id);
       const name = lookupIngredient(id)?.displayName ?? id.replaceAll('_', ' ');
       togglePantryItem(id);
@@ -55,7 +62,7 @@ export default function StaplesScreen() {
         `${checked ? 'Removed' : 'Added'} ${name} ${checked ? 'from' : 'to'} pantry.`
       );
     },
-    [pantry, togglePantryItem]
+    [pantry, pantryLocked, togglePantryItem]
   );
   const back = () => router.back();
   const finish = () => {
@@ -101,7 +108,11 @@ export default function StaplesScreen() {
           accessibilityRole="button"
           accessibilityLabel="Scan pantry with a photo"
           accessibilityHint="Opens camera options. Nothing is added until you confirm it."
-          onPress={() => router.push('/scan')}
+          disabled={pantryLocked}
+          accessibilityState={{ disabled: pantryLocked }}
+          onPress={() => {
+            if (!pantryLocked) router.push('/scan');
+          }}
           style={({ pressed }) => [
             styles.scanButton,
             { backgroundColor: color.accent, opacity: pressed ? 0.84 : 1 },
@@ -138,10 +149,12 @@ export default function StaplesScreen() {
             </Pressable>
           ) : null}
         </View>
+        <PantrySyncStatus />
         <IngredientChecklist
           ids={ids}
           selectedIds={pantry}
           onToggle={toggleIngredient}
+          disabled={pantryLocked}
           emptyMessage={emptyMessage}
           style={styles.list}
           testID="pantry-starter-checklist"
