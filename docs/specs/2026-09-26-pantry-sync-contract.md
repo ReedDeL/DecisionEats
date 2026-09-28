@@ -1,6 +1,6 @@
 # Pantry sync contract (DE-02 first slice)
 
-**Date:** September 26, 2026; verification updated September 27, 2026  
+**Date:** September 26, 2026; verification updated September 27, 2026
 **Scope:** Ingredient presence in the Pantry for a guest or signed-in account. Equipment, restrictions, plans, feedback, and onboarding remain separate persistence slices.
 
 ## Ownership and bootstrap
