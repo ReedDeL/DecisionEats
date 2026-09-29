@@ -220,7 +220,7 @@ export function getChecklistIngredientIds(
 
 /**
  * Checks whether an ingredient is safe given declared allergens and dietary restrictions.
- * Enforces that onboarding starters never preselect an item conflicting with prior choices.
+ * Keeps unsafe ingredients out of onboarding suggestions.
  */
 export function isStarterIngredientSafe(
   id: IngredientId,

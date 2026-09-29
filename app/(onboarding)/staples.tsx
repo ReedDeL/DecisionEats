@@ -1,6 +1,6 @@
 import { Icon } from '@/components/ui/Icon';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { IngredientChecklist } from '@/components/ui/IngredientChecklist';
@@ -33,7 +33,6 @@ export default function StaplesScreen() {
   const allergens = useKitchenStore((state) => state.allergens);
   const dietary = useKitchenStore((state) => state.dietary);
   const togglePantryItem = useKitchenStore((state) => state.togglePantryItem);
-  const initializePantryStarter = useKitchenStore((state) => state.initializePantryStarter);
   const completeOnboarding = useKitchenStore((state) => state.completeOnboarding);
   const [query, setQuery] = useState('');
 
@@ -41,11 +40,6 @@ export default function StaplesScreen() {
     () => filterSafeStarterIngredients(PANTRY_STARTER_IDS, allergens, dietary),
     [allergens, dietary]
   );
-
-  useEffect(() => {
-    // Suggestions are not ownership: entering setup must never enqueue cloud adds.
-    initializePantryStarter([]);
-  }, [initializePantryStarter]);
 
   const ids = useMemo(
     () => getChecklistIngredientIds(query, pantry, safeStarterIds),
