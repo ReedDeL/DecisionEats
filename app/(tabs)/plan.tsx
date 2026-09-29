@@ -14,6 +14,9 @@ import { MEAL_SLOTS, MEAL_SLOT_LABELS, type MealSlot } from '@/contracts/meal-sl
 import { weeklyMealPlanSchema, type WeeklyMealPlan } from '@/contracts/meal-journeys';
 import { BUNDLED_CATALOG, lookupIngredient } from '@/data/catalog';
 import {
+  derivePlanLinkedGroceryPreview,
+  getMissingPlanIngredientIds,
+  getPlanGroceryEntries,
   getPlanGroceryNeedMealNames,
   recomputePlanGroceryNeeds,
 } from '@/engine/plan-grocery-needs';
@@ -114,7 +117,15 @@ export default function PlanScreen() {
   const addCheckedNeedsToPantry = () => {
     if (!currentPlan || checkedNeeds.length === 0) return;
     const nextPantry = new Set([...pantry, ...checkedNeeds]);
-    const nextPlan = recomputePlanGroceryNeeds(currentPlan, BUNDLED_CATALOG, nextPantry);
+    let nextPlan: WeeklyMealPlan;
+    try {
+      nextPlan = recomputePlanGroceryNeeds(currentPlan, BUNDLED_CATALOG, nextPantry);
+    } catch {
+      setErrorMessage(
+        'This plan still needs too many ingredients. Check more items or change a meal.'
+      );
+      return;
+    }
     addPantryItems(checkedNeeds);
     if (nextPlan.status === 'confirmed') setWeeklyPlan(nextPlan);
     else setProposal(nextPlan);
@@ -183,7 +194,16 @@ export default function PlanScreen() {
       );
       return;
     }
-    const confirmed = weeklyMealPlanSchema.parse({ ...proposal, status: 'confirmed' });
+    let currentProposal: WeeklyMealPlan;
+    try {
+      currentProposal = recomputePlanGroceryNeeds(proposal, BUNDLED_CATALOG, pantrySet);
+    } catch {
+      setErrorMessage(
+        'Your pantry changed and this plan now needs too many ingredients. Adjust a meal or build a new plan.'
+      );
+      return;
+    }
+    const confirmed = weeklyMealPlanSchema.parse({ ...currentProposal, status: 'confirmed' });
     recordConfirmedPlanSelections(
       confirmed.entries.flatMap((entry) => (entry.kind === 'recipe' ? [entry.recipeId] : []))
     );
@@ -537,6 +557,10 @@ function PlanSummary({
   errorMessage: string | null;
 }) {
   const router = useRouter();
+  const previewNeeds = useMemo(
+    () => derivePlanLinkedGroceryPreview(getPlanGroceryEntries(plan, BUNDLED_CATALOG), pantry),
+    [plan, pantry]
+  );
 
   const { width } = useWindowDimensions();
   const desktop = width >= 960;
@@ -615,9 +639,8 @@ function PlanSummary({
                   entry.kind === 'recipe'
                     ? BUNDLED_CATALOG.find((candidate) => candidate.id === entry.recipeId)
                     : undefined;
-                const missingCount = recipe
-                  ? recipe.ingredients.filter((ingredient) => !pantry.has(ingredient.id)).length
-                  : 0;
+                const missingIds = recipe ? getMissingPlanIngredientIds(recipe, pantry) : [];
+                const missingCount = missingIds.length;
                 const slotLabel = MEAL_SLOT_LABELS[entry.mealSlot];
                 const accessibilityLabel =
                   entry.kind === 'recipe'
@@ -655,6 +678,14 @@ function PlanSummary({
                                 ? 'Kept open to keep your ingredient list manageable'
                                 : 'No safe match for this meal'}
                         </Text>
+                        {plan.status === 'draft' && missingIds.length > 0 ? (
+                          <Text variant="caption" tone="muted">
+                            Missing:{' '}
+                            {missingIds
+                              .map((id) => lookupIngredient(id)?.displayName ?? id)
+                              .join(', ')}
+                          </Text>
+                        ) : null}
                         {entry.kind === 'recipe' && entry.statedRelaxations.length > 0 ? (
                           <Text variant="caption" tone="muted">
                             {entry.statedRelaxations
@@ -686,57 +717,70 @@ function PlanSummary({
         ))}
       </View>
 
-      {plan.status === 'confirmed' ? (
-        <View style={styles.group}>
-          <Text variant="heading">What to get</Text>
-          <Text variant="caption" tone="muted">
-            Only ingredients missing from your pantry, grouped across this plan.
-          </Text>
-          {plan.groceryNeeds.length === 0 ? (
-            <Card variant="alt">
-              <Text variant="body">You have everything this plan needs.</Text>
-            </Card>
-          ) : (
-            plan.groceryNeeds.map((need) => {
-              const name = lookupIngredient(need.ingredientId)?.displayName ?? need.ingredientId;
-              const mealNames = getPlanGroceryNeedMealNames(need, BUNDLED_CATALOG);
-              const checked = checkedNeeds.includes(need.ingredientId);
-              return (
-                <Pressable
-                  key={need.ingredientId}
-                  accessible
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked }}
-                  accessibilityLabel={name + ', used in ' + mealNames.join(', ')}
-                  accessibilityHint="Marks this ingredient as purchased"
-                  onPress={() => onToggleNeed(need.ingredientId)}
-                  style={styles.needRow}
-                >
-                  <Text variant="bodyStrong">
-                    {checked ? '✓ ' : '○ '}
-                    {name}
-                  </Text>
-                  <Text variant="caption" tone="muted">
-                    {mealNames.join(', ')} · {need.dates.join(', ')}
-                  </Text>
-                </Pressable>
-              );
-            })
-          )}
-          {checkedNeeds.length > 0 ? (
-            <PrimaryButton
-              label="Add checked items to pantry"
-              onPress={onAddChecked}
-              accessibilityHint="Confirms purchased ingredients and adds them to your pantry"
-            />
-          ) : null}
+      <View style={styles.group}>
+        <Text variant="heading">What to get</Text>
+        <Text variant="caption" tone="muted">
+          {plan.status === 'draft'
+            ? 'Preview of ingredients missing from your pantry across this plan. Nothing is saved yet.'
+            : 'Only ingredients missing from your pantry, grouped across this plan.'}
+        </Text>
+        {previewNeeds.length === 0 ? (
+          <Card variant="alt">
+            <Text variant="body">You have everything this plan needs.</Text>
+          </Card>
+        ) : (
+          previewNeeds.map((need) => {
+            const name = lookupIngredient(need.ingredientId)?.displayName ?? need.ingredientId;
+            const mealNames = getPlanGroceryNeedMealNames(need, BUNDLED_CATALOG);
+            const checked = checkedNeeds.includes(need.ingredientId);
+            const content = (
+              <>
+                <Text variant="bodyStrong">
+                  {plan.status === 'confirmed' ? (checked ? '✓ ' : '○ ') : null}
+                  {name}
+                </Text>
+                <Text variant="caption" tone="muted">
+                  {mealNames.join(', ')} · {need.dates.join(', ')}
+                </Text>
+              </>
+            );
+            return plan.status === 'draft' ? (
+              <View key={need.ingredientId} style={styles.needRow}>
+                {content}
+              </View>
+            ) : (
+              <Pressable
+                key={need.ingredientId}
+                accessible
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked }}
+                accessibilityLabel={name + ', used in ' + mealNames.join(', ')}
+                accessibilityHint="Marks this ingredient as purchased"
+                onPress={() => onToggleNeed(need.ingredientId)}
+                style={styles.needRow}
+              >
+                {content}
+              </Pressable>
+            );
+          })
+        )}
+        {plan.status === 'confirmed' && checkedNeeds.length > 0 ? (
+          <PrimaryButton
+            label="Add checked items to pantry"
+            onPress={onAddChecked}
+            accessibilityHint="Confirms purchased ingredients and adds them to your pantry"
+          />
+        ) : null}
+        {plan.status === 'confirmed' ? (
           <PrimaryButton
             label="Open Reminders"
             variant="ghost"
             onPress={() => router.push('/reminders')}
             accessibilityHint="Opens reminders for this confirmed weekly plan"
           />
-          {Platform.OS === 'web' ? (
+        ) : null}
+        {plan.status === 'confirmed' ? (
+          Platform.OS === 'web' ? (
             <Text variant="caption" tone="muted">
               Reminders are unavailable on the web. Your plan is still saved.
             </Text>
@@ -748,9 +792,9 @@ function PlanSummary({
             <Text variant="caption" tone="muted">
               Turn on reminders in Settings when you want cooking prompts.
             </Text>
-          )}
-        </View>
-      ) : null}
+          )
+        ) : null}
+      </View>
     </Screen>
   );
 }

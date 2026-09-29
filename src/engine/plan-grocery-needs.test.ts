@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { WeeklyMealPlan } from '@/contracts/meal-journeys';
 import {
   derivePlanLinkedGroceryNeeds,
+  derivePlanLinkedGroceryPreview,
+  getMissingPlanIngredientIds,
   getPlanGroceryNeedMealNames,
   recomputePlanGroceryNeeds,
   type PlanGroceryEntry,
@@ -105,6 +107,48 @@ describe('derivePlanLinkedGroceryNeeds', () => {
         0
       )
     ).toThrow(RangeError);
+  });
+});
+
+describe('read-only plan gap preview', () => {
+  it('updates per-meal and grouped gaps after a swap and pantry change without mutating either input', () => {
+    const original = makeRecipe({
+      id: 'original',
+      ingredients: [ingredient('rice'), ingredient('onion'), ingredient('onion')],
+    });
+    const replacement = makeRecipe({
+      id: 'replacement',
+      ingredients: [ingredient('rice'), ingredient('tomato')],
+    });
+    const owned = pantry('rice');
+    const originalIngredients = [...original.ingredients];
+
+    expect(getMissingPlanIngredientIds(original, owned)).toEqual(['onion']);
+    expect(
+      derivePlanLinkedGroceryPreview([{ date: '2026-08-24', recipe: original }], owned).map(
+        (need) => need.ingredientId
+      )
+    ).toEqual(['onion']);
+    expect(
+      derivePlanLinkedGroceryPreview([{ date: '2026-08-24', recipe: replacement }], owned).map(
+        (need) => need.ingredientId
+      )
+    ).toEqual(['tomato']);
+    expect(
+      derivePlanLinkedGroceryPreview(
+        [{ date: '2026-08-24', recipe: replacement }],
+        pantry('rice', 'tomato')
+      )
+    ).toEqual([]);
+    expect([...owned]).toEqual(['rice']);
+    expect(original.ingredients).toEqual(originalIngredients);
+  });
+
+  it('shows every gap after pantry removals even when a saved plan would exceed its cap', () => {
+    const ingredients = Array.from({ length: 13 }, (_, index) => ingredient(`ingredient-${index}`));
+    const entries = [{ date: '2026-08-24', recipe: makeRecipe({ ingredients }) }];
+    expect(derivePlanLinkedGroceryPreview(entries, pantry())).toHaveLength(13);
+    expect(() => derivePlanLinkedGroceryNeeds(entries, pantry(), 12)).toThrow(RangeError);
   });
 });
 

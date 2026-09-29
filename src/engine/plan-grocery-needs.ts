@@ -6,6 +6,27 @@ export interface PlanGroceryEntry {
   recipe: Recipe;
 }
 
+/** Missing canonical IDs for one meal, shared by meal cards and grouped needs. */
+export function getMissingPlanIngredientIds(
+  recipe: Recipe,
+  pantry: ReadonlySet<IngredientId>
+): IngredientId[] {
+  return [...new Set(recipe.ingredients.map((ingredient) => ingredient.id))].filter(
+    (id) => !pantry.has(id)
+  );
+}
+
+export function getPlanGroceryEntries(
+  plan: WeeklyMealPlan,
+  recipes: readonly Recipe[]
+): PlanGroceryEntry[] {
+  return plan.entries.flatMap((entry) => {
+    if (entry.kind !== 'recipe') return [];
+    const recipe = recipes.find((candidate) => candidate.id === entry.recipeId);
+    return recipe ? [{ date: entry.date, recipe }] : [];
+  });
+}
+
 /**
  * Resolve the concrete meal names behind one grouped grocery need.
  *
@@ -29,15 +50,9 @@ export function recomputePlanGroceryNeeds(
   pantry: ReadonlySet<IngredientId>,
   limit = 12
 ): WeeklyMealPlan {
-  const groceryEntries = plan.entries.flatMap((entry) => {
-    if (entry.kind !== 'recipe') return [];
-    const recipe = recipes.find((candidate) => candidate.id === entry.recipeId);
-    return recipe ? [{ date: entry.date, recipe }] : [];
-  });
-
   return {
     ...plan,
-    groceryNeeds: derivePlanLinkedGroceryNeeds(groceryEntries, pantry, limit),
+    groceryNeeds: derivePlanLinkedGroceryNeeds(getPlanGroceryEntries(plan, recipes), pantry, limit),
   };
 }
 
@@ -55,14 +70,22 @@ export function derivePlanLinkedGroceryNeeds(
     throw new RangeError('Grocery need limit must be an integer from 0 through 12');
   }
 
+  const needs = derivePlanLinkedGroceryPreview(entries, pantry);
+  if (needs.length > limit) {
+    throw new RangeError(`Plan requires more than ${limit} grocery needs`);
+  }
+  return needs;
+}
+
+/** Read-only gap view; pantry edits can exceed the saved plan's 12-need cap. */
+export function derivePlanLinkedGroceryPreview(
+  entries: readonly PlanGroceryEntry[],
+  pantry: ReadonlySet<IngredientId>
+): PlanLinkedGroceryNeed[] {
   const referencesByIngredient = new Map<IngredientId, GroceryReferences>();
 
   for (const entry of entries) {
-    const missingIngredientIds = new Set(
-      entry.recipe.ingredients
-        .map((recipeIngredient) => recipeIngredient.id)
-        .filter((ingredientId) => !pantry.has(ingredientId))
-    );
+    const missingIngredientIds = getMissingPlanIngredientIds(entry.recipe, pantry);
 
     for (const ingredientId of missingIngredientIds) {
       const references = referencesByIngredient.get(ingredientId) ?? {
@@ -73,10 +96,6 @@ export function derivePlanLinkedGroceryNeeds(
       references.dates.add(entry.date);
       referencesByIngredient.set(ingredientId, references);
     }
-  }
-
-  if (referencesByIngredient.size > limit) {
-    throw new RangeError(`Plan requires more than ${limit} grocery needs`);
   }
 
   return [...referencesByIngredient.entries()]
