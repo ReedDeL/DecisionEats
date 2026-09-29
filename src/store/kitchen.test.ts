@@ -21,6 +21,7 @@ import {
 import { INGREDIENT_VOCABULARY, BUNDLED_CATALOG } from '@/data/catalog';
 import { decide } from '@/engine/decide';
 import { storage } from '@/lib/storage';
+import { getChecklistIngredientIds } from '@/lib/ingredients/suggestions';
 
 type Constraints = Parameters<typeof toEnginePreferences>[0];
 
@@ -31,12 +32,27 @@ const base: Constraints = {
 };
 
 describe('legacy pantry migration', () => {
-  it('stashes guest ingredients while hiding them until account identity is checked', () => {
+  it('preserves owned ingredients and confirmed scans from saved data', () => {
     storage.remove(GUEST_PANTRY_KEY);
     try {
-      const migrated = migrateKitchenState({ pantry: ['rice'], onboardingDone: true });
+      const migrated = migrateKitchenState({
+        pantry: ['rice', 'avocado'],
+        pantryStarterInitialized: true,
+        onboardingDone: true,
+      });
       expect(migrated.pantry).toEqual([]);
-      expect(JSON.parse(storage.getString(GUEST_PANTRY_KEY)!)).toEqual(['rice']);
+      expect(migrated).not.toHaveProperty('pantryStarterInitialized');
+      expect(JSON.parse(storage.getString(GUEST_PANTRY_KEY)!)).toEqual(['rice', 'avocado']);
+    } finally {
+      storage.remove(GUEST_PANTRY_KEY);
+    }
+  });
+
+  it('keeps newer guest inventory when migrating an older kitchen snapshot', () => {
+    storage.set(GUEST_PANTRY_KEY, JSON.stringify(['milk']));
+    try {
+      migrateKitchenState({ pantry: ['rice'], pantryStarterInitialized: false });
+      expect(JSON.parse(storage.getString(GUEST_PANTRY_KEY)!)).toEqual(['milk']);
     } finally {
       storage.remove(GUEST_PANTRY_KEY);
     }
@@ -518,39 +534,41 @@ describe('useKitchenStore meal-prep reminder onboarding', () => {
   });
 });
 
-describe('useKitchenStore pantry starter and photo merge', () => {
-  it('initializes starter items once and merges with existing photo detections', () => {
+describe('useKitchenStore pantry setup', () => {
+  it('starts empty and keeps suggested ingredients unowned until selected', () => {
     useKitchenStore.getState().reset();
     expect(useKitchenStore.getState().pantry).toEqual([]);
-    expect(useKitchenStore.getState().pantryStarterInitialized).toBe(false);
 
-    // Simulate prior photo scan adding avocado
-    useKitchenStore.getState().addPantryItems(['avocado']);
-    expect(useKitchenStore.getState().pantry).toEqual(['avocado']);
+    const suggested = getChecklistIngredientIds('', [], ['rice', 'onion']);
+    expect(suggested).toEqual(expect.arrayContaining(['rice', 'onion']));
+    expect(useKitchenStore.getState().pantry).toEqual([]);
 
-    // Initialize starter
-    useKitchenStore.getState().initializePantryStarter(['rice', 'onion']);
-    expect(useKitchenStore.getState().pantry).toEqual(['avocado', 'rice', 'onion']);
-    expect(useKitchenStore.getState().pantryStarterInitialized).toBe(true);
+    useKitchenStore.getState().completeOnboarding();
+    expect(useKitchenStore.getState().pantry).toEqual([]);
+    useKitchenStore.getState().reset();
+  });
 
-    // Subsequent call does not re-add or overwrite if already initialized
-    useKitchenStore.getState().togglePantryItem('rice'); // user unchecks rice
-    expect(useKitchenStore.getState().pantry).toEqual(['avocado', 'onion']);
+  it('preserves selections and confirmed scan items when returning to setup', () => {
+    useKitchenStore.getState().reset();
+    useKitchenStore.getState().togglePantryItem('rice');
+    useKitchenStore.getState().addPantryItems(['avocado', 'rice']);
+    useKitchenStore.getState().completeOnboarding();
 
-    useKitchenStore.getState().initializePantryStarter(['rice', 'onion']);
-    expect(useKitchenStore.getState().pantry).toEqual(['avocado', 'onion']);
+    const pantry = useKitchenStore.getState().pantry;
+    const checklist = getChecklistIngredientIds('', pantry, ['rice', 'onion']);
+    expect(pantry).toEqual(['rice', 'avocado']);
+    expect(checklist).toEqual(expect.arrayContaining(['rice', 'avocado', 'onion']));
+    expect(useKitchenStore.getState().pantry).toEqual(['rice', 'avocado']);
 
     useKitchenStore.getState().reset();
   });
 
-  it('allows zero ingredients and does not add unchecked items on completeOnboarding', () => {
+  it('does not re-add an ingredient after the user unchecks it', () => {
     useKitchenStore.getState().reset();
+    useKitchenStore.getState().togglePantryItem('rice');
+    useKitchenStore.getState().togglePantryItem('rice');
+    expect(getChecklistIngredientIds('', [], ['rice'])).toContain('rice');
     expect(useKitchenStore.getState().pantry).toEqual([]);
-
-    useKitchenStore.getState().completeOnboarding();
-    expect(useKitchenStore.getState().onboardingDone).toBe(true);
-    expect(useKitchenStore.getState().pantry).toEqual([]);
-
     useKitchenStore.getState().reset();
   });
 });

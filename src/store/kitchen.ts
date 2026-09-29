@@ -56,8 +56,8 @@ export const COMMON_ALLERGENS: readonly { id: string; label: string; groups: Ing
 ];
 
 /**
- * The everyday ingredients offered for one-tap adding, beyond the staples the
- * app already assumes. Kept deliberately short: this is a fast correction
+ * The everyday ingredients offered for one-tap adding. Kept deliberately
+ * short: this is a fast correction
  * surface, not a catalog browser. Anything not here arrives via the photo
  * pipeline or search once those land.
  *
@@ -122,8 +122,6 @@ interface KitchenState {
   allergens: string[];
   dietary: DietaryTag[];
   pantry: IngredientId[];
-  /** Prevents navigating back from silently reapplying starter selections. */
-  pantryStarterInitialized: boolean;
   onboardingDone: boolean;
   themeMode: ThemeMode;
   mealPrepRemindersEnabled: boolean;
@@ -143,8 +141,6 @@ interface KitchenState {
   toggleAllergen: (id: string) => void;
   toggleDietary: (tag: DietaryTag) => void;
   togglePantryItem: (id: IngredientId) => void;
-  /** Applies curated starter items once, preserving any confirmed photo detections. */
-  initializePantryStarter: (ids: readonly IngredientId[]) => void;
   removePantryItem: (id: IngredientId) => void;
   /** Bulk add from a confirmed photo scan. Idempotent — adding twice is a no-op. */
   addPantryItems: (ids: readonly IngredientId[]) => void;
@@ -210,16 +206,14 @@ export function mergePlanTasteSignals(
 
 export function migrateKitchenState(persisted: unknown): Record<string, unknown> {
   const migrated = migrateEquipmentState(persisted);
+  const withoutStarterFlag = { ...migrated };
+  delete withoutStarterFlag.pantryStarterInitialized;
   if (getJSON(GUEST_PANTRY_KEY) === null && Array.isArray(migrated.pantry))
     setJSON(GUEST_PANTRY_KEY, migrated.pantry);
   return {
-    ...migrated,
+    ...withoutStarterFlag,
     pantry: [],
     weeklyPlan: migrateWeeklyPlan(migrated.weeklyPlan),
-    pantryStarterInitialized:
-      typeof migrated.pantryStarterInitialized === 'boolean'
-        ? migrated.pantryStarterInitialized
-        : Array.isArray(migrated.pantry),
   };
 }
 
@@ -230,7 +224,6 @@ export const useKitchenStore = create<KitchenState>()(
       allergens: [],
       dietary: [],
       pantry: [],
-      pantryStarterInitialized: false,
       onboardingDone: false,
       themeMode: 'system',
       mealPrepRemindersEnabled: false,
@@ -253,11 +246,6 @@ export const useKitchenStore = create<KitchenState>()(
         const present = !useKitchenStore.getState().pantry.includes(id);
         set((s) => ({ pantry: toggle(s.pantry, id) }));
         pantryMutationSink?.(id, present);
-      },
-      initializePantryStarter: (ids) => {
-        if (useKitchenStore.getState().pantryStarterInitialized) return;
-        useKitchenStore.getState().addPantryItems(ids);
-        set({ pantryStarterInitialized: true });
       },
       removePantryItem: (id) => {
         if (!useKitchenStore.getState().pantry.includes(id)) return;
@@ -343,7 +331,6 @@ export const useKitchenStore = create<KitchenState>()(
           allergens: [],
           dietary: [],
           pantry: [],
-          pantryStarterInitialized: false,
           onboardingDone: false,
           themeMode: 'system',
           mealPrepRemindersEnabled: false,
