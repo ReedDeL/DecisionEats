@@ -12,6 +12,7 @@ import {
 } from '@/engine/__fixtures__';
 import {
   buildCandidateTimeTiers,
+  getPlanMealReplacements,
   planWeek,
   swapPlanMeal,
   type PlanWeekInput,
@@ -276,7 +277,7 @@ describe('planWeek safety and relaxation', () => {
 });
 
 describe('planWeek deterministic ranking', () => {
-  it('uses pantry readiness before existing score', () => {
+  it('excludes a session-skipped recipe even when it is pantry-ready', () => {
     const readyButSkipped = makeRecipe({
       id: 'ready',
       totalTimeMinutes: 30,
@@ -296,7 +297,15 @@ describe('planWeek deterministic ranking', () => {
       })
     );
 
-    expect(plan.entries[0]).toMatchObject({ kind: 'recipe', recipeId: 'ready' });
+    expect(plan.entries[0]).toMatchObject({ kind: 'recipe', recipeId: 'missing' });
+
+    const restored = planWeek(
+      makePlanInput({
+        recipes: [missingButFast, readyButSkipped],
+        pantry: pantry('rice'),
+      })
+    );
+    expect(restored.entries[0]).toMatchObject({ kind: 'recipe', recipeId: 'ready' });
   });
 
   it('uses existing score before a positive selected-photo tie-breaker', () => {
@@ -488,6 +497,83 @@ describe('planWeek shared fixture parity', () => {
 });
 
 describe('multi-slot and multi-day planning', () => {
+  it('previews choices without mutation and confirms the chosen recipe for exactly one slot', () => {
+    const recipes = ['a', 'b', 'c'].map((id) => makeRecipe({ id, ingredients: [ingredient(id)] }));
+    const input = makePlanInput({ recipes, pantry: pantry() });
+    const plan = { ...planWeek(input), status: 'confirmed' as const };
+    const before = JSON.stringify(plan);
+    const key = `${DATES[0]}:dinner`;
+    const choices = getPlanMealReplacements(plan, key, input);
+    expect(choices.map(({ recipe }) => recipe.id)).toEqual(expect.arrayContaining(['b', 'c']));
+    expect(choices.find(({ recipe }) => recipe.id === 'c')?.missingIngredientIds).toEqual(['c']);
+    // Opening/cancelling the picker is read-only.
+    expect(JSON.stringify(plan)).toBe(before);
+    const result = swapPlanMeal(plan, key, input, 'c')!;
+    expect(result.entries[0]).toMatchObject({
+      recipeId: 'c',
+      plannedMealTime: `${DATES[0]}T18:30:00-07:00`,
+    });
+    expect(result.entries.slice(1)).toEqual(plan.entries.slice(1));
+    expect(result.status).toBe('confirmed');
+    expect(JSON.stringify(plan)).toBe(before);
+  });
+
+  it('revalidates explicit choices after a preference or pantry change without picking a substitute', () => {
+    const recipes = [
+      makeRecipe({ id: 'a' }),
+      makeRecipe({ id: 'b', ingredients: [ingredient('milk', ['dairy'])] }),
+      makeRecipe({ id: 'c' }),
+    ];
+    const input = makePlanInput({ recipes });
+    const plan = planWeek(input);
+    const key = `${DATES[0]}:dinner`;
+    expect(getPlanMealReplacements(plan, key, input).map(({ recipe }) => recipe.id)).toContain('b');
+    expect(
+      swapPlanMeal(plan, key, { ...input, preferences: makePrefs({ allergens: ['dairy'] }) }, 'b')
+    ).toBeNull();
+    expect(
+      swapPlanMeal(
+        plan,
+        key,
+        { ...input, preferences: makePrefs({ dislikedRecipeIds: new Set(['b']) }) },
+        'b'
+      )
+    ).toBeNull();
+    expect(
+      swapPlanMeal(
+        plan,
+        key,
+        { ...input, preferences: makePrefs({ skippedRecipeIds: new Set(['b']) }) },
+        'b'
+      )
+    ).toBeNull();
+    expect(swapPlanMeal(plan, key, input, 'not-a-recipe')).toBeNull();
+  });
+
+  it('offers only hard-safe, bundled, slot-compatible alternatives and explains soft fallback', () => {
+    const recipes = [
+      makeRecipe({ id: 'a', cuisine: 'japanese', dietaryTags: ['vegan'] }),
+      makeRecipe({ id: 'b', cuisine: 'italian', totalTimeMinutes: 45, dietaryTags: ['vegan'] }),
+      makeRecipe({ id: 'unsafe-equipment', equipmentRequired: ['oven'], dietaryTags: ['vegan'] }),
+      makeRecipe({ id: 'unsafe-diet', dietaryTags: [] }),
+      makeRecipe({ id: 'wrong-slot', mealSlots: ['breakfast'], dietaryTags: ['vegan'] }),
+      makeRecipe({ id: 'live', source: 'spoonacular', dietaryTags: ['vegan'] }),
+    ];
+    const input = makePlanInput({
+      recipes,
+      preferences: makePrefs({
+        dietary: ['vegan'],
+        equipment: ['microwave'],
+        preferredCuisine: 'japanese',
+      }),
+      days: makeDays({ selectedLimit: 30 }),
+    });
+    const plan = planWeek(input);
+    const choices = getPlanMealReplacements(plan, `${DATES[0]}:dinner`, input);
+    expect(choices.map(({ recipe }) => recipe.id)).toEqual(['b']);
+    expect(choices[0]?.statedRelaxations).toEqual(['time', 'cuisine']);
+  });
+
   it('generates a 3-day 3-slot plan with 9 entries ordered by date then slot', () => {
     const recipes: Recipe[] = [
       makeRecipe({ id: 'bk-1', mealSlots: ['breakfast'], ingredients: [ingredient('egg')] }),
@@ -639,6 +725,14 @@ describe('multi-slot and multi-day planning', () => {
     );
     expect(newDinnerEntry?.kind).toBe('recipe');
     expect((newDinnerEntry as { recipeId: string }).recipeId).not.toBe(originalRecipeId);
+
+    const skippedAlternative = swapPlanMeal(initialPlan, '2026-08-24:dinner', {
+      ...planInput,
+      preferences: makePrefs({
+        skippedRecipeIds: new Set([(newDinnerEntry as { recipeId: string }).recipeId]),
+      }),
+    });
+    expect(skippedAlternative).toBeNull();
 
     // Other entries remain unchanged
     const breakfastEntry = swappedPlan?.entries.find(

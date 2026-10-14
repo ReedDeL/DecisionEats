@@ -37,14 +37,28 @@ interface DeviceLike {
  */
 export function toCameraDevices(devices: readonly DeviceLike[]): CameraDevice[] {
   return devices
-    .filter((device) => device.kind === 'videoinput')
+    .filter((device) => device.kind === 'videoinput' && device.deviceId)
+    .filter(
+      (device, index, inputs) =>
+        inputs.findIndex((input) => input.deviceId === device.deviceId) === index
+    )
     .map((device, index) => ({
       deviceId: device.deviceId,
       label: device.label || `Camera ${index + 1}`,
     }));
 }
 
-/** getUserMedia's video constraint: the exact chosen device, or the browser default. */
+/** Prefer a rear camera on phones; use the browser's available camera otherwise. */
 export function videoConstraintsFor(deviceId: string | null): MediaTrackConstraints | boolean {
-  return deviceId ? { deviceId: { exact: deviceId } } : true;
+  return deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: 'environment' } };
+}
+
+/** Cycle through available cameras, including multiple desktop webcams. */
+export function nextCameraDeviceId(
+  devices: readonly CameraDevice[],
+  activeDeviceId: string | null
+) {
+  if (devices.length < 2) return null;
+  const currentIndex = devices.findIndex((device) => device.deviceId === activeDeviceId);
+  return devices[(currentIndex + 1) % devices.length]?.deviceId ?? null;
 }

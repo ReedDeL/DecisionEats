@@ -2,6 +2,11 @@
 
 **Version:** 0.1.0 · **Date:** August 23, 2026
 
+**October 12 verification:** GitHub's current default branch is `master`. The
+existing Cloudflare Pages production-branch setting has not been verified; inspect
+it before changing or deploying. Current local evidence and release gates are in
+the [feedback execution record](reports/2026-10-12-feedback-execution.md).
+
 This publishes the existing Expo Router
 web build as static assets on Cloudflare Pages. It does not replace Supabase,
 move an API, or create a second backend.
@@ -50,7 +55,7 @@ approved by the repository owner.
 
    | Setting | Value |
    |---|---|
-   | Production branch | `main` |
+   | Production branch | `master` (verify the existing Pages project before changing it) |
    | Framework preset | None |
    | Build command | `npm run web:build` |
    | Build output directory | `dist` |
@@ -92,7 +97,14 @@ photo pipeline and future authentication.
 - Inspect the deployed bundle or network requests for accidental secrets.
 - Test at phone and desktop widths in Chrome, Safari, and Firefox.
 
-When web authentication is enabled, add the final `https://*.pages.dev` and
-custom-domain callback URLs to Supabase Auth's allowed redirect URLs. That is
-an account change, not part of the static deployment, and should not be done
-until the final hostname is known.
+Web auth redirects to the same origin that started the flow:
+/auth/callback for Google and email confirmation, and /auth/reset-password
+for password recovery. Add each exact localhost, Pages preview/production, and
+custom-domain URL to Supabase Auth's Redirect URLs allowlist. Preview and
+production hosts need separate entries. Supabase validates redirectTo against
+this allowlist; the Site URL is only the default when a flow supplies no
+redirect. See the Supabase redirect URL guide:
+https://supabase.com/docs/guides/auth/redirect-urls.
+
+The deployed hostname and hosted provider round trips still need verification.
+A local Chrome or WebKit pass only proves the local origin and browser flow.

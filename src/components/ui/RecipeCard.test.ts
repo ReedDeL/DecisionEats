@@ -51,17 +51,19 @@ describe('RecipeCard', () => {
     expect(markup).toContain('aria-label="Garlic Butter Pasta. 20 min. Missing 1."');
   });
 
-  it('renders "I don\'t like this" button when onDislike callback is provided', () => {
+  it('distinguishes permanent dislike from a temporary skip', () => {
     const markup = renderToStaticMarkup(
       createElement(RecipeCard, {
         scored: scoredRecipe,
         onPress: () => undefined,
         onDislike: () => undefined,
+        onSkip: () => undefined,
       })
     );
 
-    expect(markup).toContain('I don&#x27;t like this');
-    expect(markup).toContain('aria-label="I don&#x27;t like this, Garlic Butter Pasta"');
+    expect(markup).toContain('Never again');
+    expect(markup).toContain('aria-label="Never again, Garlic Butter Pasta"');
+    expect(markup).toContain('aria-label="Not right now, Garlic Butter Pasta"');
   });
 
   it('omits dislike action when onDislike is not provided', () => {
@@ -72,7 +74,8 @@ describe('RecipeCard', () => {
       })
     );
 
-    expect(markup).not.toContain('I don&#x27;t like this');
+    expect(markup).not.toContain('Never again');
+    expect(markup).not.toContain('Not right now');
   });
 
   it('does not render inaccurate meal images', () => {

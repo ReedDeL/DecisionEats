@@ -123,8 +123,10 @@ export interface UserPreferences {
   dietary: DietaryTag[];
   /** Strong negative signal — suppress permanently. */
   dislikedRecipeIds: Set<string>;
-  /** Weak negative signal — de-rank, do not eliminate. */
+  /** Suppressed from new suggestions for the current app session. */
   skippedRecipeIds: Set<string>;
+  /** Explicit positive photo choices; used only to break otherwise equal Now matches. */
+  photoSelectedRecipeIds?: ReadonlySet<string>;
   /** Soft cuisine or broad food-style preference; dropped during relaxation after time. */
   preferredCuisine: string | null;
   /** Optional goal used only as a soft ranking signal. */

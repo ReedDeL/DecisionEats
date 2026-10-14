@@ -13,6 +13,7 @@ import {
 import { getIngredientPresentation, type IngredientCategory } from '@/data/ingredient-presentation';
 import { lookupIngredient } from '@/data/catalog';
 import type { IngredientId } from '@/engine/types';
+import { selectionKeyboardProps } from '@/lib/selection-keyboard';
 import { radius, space, touchTarget } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 import { Text } from './Text';
@@ -87,6 +88,7 @@ export function IngredientChecklist({
         disabled={disabled}
         aria-checked={checked}
         onPress={() => onToggle(id)}
+        {...selectionKeyboardProps(() => onToggle(id), disabled)}
         onFocus={() => setFocusedId(id)}
         onBlur={() => setFocusedId((current) => (current === id ? null : current))}
         style={({ pressed }) => [

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
-import { Chip } from '@/components/ui/Chip';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import {
+  nextCameraDeviceId,
   toCameraDevices,
   videoConstraintsFor,
   type CameraCaptureProps,
@@ -13,6 +13,7 @@ import {
 } from '@/lib/webcam';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
+import { useReducedMotion } from '@/lib/use-reduced-motion';
 
 type Phase = 'requesting' | 'live' | 'closed' | 'unavailable';
 
@@ -24,6 +25,7 @@ type Phase = 'requesting' | 'live' | 'closed' | 'unavailable';
  */
 export function CameraCapture({ visible, onCapture, onClose, onUnavailable }: CameraCaptureProps) {
   const { color } = useTheme();
+  const reducedMotion = useReducedMotion();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -83,12 +85,20 @@ export function CameraCapture({ visible, onCapture, onClose, onUnavailable }: Ca
           }
         }
 
+        if (requestId !== requestIdRef.current) return;
         const settledDeviceId = stream.getVideoTracks()[0]?.getSettings().deviceId ?? deviceId;
         setActiveDeviceId(settledDeviceId ?? null);
 
-        const mediaDevices = await navigator.mediaDevices.enumerateDevices();
-        if (requestId !== requestIdRef.current) return;
-        setDevices(toCameraDevices(mediaDevices));
+        // Enumeration can fail even with a working stream. Capture should
+        // remain available; only the optional Flip action needs this list.
+        try {
+          const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+          if (requestId !== requestIdRef.current) return;
+          setDevices(toCameraDevices(mediaDevices));
+        } catch {
+          if (requestId !== requestIdRef.current) return;
+          setDevices([]);
+        }
 
         setPhase('live');
       } catch {
@@ -123,8 +133,11 @@ export function CameraCapture({ visible, onCapture, onClose, onUnavailable }: Ca
     const element = node as unknown as HTMLElement | null;
 
     if (!element) {
-      videoRef.current?.remove();
-      videoRef.current = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.remove();
+        videoRef.current = null;
+      }
       return;
     }
 
@@ -146,7 +159,14 @@ export function CameraCapture({ visible, onCapture, onClose, onUnavailable }: Ca
 
   const handleCapture = useCallback(() => {
     const video = videoRef.current;
-    if (!video || video.videoWidth === 0) return;
+    if (
+      phase !== 'live' ||
+      !video ||
+      !streamRef.current ||
+      video.srcObject !== streamRef.current ||
+      video.videoWidth === 0
+    )
+      return;
 
     if (!captureCanvasRef.current) {
       captureCanvasRef.current = document.createElement('canvas');
@@ -160,22 +180,24 @@ export function CameraCapture({ visible, onCapture, onClose, onUnavailable }: Ca
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     onCapture(canvas.toDataURL('image/jpeg', 0.92));
-  }, [onCapture]);
+  }, [onCapture, phase]);
 
-  const handleSelectDevice = useCallback(
-    (deviceId: string) => {
-      if (deviceId === activeDeviceId) return;
-      void startStream(deviceId);
-    },
-    [activeDeviceId, startStream]
-  );
+  const handleFlipCamera = useCallback(() => {
+    if (phase !== 'live') return;
+    const nextDeviceId = nextCameraDeviceId(devices, activeDeviceId);
+    if (nextDeviceId) void startStream(nextDeviceId);
+  }, [phase, devices, activeDeviceId, startStream]);
 
   if (!visible) return null;
 
   const unavailable = phase === 'unavailable';
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType={reducedMotion ? 'none' : 'fade'}
+      onRequestClose={onClose}
+    >
       <View style={[styles.backdrop, { backgroundColor: color.surfaceAlt }]}>
         <View style={styles.column}>
           <Screen
@@ -221,17 +243,14 @@ export function CameraCapture({ visible, onCapture, onClose, onUnavailable }: Ca
                 />
 
                 {devices.length > 1 ? (
-                  <View style={styles.deviceRow}>
-                    {devices.map((device) => (
-                      <Chip
-                        key={device.deviceId}
-                        label={device.label}
-                        selected={device.deviceId === activeDeviceId}
-                        onPress={() => handleSelectDevice(device.deviceId)}
-                        accessibilityLabel={`Use ${device.label}`}
-                        accessibilityHint="Switches the live preview to this camera"
-                      />
-                    ))}
+                  <View style={styles.flipAction}>
+                    <PrimaryButton
+                      label="Flip camera"
+                      variant="secondary"
+                      onPress={handleFlipCamera}
+                      disabled={phase !== 'live'}
+                      accessibilityHint="Switches the live preview to the next available camera"
+                    />
                   </View>
                 ) : null}
               </>
@@ -252,6 +271,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
   },
-  deviceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  flipAction: { marginTop: space.sm },
   footer: { gap: space.sm },
 });

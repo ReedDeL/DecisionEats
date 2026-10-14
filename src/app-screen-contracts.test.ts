@@ -16,6 +16,10 @@ const settingsSource = readApp('settings.tsx');
 const equipmentSource = readApp('(onboarding)/equipment.tsx');
 const planSource = readApp('(tabs)/plan.tsx');
 const homeSource = readApp('(tabs)/index.tsx');
+const foodGenreSource = readFileSync(
+  new URL('./components/FoodGenreOptions.tsx', import.meta.url),
+  'utf8'
+);
 
 describe('Kitchen Setup screen acceptance contract', () => {
   it('has accessible equipment checklist with save feedback', () => {
@@ -131,8 +135,12 @@ describe('Home screen food-style choices contract', () => {
   });
 
   it('provides Any food style and never auto-advances on selection', () => {
-    expect(homeSource).toContain('label="Any"');
-    expect(homeSource).toContain('FOOD_GENRE_OPTIONS.map');
-    expect(homeSource).toContain('onSelectCuisine(cuisine === option.value ? null : option.value)');
+    expect(homeSource).toContain('<FoodGenreOptions');
+    expect(planSource).toContain('<FoodGenreOptions');
+    expect(foodGenreSource).toContain('label="Any"');
+    expect(foodGenreSource).toContain('FOOD_GENRE_OPTIONS.map');
+    expect(foodGenreSource).toContain(
+      'onSelectCuisine(cuisine === option.value ? null : option.value)'
+    );
   });
 });

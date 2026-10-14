@@ -12,7 +12,7 @@ import {
 
 import { BrandLockup } from '@/components/BrandLockup';
 import { Card } from '@/components/ui/Card';
-import { Chip } from '@/components/ui/Chip';
+import { FoodGenreOptions } from '@/components/FoodGenreOptions';
 import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { RecommendationSections } from '@/components/ui/RecommendationSections';
@@ -25,8 +25,7 @@ import { decide } from '@/engine/decide';
 import { decideWithRelaxation } from '@/engine/relax';
 import type { Bucket, Minutes } from '@/engine/types';
 import { getResponsiveLayout } from '@/components/ui/responsive-layout';
-import { FOOD_GENRE_OPTIONS } from '@/lib/cuisines';
-import { formatDuration } from '@/lib/format';
+import { formatCuisine, formatDuration } from '@/lib/format';
 import {
   trackConstraintRelaxed,
   trackPantryFilterSubmitted,
@@ -35,7 +34,9 @@ import {
 import { TimeSlider } from '@/components/ui/TimeSlider';
 import {
   recordDislike,
+  recordSkip,
   removeDislike,
+  removeSkip,
   toEnginePreferences,
   useKitchenStore,
 } from '@/store/kitchen';
@@ -67,6 +68,7 @@ export default function HomeScreen() {
   const skippedRecipes = useKitchenStore((state) => state.skippedRecipes);
   const bodyGoal = useKitchenStore((state) => state.bodyGoal);
   const bodyMetrics = useKitchenStore((state) => state.bodyMetrics);
+  const photoTasteSignals = useKitchenStore((state) => state.photoTasteSignals);
 
   const [selectedTime, setSelectedTime] = useState<Minutes>(30);
   const [timeLimit, setTimeLimit] = useState<Minutes | null>(null);
@@ -76,7 +78,11 @@ export default function HomeScreen() {
    * chose is honoured exactly — even though that returns fewer answers.
    */
   const [strict, setStrict] = useState(false);
-  const [undoDislike, setUndoDislike] = useState<{ id: string; title: string } | null>(null);
+  const [undoFeedback, setUndoFeedback] = useState<{
+    id: string;
+    title: string;
+    kind: 'dislike' | 'skip';
+  } | null>(null);
   const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -90,10 +96,29 @@ export default function HomeScreen() {
   const preferences = useMemo(
     () =>
       toEnginePreferences(
-        { equipment, allergens, dietary, dislikedRecipes, skippedRecipes, bodyGoal, bodyMetrics },
+        {
+          equipment,
+          allergens,
+          dietary,
+          dislikedRecipes,
+          skippedRecipes,
+          bodyGoal,
+          bodyMetrics,
+          photoTasteSignals,
+        },
         cuisine
       ),
-    [equipment, allergens, dietary, dislikedRecipes, skippedRecipes, bodyGoal, bodyMetrics, cuisine]
+    [
+      equipment,
+      allergens,
+      dietary,
+      dislikedRecipes,
+      skippedRecipes,
+      bodyGoal,
+      bodyMetrics,
+      cuisine,
+      photoTasteSignals,
+    ]
   );
 
   const pantrySet = useMemo(() => new Set(pantry), [pantry]);
@@ -162,21 +187,31 @@ export default function HomeScreen() {
     if (undoTimeoutRef.current) {
       clearTimeout(undoTimeoutRef.current);
     }
-    setUndoDislike({ id: recipeId, title: targetTitle });
+    setUndoFeedback({ id: recipeId, title: targetTitle, kind: 'dislike' });
     undoTimeoutRef.current = setTimeout(() => {
-      setUndoDislike(null);
+      setUndoFeedback(null);
     }, 6000);
   };
 
-  const handleUndoDislike = () => {
-    if (!undoDislike) return;
-    const { id, title } = undoDislike;
-    removeDislike(id);
+  const handleSkipRecipe = (recipeId: string) => {
+    const title = BUNDLED_CATALOG.find((recipe) => recipe.id === recipeId)?.title ?? 'Recipe';
+    recordSkip(recipeId);
+    AccessibilityInfo.announceForAccessibility(`Skipped ${title} for this session.`);
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    setUndoFeedback({ id: recipeId, title, kind: 'skip' });
+    undoTimeoutRef.current = setTimeout(() => setUndoFeedback(null), 6000);
+  };
+
+  const handleUndoFeedback = () => {
+    if (!undoFeedback) return;
+    const { id, title, kind } = undoFeedback;
+    if (kind === 'skip') removeSkip(id);
+    else removeDislike(id);
     AccessibilityInfo.announceForAccessibility(`Restored ${title} to recommendations.`);
     if (undoTimeoutRef.current) {
       clearTimeout(undoTimeoutRef.current);
     }
-    setUndoDislike(null);
+    setUndoFeedback(null);
   };
 
   if (decision === null || timeLimit === null) {
@@ -196,6 +231,7 @@ export default function HomeScreen() {
   return (
     <Screen
       scroll={false}
+      transitionKey="results"
       header={
         <Header
           onBack={() => {
@@ -210,7 +246,7 @@ export default function HomeScreen() {
       }
     >
       <ScrollView contentContainerStyle={styles.results} showsVerticalScrollIndicator={false}>
-        {undoDislike ? (
+        {undoFeedback ? (
           <View
             accessibilityLiveRegion="polite"
             style={[
@@ -219,14 +255,15 @@ export default function HomeScreen() {
             ]}
           >
             <Text variant="caption" tone="muted" style={styles.undoText}>
-              Removed &ldquo;{undoDislike.title}&rdquo;
+              {undoFeedback.kind === 'skip' ? 'Skipped' : 'Hidden'} &ldquo;{undoFeedback.title}
+              &rdquo;
             </Text>
             <Pressable
               accessible
               accessibilityRole="button"
-              accessibilityLabel={`Undo removing ${undoDislike.title}`}
+              accessibilityLabel={`Undo ${undoFeedback.kind === 'skip' ? 'skipping' : 'hiding'} ${undoFeedback.title}`}
               accessibilityHint="Restores this recipe to suggestions"
-              onPress={handleUndoDislike}
+              onPress={handleUndoFeedback}
               style={styles.undoButton}
             >
               <Text variant="caption" tone="accent">
@@ -238,7 +275,7 @@ export default function HomeScreen() {
 
         <RelaxationBanner
           relaxations={decision.appliedRelaxations}
-          revertLabel={`Keep ${formatDuration(timeLimit)}`}
+          revertLabel="Keep my choices"
           onRevert={() => setStrict(true)}
         />
 
@@ -247,32 +284,35 @@ export default function HomeScreen() {
           buckets={decision.buckets}
           onSelectRecipe={(recipeId) => router.push(`/recipe/${recipeId}`)}
           onDislikeRecipe={handleDislikeRecipe}
+          onSkipRecipe={handleSkipRecipe}
         />
 
         {totalResults === 0 ? (
           strict ? (
             <Card variant="alt">
-              <Text variant="heading">Nothing fits {formatDuration(timeLimit)} exactly.</Text>
+              <Text variant="heading">Nothing fits your choices exactly.</Text>
               <Text variant="body" tone="muted">
-                You asked us to hold that limit, so we did. We can widen it slightly instead.
+                We kept your {formatDuration(timeLimit)} limit
+                {cuisine ? ` and ${formatCuisine(cuisine)} preference` : ''}. You can show close
+                matches instead.
               </Text>
               <PrimaryButton
                 label="Show me what's close"
                 onPress={() => setStrict(false)}
-                accessibilityHint="Widens the time limit and shows results again"
+                accessibilityHint="Relaxes time or food style to show available results"
               />
             </Card>
-          ) : dislikedRecipes.length > 0 ? (
+          ) : dislikedRecipes.length > 0 || skippedRecipes.length > 0 ? (
             <Card variant="alt">
               <Text variant="heading">No meals fit your preferences right now.</Text>
               <Text variant="body" tone="muted">
-                You&apos;ve removed suggestions you didn&apos;t want. You can widen your time limit
-                or reset hidden suggestions in Settings.
+                You&apos;ve hidden suggestions for this session or until you restore them. You can
+                manage hidden recipes in Settings.
               </Text>
-              {undoDislike ? (
+              {undoFeedback ? (
                 <PrimaryButton
-                  label={`Undo removing ${undoDislike.title}`}
-                  onPress={handleUndoDislike}
+                  label={`Undo ${undoFeedback.kind === 'skip' ? 'skipping' : 'hiding'} ${undoFeedback.title}`}
+                  onPress={handleUndoFeedback}
                   accessibilityHint="Restores the recipe you just removed"
                 />
               ) : (
@@ -419,35 +459,6 @@ function TimePrompt({
         ) : null}
       </View>
     </Screen>
-  );
-}
-
-interface FoodGenreOptionsProps {
-  cuisine: string | null;
-  onSelectCuisine: (cuisine: string | null) => void;
-}
-
-function FoodGenreOptions({ cuisine, onSelectCuisine }: FoodGenreOptionsProps) {
-  return (
-    <>
-      <Chip
-        label="Any"
-        selected={cuisine === null}
-        onPress={() => onSelectCuisine(null)}
-        accessibilityLabel="Any food style"
-        accessibilityHint="Removes the food-style preference"
-      />
-      {FOOD_GENRE_OPTIONS.map((option) => (
-        <Chip
-          key={option.value}
-          label={option.label}
-          selected={cuisine === option.value}
-          onPress={() => onSelectCuisine(cuisine === option.value ? null : option.value)}
-          accessibilityLabel={option.label}
-          accessibilityHint="Prefers this food style, but never at the cost of an empty screen"
-        />
-      ))}
-    </>
   );
 }
 

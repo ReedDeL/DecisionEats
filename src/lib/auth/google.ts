@@ -10,6 +10,7 @@ import {
   type GoogleOAuthFlowDependencies,
   type GoogleOAuthOutcome,
 } from './google-flow';
+import { AUTH_CALLBACK_PATH, resolveWebAuthRedirectUri } from './redirect-uri';
 
 type GoogleOAuthPlatform = 'android' | 'web';
 
@@ -48,7 +49,7 @@ export function resolveWebRedirectUri(
   currentOrigin: string,
   configuredOrigin = process.env.EXPO_PUBLIC_SITE_URL
 ): string {
-  return configuredOrigin?.trim() || currentOrigin;
+  return resolveWebAuthRedirectUri(currentOrigin, AUTH_CALLBACK_PATH, configuredOrigin);
 }
 
 export function createGoogleOAuthDependencies(

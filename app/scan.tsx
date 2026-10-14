@@ -12,6 +12,7 @@ import { Header } from '@/components/ui/Header';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
+import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import type { VocabularyEntry } from '@/data/catalog';
 import {
   MAX_PHOTOS,
@@ -274,6 +275,9 @@ export default function ScanScreen() {
           </Text>
         </Card>
 
+        {phase === 'analyzing' ? (
+          <LoadingSkeleton label="Reading ingredients from your photos…" />
+        ) : null}
         {error ? (
           <Card variant="alt">
             <Text variant="body" tone="near">

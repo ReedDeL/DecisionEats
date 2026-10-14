@@ -39,7 +39,7 @@ export function formatDuration(minutes: Minutes): string {
  * we can honestly do without a curated mapping.
  */
 export function formatCuisine(cuisine: string): string {
-  return cuisine.replace(/\b\w/g, (character) => character.toUpperCase());
+  return cuisine.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 /**
@@ -52,7 +52,7 @@ export function formatRelaxation(relaxation: Relaxation): string {
     case 'time_widened':
       return `Nothing fits ${relaxation.from} min. Here's what works in ${relaxation.to}.`;
     case 'cuisine_dropped':
-      return `Nothing ${formatCuisine(relaxation.cuisine)} fits. Showing everything else.`;
+      return `No ${formatCuisine(relaxation.cuisine)} meals fit right now. Showing other food styles that fit your kitchen.`;
     case 'bucket_promoted':
       return "You're a couple of ingredients short on these.";
     case 'spoonacular_expansion':

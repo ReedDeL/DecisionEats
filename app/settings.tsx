@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { PantrySyncStatus } from '@/components/PantrySyncStatus';
+import { PhotoTastePicker } from '@/components/PhotoTastePicker';
 import { pantrySync } from '@/lib/pantry-sync-live';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
@@ -38,7 +39,8 @@ import {
   type HeightUnit,
   type WeightUnit,
 } from '@/lib/body-profile';
-import { signInWithGoogle, signOut } from '@/lib/auth/google';
+import { signOut } from '@/lib/auth/google';
+import { continueAsGuest } from '@/lib/auth/guest-access';
 import { useAuthSession } from '@/lib/auth/useAuthSession';
 import { isHttpsUrl, mergeAttributions, type CatalogAttribution } from '@/lib/catalog';
 import { useCatalogAttributions } from '@/lib/queries/catalog';
@@ -46,15 +48,19 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SelectableCard } from '@/components/ui/SelectableCard';
 import { Text } from '@/components/ui/Text';
-import { BUNDLED_CATALOG_ATTRIBUTIONS } from '@/data/catalog';
+import { BUNDLED_CATALOG, BUNDLED_CATALOG_ATTRIBUTIONS } from '@/data/catalog';
 import {
   COMMON_ALLERGENS,
   DIETARY_PRESETS,
+  removeDislike,
+  removeSkip,
   useKitchenStore,
   type ThemeMode,
 } from '@/store/kitchen';
 import { space } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
+
+const recipeTitles = new Map(BUNDLED_CATALOG.map((recipe) => [recipe.id, recipe.title]));
 
 const REMINDER_LEAD_LABELS: Record<MealPrepReminderLeadMinutes, string> = {
   0: 'At cook time',
@@ -132,6 +138,7 @@ export default function SettingsScreen() {
   const toggleDietary = useKitchenStore((state) => state.toggleDietary);
 
   const bodyGoal = useKitchenStore((state) => state.bodyGoal);
+  const [editingPhotoTaste, setEditingPhotoTaste] = useState(false);
   const bodyMetrics = useKitchenStore((state) => state.bodyMetrics);
   const setBodyGoal = useKitchenStore((state) => state.setBodyGoal);
   const setBodyMetrics = useKitchenStore((state) => state.setBodyMetrics);
@@ -145,10 +152,9 @@ export default function SettingsScreen() {
   );
 
   const dislikedRecipes = useKitchenStore((state) => state.dislikedRecipes);
+  const skippedRecipes = useKitchenStore((state) => state.skippedRecipes);
   const resetDislikes = useKitchenStore((state) => state.resetDislikes);
   const reset = useKitchenStore((state) => state.reset);
-  const [isSigningIn, setIsSigningIn] = useState(false);
-  const [signInError, setSignInError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [resetConfirming, setResetConfirming] = useState(false);
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
@@ -241,23 +247,15 @@ export default function SettingsScreen() {
     trackSettingsUpdated({ setting: 'dietary_filter_enabled', value: enabled });
   };
 
-  const handleSignIn = async () => {
-    setSignInError(null);
-    setIsSigningIn(true);
-
-    try {
-      await signInWithGoogle();
-    } catch {
-      setSignInError("Couldn't sign you in. Check your connection and try again.");
-    } finally {
-      setIsSigningIn(false);
-    }
+  const handleSignIn = () => {
+    router.push({ pathname: '/login', params: { intent: 'account' } });
   };
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
 
     try {
+      continueAsGuest();
       await signOut();
     } catch (error: unknown) {
       console.warn('[auth] Unable to sign out', error);
@@ -377,7 +375,7 @@ export default function SettingsScreen() {
               <PrimaryButton
                 label={isSigningOut ? 'Signing out…' : 'Sign out'}
                 onPress={handleSignOut}
-                accessibilityHint="Signs out and returns to the local guest pantry"
+                accessibilityHint="Signs out and returns to local guest access without clearing the kitchen"
                 disabled={isSigningOut}
               />
             </>
@@ -385,15 +383,13 @@ export default function SettingsScreen() {
             <>
               <Text variant="bodyStrong">Guest access</Text>
               <Text variant="caption" tone="muted">
-                Your local kitchen stays on this device. Sign in with Google to use account features
-                and sync pantry ingredients across devices.
+                Your existing local kitchen remains on this device. Sign in or create an account
+                when you want to use account features.
               </Text>
-              {signInError ? <Text accessibilityLiveRegion="polite">{signInError}</Text> : null}
               <PrimaryButton
-                label={isSigningIn ? 'Signing in…' : 'Sync across devices'}
+                label="Sign in or create account"
                 onPress={handleSignIn}
-                accessibilityHint="Opens optional sign-in for cross-device sync"
-                disabled={isSigningIn}
+                accessibilityHint="Opens account sign-in and signup options"
               />
             </>
           )}
@@ -736,6 +732,79 @@ export default function SettingsScreen() {
         </Card>
       </View>
 
+      <View style={styles.section}>
+        <Text variant="heading">Meal photo preferences</Text>
+        {editingPhotoTaste ? (
+          <PhotoTastePicker
+            allowClear
+            onDone={() => setEditingPhotoTaste(false)}
+            onSkip={() => setEditingPhotoTaste(false)}
+          />
+        ) : (
+          <PrimaryButton
+            label="Edit photo preferences"
+            variant="ghost"
+            onPress={() => setEditingPhotoTaste(true)}
+            accessibilityHint="Edits optional positive meal preferences used in Now"
+          />
+        )}
+      </View>
+      <View style={styles.section}>
+        <Text variant="heading">Hidden recipes</Text>
+        <Text variant="caption" tone="muted">
+          Never again stays hidden until restored. Not right now lasts only for this app session.
+          Restored recipes still follow your allergy, diet, and equipment settings.
+        </Text>
+        <Text variant="bodyStrong">Never again</Text>
+        {dislikedRecipes.length === 0 ? (
+          <Text variant="caption" tone="muted">
+            No permanently hidden recipes.
+          </Text>
+        ) : (
+          dislikedRecipes.map((id) => {
+            const title = recipeTitles.get(id) ?? id.replaceAll('_', ' ');
+            return (
+              <Card key={id} variant="alt">
+                <Text variant="bodyStrong">{title}</Text>
+                <PrimaryButton
+                  label={`Restore ${title}`}
+                  variant="ghost"
+                  onPress={() => removeDislike(id)}
+                  accessibilityHint="Allows this recipe again when it meets your kitchen settings"
+                />
+              </Card>
+            );
+          })
+        )}
+        {dislikedRecipes.length > 0 ? (
+          <PrimaryButton
+            label="Restore all permanently hidden recipes"
+            variant="ghost"
+            onPress={resetDislikes}
+            accessibilityHint="Restores every permanently hidden recipe"
+          />
+        ) : null}
+        {skippedRecipes.length > 0 ? (
+          <View style={styles.group}>
+            <Text variant="bodyStrong">Not right now</Text>
+            {skippedRecipes.map((id) => {
+              const title = recipeTitles.get(id) ?? id.replaceAll('_', ' ');
+              return (
+                <Card key={id} variant="alt">
+                  <Text variant="bodyStrong">{title}</Text>
+                  <PrimaryButton
+                    label={`Show ${title} again`}
+                    variant="ghost"
+                    onPress={() => removeSkip(id)}
+                    accessibilityHint="Ends this recipe's temporary skip"
+                  />
+                </Card>
+              );
+            })}
+          </View>
+        ) : null}
+      </View>
+
       {/* Danger / Reset Zone */}
       <View style={styles.section}>
         <Text variant="heading">Data & Reset</Text>
@@ -743,23 +812,6 @@ export default function SettingsScreen() {
           Clear the guest pantry, local preferences and body data, and restart onboarding. Your
           account pantry and pending saves are kept.
         </Text>
-
-        {dislikedRecipes.length > 0 ? (
-          <View style={styles.group}>
-            <Text variant="bodyStrong">Hidden suggestions</Text>
-            <Text variant="caption" tone="muted">
-              You have hidden {dislikedRecipes.length}{' '}
-              {dislikedRecipes.length === 1 ? 'recipe' : 'recipes'} with &ldquo;I don&apos;t like
-              this&rdquo;.
-            </Text>
-            <PrimaryButton
-              label="Restore all hidden suggestions"
-              variant="ghost"
-              onPress={() => resetDislikes()}
-              accessibilityHint="Restores all hidden recipes back to your recommendations"
-            />
-          </View>
-        ) : null}
 
         {resetConfirming ? (
           <View style={styles.confirmRow}>

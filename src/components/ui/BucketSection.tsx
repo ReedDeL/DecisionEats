@@ -24,6 +24,7 @@ interface BucketSectionProps {
   recipes: readonly ScoredRecipe[];
   onSelectRecipe: (recipeId: string) => void;
   onDislikeRecipe?: (recipeId: string) => void;
+  onSkipRecipe?: (recipeId: string) => void;
 }
 
 export function BucketSection({
@@ -31,6 +32,7 @@ export function BucketSection({
   recipes,
   onSelectRecipe,
   onDislikeRecipe,
+  onSkipRecipe,
 }: BucketSectionProps) {
   const meta = RECOMMENDATION_SECTION_META[section];
   const { width } = useWindowDimensions();
@@ -60,7 +62,12 @@ export function BucketSection({
       >
         {recipes.map((scored) => (
           <View key={scored.recipe.id} style={responsive.isDesktop && styles.desktopCard}>
-            <RecipeCard scored={scored} onPress={onSelectRecipe} onDislike={onDislikeRecipe} />
+            <RecipeCard
+              scored={scored}
+              onPress={onSelectRecipe}
+              onDislike={onDislikeRecipe}
+              onSkip={onSkipRecipe}
+            />
           </View>
         ))}
       </View>

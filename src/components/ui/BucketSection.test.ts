@@ -50,17 +50,19 @@ describe('BucketSection', () => {
     expect(markup).toContain('Garlic Butter Pasta');
   });
 
-  it('renders dislike action on cards when onDislikeRecipe is provided', () => {
+  it('renders separate permanent and session hide actions', () => {
     const markup = renderToStaticMarkup(
       createElement(BucketSection, {
         section: 'ready_now',
         recipes: [scoredRecipe],
         onSelectRecipe: () => undefined,
         onDislikeRecipe: () => undefined,
+        onSkipRecipe: () => undefined,
       })
     );
 
-    expect(markup).toContain('I don&#x27;t like this');
+    expect(markup).toContain('Never again');
+    expect(markup).toContain('Not right now');
   });
 
   it('returns null when recipes list is empty', () => {

@@ -19,6 +19,8 @@ const GENRE_CUISINES: Readonly<Record<string, readonly string[]>> = {
     'thai',
     'vietnamese',
   ],
+  southeast_asian: ['filipino', 'indonesian', 'malaysian', 'singaporean', 'thai', 'vietnamese'],
+  middle_eastern: ['iranian', 'iraqi', 'israeli', 'lebanese', 'palestinian', 'syrian', 'yemeni'],
   'hispanic/latin': [
     'argentinian',
     'brazilian',

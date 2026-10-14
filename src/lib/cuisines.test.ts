@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUNDLED_CATALOG } from '@/data/catalog';
-import { FOOD_GENRE_OPTIONS, normalizeCuisine } from '@/lib/cuisines';
+import { FOOD_GENRE_OPTIONS, foodGenreOptionsForCatalog, normalizeCuisine } from '@/lib/cuisines';
+import { formatRelaxation } from '@/lib/format';
 import { matchesCuisinePreference } from '@/engine/cuisine-preference';
 import { decide } from '@/engine/decide';
 import { toEnginePreferences } from '@/store/kitchen';
@@ -82,9 +83,62 @@ describe('FOOD_GENRE_OPTIONS', () => {
       { value: 'european', label: 'European' },
     ]);
   });
+
+  it('shows new broad styles only after three distinct catalog meals match', () => {
+    const meals = [
+      { cuisine: 'thai', title: 'Thai curry' },
+      { cuisine: 'vietnamese', title: 'Noodle bowl' },
+      { cuisine: 'filipino', title: 'Adobo' },
+      { cuisine: 'iraqi', title: 'Lentil soup' },
+      { cuisine: 'iranian', title: 'Rice dish' },
+      { cuisine: 'syrian', title: 'Chickpea salad' },
+    ];
+    const base = foodGenreOptionsForCatalog(meals.slice(0, 2));
+    expect(base.some((option) => option.value === 'southeast_asian')).toBe(false);
+
+    const expanded = foodGenreOptionsForCatalog(meals);
+    expect(expanded).toContainEqual({ value: 'southeast_asian', label: 'Southeast Asian' });
+    expect(expanded).toContainEqual({ value: 'middle_eastern', label: 'Middle Eastern' });
+    expect(new Set(expanded.map((option) => option.value)).size).toBe(expanded.length);
+    expect(new Set(expanded.map((option) => option.label)).size).toBe(expanded.length);
+    expect(
+      expanded.filter((option) => ['chinese', 'japanese', 'korean'].includes(option.value))
+    ).toHaveLength(3);
+  });
+
+  it('does not add a style that only repeats meals from existing choices', () => {
+    const meals = [
+      { cuisine: 'lebanese', title: 'Lentil soup' },
+      { cuisine: 'lebanese', title: 'Flatbread' },
+      { cuisine: 'iranian', title: 'Rice dish' },
+    ];
+    expect(
+      foodGenreOptionsForCatalog(meals).some((option) => option.value === 'middle_eastern')
+    ).toBe(false);
+  });
+
+  it('does not count title variations as distinct meals', () => {
+    const meals = [
+      { cuisine: 'thai', title: 'Thai curry' },
+      { cuisine: 'thai', title: ' thai curry ' },
+      { cuisine: 'vietnamese', title: 'Noodle bowl' },
+    ];
+    expect(
+      foodGenreOptionsForCatalog(meals).some((option) => option.value === 'southeast_asian')
+    ).toBe(false);
+  });
 });
 
 describe('cuisine preference and engine relaxation ladder', () => {
+  it('explains when the selected style cannot be honored', () => {
+    expect(formatRelaxation({ kind: 'cuisine_dropped', cuisine: 'chinese' })).toBe(
+      'No Chinese meals fit right now. Showing other food styles that fit your kitchen.'
+    );
+    expect(formatRelaxation({ kind: 'cuisine_dropped', cuisine: 'middle_eastern' })).toBe(
+      'No Middle Eastern meals fit right now. Showing other food styles that fit your kitchen.'
+    );
+  });
+
   it('matches regional dishes inside their broad food styles', () => {
     expect(matchesCuisinePreference('nigerian', 'african')).toBe(true);
     expect(matchesCuisinePreference('kenyan', 'african')).toBe(true);

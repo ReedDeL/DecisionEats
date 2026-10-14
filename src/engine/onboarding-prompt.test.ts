@@ -49,6 +49,29 @@ describe('chooseContinuousOnboardingPrompt', () => {
     });
   });
 
+  it('defers unavailable prompts and offers the next usable one', () => {
+    const progress = makeOnboardingProgress({ safetyCompleted: true });
+    expect(
+      chooseContinuousOnboardingPrompt({
+        journey: 'now',
+        progress,
+        state: makeOnboardingPromptState(),
+        availablePrompts: ['body_profile', 'reminder'],
+      })
+    ).toEqual({
+      kind: 'body_profile',
+      state: { shownThisSession: true, activePrompt: 'body_profile' },
+    });
+    expect(
+      chooseContinuousOnboardingPrompt({
+        journey: 'now',
+        progress,
+        state: makeOnboardingPromptState(),
+        availablePrompts: [],
+      })
+    ).toBeNull();
+  });
+
   it('offers the week-critical preference only during the week journey', () => {
     const progress = makeOnboardingProgress({
       safetyCompleted: true,

@@ -61,6 +61,7 @@ export function createMealPrepReminderScheduler(
     await clearInternal();
 
     const identifiers: string[] = [];
+    let failures = 0;
     for (const entry of entries) {
       const reminder = getMealPrepReminder(entry, settings.leadMinutes, now());
       if (!reminder) continue;
@@ -73,12 +74,18 @@ export function createMealPrepReminderScheduler(
             triggerAt: reminder.notificationTime,
           })
         );
+        client.setIdentifiers([...identifiers]);
       } catch (error: unknown) {
+        failures += 1;
         console.warn(`[notifications] Unable to schedule meal-prep entry ${entry.id}`, error);
       }
     }
 
     client.setIdentifiers(identifiers);
+    if (failures > 0)
+      throw new Error(
+        `${failures} cooking reminder${failures === 1 ? '' : 's'} could not be scheduled. Try again.`
+      );
   }
 
   function clear(): Promise<void> {

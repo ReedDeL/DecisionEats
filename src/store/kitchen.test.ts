@@ -32,6 +32,42 @@ const base: Constraints = {
 };
 
 describe('legacy pantry migration', () => {
+  it('persists only explicit reviewed photo choices and keeps pantry and plan independent', () => {
+    useKitchenStore.getState().reset();
+    const before = useKitchenStore.getState();
+    useKitchenStore
+      .getState()
+      .setPhotoTasteSelections(['hc-staple-pbj', 'hc-staple-pbj', 'unknown']);
+    const after = useKitchenStore.getState();
+    expect(after.photoTasteSignals).toEqual([
+      expect.objectContaining({
+        kind: 'photo_selected',
+        recipeId: 'hc-staple-pbj',
+        journey: 'now',
+      }),
+    ]);
+    expect(after.pantry).toEqual(before.pantry);
+    expect(after.planTasteSignals).toEqual(before.planTasteSignals);
+    expect(after.dislikedRecipes).toEqual([]);
+    expect(JSON.parse(storage.getString('homechef-kitchen')!).state.photoTasteSignals).toHaveLength(
+      1
+    );
+    useKitchenStore.getState().setPhotoTasteSelections([]);
+    expect(useKitchenStore.getState().photoTasteSignals).toEqual([]);
+    expect(useKitchenStore.getState().dislikedRecipes).toEqual([]);
+    useKitchenStore.getState().reset();
+  });
+  it('discards old saved skips while preserving permanent dislikes', () => {
+    storage.set('homechef-skipped', JSON.stringify(['old-skip']));
+    const migrated = migrateKitchenState({
+      skippedRecipes: ['old-skip'],
+      dislikedRecipes: ['permanent'],
+    });
+    expect(migrated.skippedRecipes).toEqual([]);
+    expect(migrated.dislikedRecipes).toEqual(['permanent']);
+    expect(storage.getString('homechef-skipped')).toBeUndefined();
+  });
+
   it('preserves owned ingredients and confirmed scans from saved data', () => {
     storage.remove(GUEST_PANTRY_KEY);
     try {
@@ -292,6 +328,28 @@ describe('useKitchenStore meal-prep reminder preferences', () => {
     const resetPrefs = toEnginePreferences(useKitchenStore.getState());
     expect(resetPrefs.dislikedRecipeIds.size).toBe(0);
     expect(resetPrefs.skippedRecipeIds.size).toBe(0);
+  });
+
+  it('keeps skips out of persistence and lets each action be undone', () => {
+    useKitchenStore.getState().reset();
+    useKitchenStore.getState().recordSkip('temporary');
+    expect(useKitchenStore.getState().skippedRecipes).toEqual(['temporary']);
+    const persisted = JSON.parse(storage.getString('homechef-kitchen')!);
+    expect(persisted.state.skippedRecipes).toBeUndefined();
+    expect(storage.getString('homechef-skipped')).toBeUndefined();
+
+    useKitchenStore.getState().removeSkip('temporary');
+    expect(useKitchenStore.getState().skippedRecipes).toEqual([]);
+    useKitchenStore.getState().recordSkip('same-recipe');
+    useKitchenStore.getState().recordDislike('same-recipe');
+    expect(useKitchenStore.getState().skippedRecipes).toEqual([]);
+    expect(useKitchenStore.getState().dislikedRecipes).toContain('same-recipe');
+    expect(JSON.parse(storage.getString('homechef-disliked')!)).toContain('same-recipe');
+    useKitchenStore.getState().recordSkip('same-recipe');
+    expect(useKitchenStore.getState().skippedRecipes).toEqual([]);
+    useKitchenStore.getState().removeDislike('same-recipe');
+    expect(useKitchenStore.getState().dislikedRecipes).not.toContain('same-recipe');
+    useKitchenStore.getState().reset();
   });
 
   it('supports exported recordDislike, removeDislike, and resetDislikes helper functions', () => {

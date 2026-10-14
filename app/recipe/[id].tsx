@@ -9,6 +9,8 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { getResponsiveLayout } from '@/components/ui/responsive-layout';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
+import { RecipeImage } from '@/components/ui/RecipeImage';
+import { mealPhoto } from '@/data/food-images';
 import { BUNDLED_CATALOG, lookupIngredient } from '@/data/catalog';
 import { getPortionGuidance } from '@/engine/portion-guidance';
 import { trackRecipeOpened } from '@/lib/analytics';
@@ -95,6 +97,18 @@ export default function RecipeScreen() {
         ]}
       >
         <View style={styles.recipePrimary}>
+          {mealPhoto(recipe.id) ? (
+            <View style={styles.group}>
+              <RecipeImage
+                recipeId={recipe.id}
+                title={recipe.title}
+                style={{ width: '100%', height: 220 }}
+              />
+              <Text variant="caption" tone="muted">
+                Representative serving · See Image credits in Settings.
+              </Text>
+            </View>
+          ) : null}
           <View style={styles.intro}>
             <Text variant="title">{recipe.title}</Text>
             <Text variant="caption" tone="muted">

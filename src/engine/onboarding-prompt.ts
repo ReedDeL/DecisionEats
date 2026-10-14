@@ -19,6 +19,8 @@ export interface ChooseContinuousOnboardingPromptInput {
   journey: MealJourney;
   progress: ContinuousOnboardingProgress;
   state: ContinuousOnboardingPromptState;
+  /** Missing UI defers a prompt without spending the session slot. */
+  availablePrompts?: readonly ContinuousOnboardingPromptKind[];
 }
 
 export interface ContinuousOnboardingPrompt {
@@ -42,7 +44,7 @@ export function chooseContinuousOnboardingPrompt(
 ): ContinuousOnboardingPrompt | null {
   if (input.state.shownThisSession) return null;
 
-  const kind = firstEligiblePrompt(input.journey, input.progress);
+  const kind = firstEligiblePrompt(input.journey, input.progress, input.availablePrompts);
   if (kind === null) return null;
 
   return {
@@ -68,12 +70,16 @@ export function resolveContinuousOnboardingPrompt(
 
 function firstEligiblePrompt(
   journey: MealJourney,
-  progress: ContinuousOnboardingProgress
+  progress: ContinuousOnboardingProgress,
+  availablePrompts?: readonly ContinuousOnboardingPromptKind[]
 ): ContinuousOnboardingPromptKind | null {
-  if (!progress.safetyCompleted) return 'safety';
-  if (journey === 'week' && !progress.weekPreferenceCompleted) return 'week_preference';
-  if (!progress.photoTasteCompleted) return 'photo_taste';
-  if (!progress.bodyProfileCompleted) return 'body_profile';
-  if (!progress.reminderCompleted) return 'reminder';
+  const available = (kind: ContinuousOnboardingPromptKind) =>
+    availablePrompts === undefined || availablePrompts.includes(kind);
+  if (!progress.safetyCompleted && available('safety')) return 'safety';
+  if (journey === 'week' && !progress.weekPreferenceCompleted && available('week_preference'))
+    return 'week_preference';
+  if (!progress.photoTasteCompleted && available('photo_taste')) return 'photo_taste';
+  if (!progress.bodyProfileCompleted && available('body_profile')) return 'body_profile';
+  if (!progress.reminderCompleted && available('reminder')) return 'reminder';
   return null;
 }

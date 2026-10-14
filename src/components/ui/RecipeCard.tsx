@@ -2,6 +2,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { IngredientChip } from '@/components/ui/IngredientChip';
 import { Text } from '@/components/ui/Text';
+import { RecipeImage } from '@/components/ui/RecipeImage';
+import { mealPhoto } from '@/data/food-images';
 import type { ScoredRecipe } from '@/engine/types';
 import { formatDuration, formatEquipment } from '@/lib/format';
 import { radius, space } from '@/theme/tokens';
@@ -11,6 +13,7 @@ interface RecipeCardProps {
   scored: ScoredRecipe;
   onPress: (recipeId: string) => void;
   onDislike?: (recipeId: string) => void;
+  onSkip?: (recipeId: string) => void;
 }
 
 /**
@@ -22,7 +25,7 @@ interface RecipeCardProps {
  * `IngredientChip`s rather than text so it inherits the one-gesture correction
  * that keeps the pantry honest.
  */
-export function RecipeCard({ scored, onPress, onDislike }: RecipeCardProps) {
+export function RecipeCard({ scored, onPress, onDislike, onSkip }: RecipeCardProps) {
   const { color, shadow } = useTheme();
   const { recipe, missing } = scored;
 
@@ -44,6 +47,13 @@ export function RecipeCard({ scored, onPress, onDislike }: RecipeCardProps) {
         onPress={() => onPress(recipe.id)}
         style={({ pressed }) => [styles.main, { opacity: pressed ? 0.9 : 1 }]}
       >
+        {mealPhoto(recipe.id) ? (
+          <RecipeImage
+            recipeId={recipe.id}
+            title={recipe.title}
+            style={{ width: '100%', height: 150 }}
+          />
+        ) : null}
         <View style={styles.copy}>
           <Text variant="bodyStrong" numberOfLines={2}>
             {recipe.title}
@@ -70,23 +80,42 @@ export function RecipeCard({ scored, onPress, onDislike }: RecipeCardProps) {
         ) : null}
       </Pressable>
 
-      {onDislike ? (
+      {onDislike || onSkip ? (
         <View style={styles.actions}>
-          <Pressable
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={`I don't like this, ${recipe.title}`}
-            accessibilityHint="Removes this recipe from suggestions and finds a replacement"
-            onPress={() => onDislike(recipe.id)}
-            style={({ pressed }) => [
-              styles.dislikeButton,
-              { borderColor: color.border, opacity: pressed ? 0.6 : 1 },
-            ]}
-          >
-            <Text variant="caption" tone="muted">
-              I don&apos;t like this
-            </Text>
-          </Pressable>
+          {onSkip ? (
+            <Pressable
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`Not right now, ${recipe.title}`}
+              accessibilityHint="Hides this recipe until the app is restarted"
+              onPress={() => onSkip(recipe.id)}
+              style={({ pressed }) => [
+                styles.dislikeButton,
+                { borderColor: color.border, opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Text variant="caption" tone="muted">
+                Not right now
+              </Text>
+            </Pressable>
+          ) : null}
+          {onDislike ? (
+            <Pressable
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`Never again, ${recipe.title}`}
+              accessibilityHint="Permanently hides this recipe until restored in Settings"
+              onPress={() => onDislike(recipe.id)}
+              style={({ pressed }) => [
+                styles.dislikeButton,
+                { borderColor: color.border, opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Text variant="caption" tone="muted">
+                Never again
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -114,6 +143,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: space.xs,
     marginTop: space.xs,
   },
   dislikeButton: {

@@ -74,6 +74,7 @@ interface RecommendationSectionsViewProps {
   onShowMore: () => void;
   onSelectRecipe: (recipeId: string) => void;
   onDislikeRecipe?: (recipeId: string) => void;
+  onSkipRecipe?: (recipeId: string) => void;
 }
 
 export function RecommendationSectionsView({
@@ -82,6 +83,7 @@ export function RecommendationSectionsView({
   onShowMore,
   onSelectRecipe,
   onDislikeRecipe,
+  onSkipRecipe,
 }: RecommendationSectionsViewProps) {
   const total = sections.reduce((sum, section) => sum + section.recipes.length, 0);
   const visible = getVisibleRecommendationSections(sections, visibleCount);
@@ -100,6 +102,7 @@ export function RecommendationSectionsView({
           recipes={section.recipes}
           onSelectRecipe={onSelectRecipe}
           onDislikeRecipe={onDislikeRecipe}
+          onSkipRecipe={onSkipRecipe}
         />
       ))}
 
@@ -128,12 +131,14 @@ interface RecommendationSectionsProps {
   buckets: Readonly<Record<Bucket, readonly ScoredRecipe[]>>;
   onSelectRecipe: (recipeId: string) => void;
   onDislikeRecipe?: (recipeId: string) => void;
+  onSkipRecipe?: (recipeId: string) => void;
 }
 
 export function RecommendationSections({
   buckets,
   onSelectRecipe,
   onDislikeRecipe,
+  onSkipRecipe,
 }: RecommendationSectionsProps) {
   const sections = buildRecommendationSections(buckets);
   const total = sections.reduce((sum, section) => sum + section.recipes.length, 0);
@@ -154,6 +159,7 @@ export function RecommendationSections({
       onShowMore={showMore}
       onSelectRecipe={onSelectRecipe}
       onDislikeRecipe={onDislikeRecipe}
+      onSkipRecipe={onSkipRecipe}
     />
   );
 }

@@ -1,6 +1,7 @@
 # DecisionEats UI/UX Specification
 
-**Decision date:** August 26, 2026  
+**Decision date:** August 26, 2026; feedback scope updated September 23, 2026
+
 **Status:** Current experience direction  
 **Release:** Version 1.0 ships when ready
 
@@ -56,20 +57,17 @@ height, rounded corners, visible keyboard focus, and labels that can wrap.
 Loading actions retain their label, show a progress indicator, and cannot be
 submitted again. Selected tabs use a subtle warm pill behind their icon.
 
-Recipe photos take precedence when available. Missing or failed photos use
-bundled, recipe-specific serving illustrations first, then a shared meal-type
-default labeled with its category and “Illustration.” Reviewed recipe IDs and
-explicit template bases select the category; titles are never guessed at runtime.
-All current catalog recipes have serving artwork or a meal-type default.
-Unknown recipes retain the neutral place setting.
+Use reviewed real meal photographs with documented source, author, reuse rights and
+recipe relevance. Keep a neutral or text fallback when no suitable photo exists;
+do not restore generated meal art as the target experience. DE-08 in
+[the feedback roadmap](09_FEEDBACK_ROADMAP.md) owns the asset audit and integration.
+The audited branch currently omits imagery from meal cards and the recipe route;
+remaining illustration components/assets are not proof of displayed imagery.
 
-Ingredient thumbnails keep the reviewed Commons photographs, with original
-pantry artwork as fallback. Recipe cards and heroes do not use ingredient
-collages. Images are bundled locally; there is no runtime image search. Recipe
-pages and Settings link to Image credits, including photographer, original file,
-license, and display-cropping information. Recipe pages disclose that meal-type
-illustrations are shared examples rather than photos of the exact recipe.
-Artwork never determines ingredients, allergens, equipment, or portions.
+Reviewed Commons ingredient photographs and the credits pipeline can be reused,
+but ingredient images must remain separate from finished meals. Bundle approved
+assets, retain attribution and modifications, and avoid runtime image search.
+Photography never determines ingredients, allergens, equipment or portions.
 
 Settings is secondary. Reminders is a secondary destination reachable from
 Settings and a confirmed weekly plan. It is not a fourth primary tab.
@@ -77,15 +75,27 @@ Settings and a confirmed weekly plan. It is not a fourth primary tab.
 Legacy cook-mode routes may remain during transition, but they are not part of
 the current product and should not shape new UI work.
 
+## Account entry and data state
+
+The DE-01 entry screen provides Google, email/password signup/sign-in/reset, and
+Continue as guest. Returning guests retain access to their existing local kitchens.
+The guest choice is persisted separately from kitchen data. Account identity and pantry
+sync status appear in separate Settings sections; pending, synced and failed pantry
+operations remain distinct from the signed-in identity.
+
 ## Onboarding
 
 Onboarding captures only what later removes decisions:
 
 1. equipment;
 2. dietary needs and allergens;
-3. starter pantry items or an optional photo scan.
+3. optional goals and height/weight, using the existing controls;
+4. explicit pantry selections or an optional confirmed photo scan.
 
-One topic appears per screen. Camera access is optional.
+New pantries start empty; starter suggestions are unchecked (planned DE-03).
+Existing user inventories must be preserved. Camera access and body metrics are optional.
+Continuous onboarding reuses the existing prompt policy, at most one skippable prompt
+per session (DE-12). Never treat a skipped goal as a weight-loss preference.
 
 ## Now decision tree
 
@@ -93,11 +103,14 @@ One topic appears per screen. Camera access is optional.
 
 Ask: **How much time do you have?**
 
-Use a small set of large choices. Do not use a slider.
+Keep the existing time control and its reachable preset choices; September feedback
+does not request another time-control rebuild.
 
 ### Step 2: Optional preference
 
-Ask one lightweight question such as cuisine or meal mood. The user can skip it.
+Ask one lightweight question such as food style or meal mood. The user can skip it.
+DE-09 adds reviewed photo-led preferences, reusing DE-08 assets and DE-06 taxonomy.
+Only explicit selections are positive taste signals; skipping is neutral.
 
 Do not combine time, cuisine, pantry editing, and equipment into one filter
 panel. Equipment and restrictions are already known.
@@ -171,12 +184,13 @@ Show:
 - prep style and time;
 - pantry coverage;
 - repeated ingredients that reduce waste;
-- a single action to replace one meal.
+- a single action to choose a replacement for one meal, with safe alternatives and cancellation (DE-05);
+- expandable missing ingredient names and aggregate gaps before confirmation (DE-04).
 
 ### Step 5: What to get
 
-After the plan is confirmed, show the ingredient gap beyond the pantry under
-the heading **What to get**.
+Preview the ingredient gap beyond the pantry before confirmation, then retain it
+under **What to get** for the confirmed plan. Previewing never mutates pantry or plan state.
 
 This list belongs to the current plan. It is not a reusable shopping list,
 checkout flow, or barcode-scanning surface.
@@ -194,6 +208,17 @@ The pantry screen supports three quick actions:
 
 Photo results always pass through confirmation. Uncertain items use friendly
 copy such as “Not sure about this one.” They are never saved silently.
+
+## Preference memory, loading and capture
+
+DE-07 distinguishes **Never again** from **Not right now** and provides individual
+restore controls in Settings. Temporary skips expire; permanent exclusions are editable.
+DE-10 replaces camera device chips with an accessible Flip camera control where supported.
+DE-11 adds skeletons only during actual waits and restrained reduced-motion-aware transitions.
+Native reminders already exist; DE-13 verifies delivery and separately evaluates web support.
+
+Calorie information and intake tracking are later-phase requirements under DE-14.
+Reuse existing optional goals and metrics; do not present portion estimates as logged intake.
 
 ## Copy
 
