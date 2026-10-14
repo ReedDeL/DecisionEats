@@ -45,19 +45,21 @@ afterEach(() => {
 });
 
 describe('resolveWebRedirectUri', () => {
-  it('uses the configured production origin when present', () => {
-    expect(resolveWebRedirectUri('http://localhost:8081', 'https://homechef-2xy.pages.dev')).toBe(
-      'https://homechef-2xy.pages.dev'
-    );
+  it('keeps the current preview origin when a different canonical origin is configured', () => {
+    expect(
+      resolveWebRedirectUri('https://preview.example.com', 'https://homechef.example.com')
+    ).toBe('https://preview.example.com/auth/callback');
   });
 
-  it('falls back to the current browser origin for local development', () => {
-    expect(resolveWebRedirectUri('http://localhost:8081', '   ')).toBe('http://localhost:8081');
+  it('uses the current browser origin and callback path for local development', () => {
+    expect(resolveWebRedirectUri('http://localhost:8081', '   ')).toBe(
+      'http://localhost:8081/auth/callback'
+    );
   });
 });
 
 describe('createGoogleOAuthDependencies', () => {
-  it('uses a regular Supabase redirect on web', async () => {
+  it('uses the redirect configured by the caller on web', async () => {
     const signInWithOAuth = vi.fn(async () => ({ data: {}, error: null }));
     const dependencies = createGoogleOAuthDependencies({
       platform: 'web',
@@ -198,7 +200,7 @@ describe('createGoogleOAuthDependencies', () => {
 
     expect(signInWithOAuthMock).toHaveBeenCalledWith({
       provider: 'google',
-      options: { redirectTo: 'https://homechef.example.com' },
+      options: { redirectTo: 'https://homechef.example.com/auth/callback' },
     });
     expect(openAuthSessionAsyncMock).not.toHaveBeenCalled();
   });

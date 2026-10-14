@@ -31,6 +31,7 @@ export function decide(
   const survivors = catalog.filter(
     (r) =>
       !prefs.dislikedRecipeIds.has(r.id) &&
+      !prefs.skippedRecipeIds.has(r.id) &&
       isRecipeHardConstraintSatisfied(r, prefs) &&
       r.totalTimeMinutes <= timeLimit &&
       matchesCuisinePreference(r.cuisine, prefs.preferredCuisine)
@@ -43,7 +44,15 @@ export function decide(
   }
 
   for (const bucket of BUCKET_ORDER) {
-    buckets[bucket] = buckets[bucket].sort(byScoreThenId).slice(0, PER_BUCKET_RESULT_CAP);
+    buckets[bucket] = buckets[bucket]
+      .sort((a, b) => {
+        if (a.score !== b.score) return b.score - a.score;
+        const photoPreference =
+          Number(prefs.photoSelectedRecipeIds?.has(b.recipe.id) ?? false) -
+          Number(prefs.photoSelectedRecipeIds?.has(a.recipe.id) ?? false);
+        return photoPreference || byScoreThenId(a, b);
+      })
+      .slice(0, PER_BUCKET_RESULT_CAP);
   }
 
   return { buckets, appliedRelaxations: [] };

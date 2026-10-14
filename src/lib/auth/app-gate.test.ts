@@ -5,6 +5,30 @@ import { appGatePhase, needsRouteReplacement, rootRouteIsAvailable } from '@/lib
 const CURRENT_DYNAMIC_APP_ROUTES = ['recipe/[id]', 'kitchen-setup', 'reminders'] as const;
 
 describe('app gate routing', () => {
+  it('keeps login and callback routes public while a session is restored', () => {
+    expect(rootRouteIsAvailable('login', 'loading', '/login')).toBe(true);
+    expect(rootRouteIsAvailable('auth/callback', 'loading', '/login')).toBe(true);
+    expect(rootRouteIsAvailable('auth/reset-password', 'loading', '/login')).toBe(true);
+    expect(needsRouteReplacement('auth', '/login')).toBe(false);
+  });
+
+  it('routes a first-time visitor to login without exposing the kitchen', () => {
+    expect(needsRouteReplacement(undefined, '/login')).toBe(true);
+    expect(rootRouteIsAvailable('login', 'ready', '/login')).toBe(true);
+    expect(rootRouteIsAvailable('(tabs)', 'ready', '/login')).toBe(false);
+  });
+
+  it('keeps an intentional account entry open for a guest', () => {
+    expect(needsRouteReplacement('login', '/(onboarding)/equipment', true)).toBe(false);
+    expect(appGatePhase(true, 'login', '/(onboarding)/equipment', true)).toBe('ready');
+    expect(rootRouteIsAvailable('login', 'ready', '/(onboarding)/equipment')).toBe(true);
+  });
+
+  it('returns an incidental login route to an existing local kitchen', () => {
+    expect(needsRouteReplacement('login', '/')).toBe(true);
+    expect(needsRouteReplacement('login', '/(onboarding)/equipment')).toBe(true);
+  });
+
   it('replaces an app route with onboarding for a new local user', () => {
     expect(needsRouteReplacement(undefined, '/(onboarding)/equipment')).toBe(true);
     expect(needsRouteReplacement('(tabs)', '/(onboarding)/equipment')).toBe(true);

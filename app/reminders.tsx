@@ -64,6 +64,8 @@ export default function RemindersScreen() {
     Platform.OS === 'web' ? 'unsupported' : 'undetermined'
   );
   const [permissionError, setPermissionError] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [retrySync, setRetrySync] = useState(0);
 
   const entries = useMemo(
     () => toMealPrepReminderEntries(weeklyPlan, BUNDLED_CATALOG),
@@ -81,10 +83,19 @@ export default function RemindersScreen() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+    setSyncError(null);
     void syncMealPrepReminders(entries, { enabled, leadMinutes }).catch((error: unknown) => {
       console.warn('[reminders] Unable to sync reminders', error);
+      if (active)
+        setSyncError(
+          'Some cooking reminders could not be scheduled. Your plan is saved; retry reminder setup.'
+        );
     });
-  }, [entries, enabled, leadMinutes]);
+    return () => {
+      active = false;
+    };
+  }, [entries, enabled, leadMinutes, retrySync]);
 
   const upcoming =
     enabled && permission === 'granted'
@@ -338,6 +349,16 @@ export default function RemindersScreen() {
         </Text>
       </View>
 
+      {syncError ? (
+        <Card variant="alt">
+          <Text accessibilityRole="alert">{syncError}</Text>
+          <PrimaryButton
+            label="Retry reminders"
+            onPress={() => setRetrySync((value) => value + 1)}
+            accessibilityHint="Retries scheduling reminders for the saved plan"
+          />
+        </Card>
+      ) : null}
       {permission === 'unsupported' ? (
         <Card variant="alt">
           <Text variant="heading">Unavailable on the web</Text>
@@ -352,11 +373,13 @@ export default function RemindersScreen() {
             <View style={styles.statusCopy}>
               <Text variant="heading">Reminder status</Text>
               <Text variant="body" tone={enabled && permission === 'granted' ? 'ready' : 'muted'}>
-                {enabled && permission === 'granted'
-                  ? 'On for future confirmed-plan meals'
-                  : permission === 'denied'
-                    ? 'Off — notifications are blocked'
-                    : 'Off'}
+                {syncError
+                  ? 'Needs attention'
+                  : enabled && permission === 'granted'
+                    ? 'On for future confirmed-plan meals'
+                    : permission === 'denied'
+                      ? 'Off — notifications are blocked'
+                      : 'Off'}
               </Text>
             </View>
             <Switch
@@ -407,7 +430,9 @@ export default function RemindersScreen() {
 
       {upcoming.length > 0 ? (
         <View style={styles.group}>
-          <Text variant="heading">Upcoming reminders</Text>
+          <Text variant="heading">
+            {syncError ? 'Planned reminder times' : 'Upcoming reminders'}
+          </Text>
           {upcoming.map((reminder) => (
             <Card key={reminder.id} variant="alt">
               <Text variant="bodyStrong">{reminder.recipeTitle}</Text>

@@ -1,0 +1,40 @@
+[
+  {
+    "key": "meal_pbj",
+    "local_file": "pbj.jpg",
+    "title": "Peanut butter and jelly sandwich",
+    "recipe_ids": [
+      "hc-staple-pbj"
+    ],
+    "source_url": "https://commons.wikimedia.org/wiki/File:Peanut-Butter-Jelly-Sandwich.jpg",
+    "thumbnail_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Peanut-Butter-Jelly-Sandwich.jpg/960px-Peanut-Butter-Jelly-Sandwich.jpg",
+    "author": "Evan-Amos",
+    "license": "Public domain",
+    "license_url": "https://commons.wikimedia.org/wiki/File:Peanut-Butter-Jelly-Sandwich.jpg#Licensing",
+    "modifications": "Wikimedia 960px thumbnail, displayed cropped to fit. No ingredient or color changes.",
+    "match": "representative",
+    "reviewed_on": "2026-10-09",
+    "review_note": "Visually reviewed: white bread with peanut butter and fruit jelly matches the three ingredients and uncooked sandwich method. Representative serving, not a photograph of a tested DecisionEats recipe. No mapping to other sandwiches.",
+    "sha256": "9024a572de0291a10a1d1e9d0d43509d7a09a709b5901008d728f5135b0521c1",
+    "reviewed": true
+  },
+  {
+    "key": "meal_grilled_cheese",
+    "local_file": "grilled-cheese.jpg",
+    "title": "Classic Grilled Cheese Sandwich",
+    "recipe_ids": [
+      "hc-staple-grilled-cheese"
+    ],
+    "source_url": "https://commons.wikimedia.org/wiki/File:Classic_Grilled_Cheese_Sandwich_(25791331763).jpg",
+    "thumbnail_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Classic_Grilled_Cheese_Sandwich_%2825791331763%29.jpg/960px-Classic_Grilled_Cheese_Sandwich_%2825791331763%29.jpg",
+    "author": "Willis Lam",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "modifications": "Wikimedia 960px thumbnail, displayed cropped to fit. This asset and display crop remain CC BY-SA 2.0.",
+    "match": "representative",
+    "reviewed_on": "2026-10-09",
+    "review_note": "Visually reviewed: golden buttered bread and melted orange cheese with no visible extra fillings matches the bread, cheddar, butter skillet recipe. Representative serving, not a photograph of a tested DecisionEats recipe. No mapping to other sandwiches.",
+    "sha256": "70122327ac27456ad4c922e10748b5b2d1eef331a8e040c4e003c775a733d5ce",
+    "reviewed": true
+  }
+]

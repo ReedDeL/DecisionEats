@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
+import { selectionKeyboardProps } from '@/lib/selection-keyboard';
 import { radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
@@ -45,6 +46,7 @@ export function SelectableCard({
       accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
+      {...selectionKeyboardProps(onPress)}
       style={({ pressed }) => [
         styles.card,
         {

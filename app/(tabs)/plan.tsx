@@ -9,6 +9,8 @@ import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Screen } from '@/components/ui/Screen';
 import { SelectableCard } from '@/components/ui/SelectableCard';
 import { SettingsAction } from '@/components/ui/SettingsAction';
+import { PlanReplacementPicker } from '@/components/PlanReplacementPicker';
+import { FoodGenreOptions } from '@/components/FoodGenreOptions';
 import { Text } from '@/components/ui/Text';
 import { MEAL_SLOTS, MEAL_SLOT_LABELS, type MealSlot } from '@/contracts/meal-slots';
 import { weeklyMealPlanSchema, type WeeklyMealPlan } from '@/contracts/meal-journeys';
@@ -21,13 +23,18 @@ import {
   recomputePlanGroceryNeeds,
 } from '@/engine/plan-grocery-needs';
 import { createPlanProposal, type PlanPrepStyle } from '@/engine/plan-proposal';
-import { isHardSafePlanRecipe, swapPlanMeal, type PlanWeekInput } from '@/engine/plan-week';
+import {
+  getPlanMealReplacements,
+  isHardSafePlanRecipe,
+  swapPlanMeal,
+  type PlanWeekInput,
+} from '@/engine/plan-week';
 import type { DailyPlanPreference } from '@/engine/types';
 import { formatDuration, formatFriendlyDate } from '@/lib/format';
 import { syncMealPrepReminders } from '@/lib/meal-prep-notifications';
 import { toMealPrepReminderEntries } from '@/lib/meal-prep-reminder-view';
 import type { MealPrepReminderLeadMinutes } from '@/lib/meal-prep-reminder';
-import { buildWeekDays } from '@/lib/plan-week-days';
+import { buildWeekDays, defaultPlanMealTime } from '@/lib/plan-week-days';
 import { toEnginePreferences, useKitchenStore } from '@/store/kitchen';
 import { radius, space } from '@/theme/tokens';
 
@@ -78,6 +85,7 @@ export default function PlanScreen() {
   const dietary = useKitchenStore((state) => state.dietary);
   const pantry = useKitchenStore((state) => state.pantry);
   const dislikedRecipes = useKitchenStore((state) => state.dislikedRecipes);
+  const skippedRecipes = useKitchenStore((state) => state.skippedRecipes);
   const bodyGoal = useKitchenStore((state) => state.bodyGoal);
   const bodyMetrics = useKitchenStore((state) => state.bodyMetrics);
   const planTasteSignals = useKitchenStore((state) => state.planTasteSignals);
@@ -97,19 +105,36 @@ export default function PlanScreen() {
   const [days, setDays] = useState<Days>(7);
   const [mealSlots, setMealSlots] = useState<MealSlot[]>(['dinner']);
   const [prepStyle, setPrepStyle] = useState<PrepStyle>('balanced');
+  const [weekCuisine, setWeekCuisine] = useState<string | null>(null);
   const [variety, setVariety] = useState<Variety>('variety');
   const [proposal, setProposal] = useState<WeeklyMealPlan | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const generationLock = useRef(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reminderError, setReminderError] = useState<string | null>(null);
+  const [swapTarget, setSwapTarget] = useState<{
+    key: string;
+    date: string;
+    mealSlot: MealSlot;
+    plan: WeeklyMealPlan;
+  } | null>(null);
 
   const preferences = useMemo(
     () =>
       toEnginePreferences(
-        { equipment, allergens, dietary, dislikedRecipes, bodyGoal, bodyMetrics },
-        null
+        { equipment, allergens, dietary, dislikedRecipes, skippedRecipes, bodyGoal, bodyMetrics },
+        weekCuisine
       ),
-    [equipment, allergens, dietary, dislikedRecipes, bodyGoal, bodyMetrics]
+    [
+      equipment,
+      allergens,
+      dietary,
+      dislikedRecipes,
+      skippedRecipes,
+      bodyGoal,
+      bodyMetrics,
+      weekCuisine,
+    ]
   );
   const pantrySet = useMemo(() => new Set(pantry), [pantry]);
   const currentPlan = step === 'proposal' ? proposal : weeklyPlan;
@@ -133,11 +158,17 @@ export default function PlanScreen() {
   };
 
   useEffect(() => {
+    let active = true;
     void syncReminders(
       weeklyPlan?.status === 'confirmed' ? weeklyPlan : null,
       remindersEnabled,
       leadMinutes
-    );
+    ).then((error) => {
+      if (active) setReminderError(error);
+    });
+    return () => {
+      active = false;
+    };
   }, [weeklyPlan, remindersEnabled, leadMinutes]);
 
   const toggleMealSlot = (slot: MealSlot) => {
@@ -147,14 +178,12 @@ export default function PlanScreen() {
     });
   };
 
-  const handleBuildPlan = async () => {
+  const handleBuildPlan = () => {
     if (generationLock.current || mealSlots.length === 0) return;
     generationLock.current = true;
     setIsGenerating(true);
     setErrorMessage(null);
     try {
-      // Yield a frame so the busy state paints before the synchronous engine runs.
-      await new Promise<void>((resolve) => setTimeout(resolve, 32));
       const weekDays = buildWeekDays(prepStyle, new Date(), mealSlots, days);
       const plan = createPlanProposal({
         recipes: BUNDLED_CATALOG,
@@ -180,13 +209,17 @@ export default function PlanScreen() {
     }
   };
 
-  const confirm = async () => {
+  const confirm = () => {
     if (!proposal) return;
     if (
       proposal.entries.some((entry) => {
         if (entry.kind !== 'recipe') return false;
         const recipe = BUNDLED_CATALOG.find((item) => item.id === entry.recipeId);
-        return !recipe || !isHardSafePlanRecipe(recipe, preferences);
+        return (
+          !recipe ||
+          !isHardSafePlanRecipe(recipe, preferences) ||
+          preferences.skippedRecipeIds.has(entry.recipeId)
+        );
       })
     ) {
       setErrorMessage(
@@ -217,16 +250,8 @@ export default function PlanScreen() {
     setStep('days');
   };
 
-  const swap = (date: string, mealSlot: MealSlot) => {
-    if (!currentPlan) return;
-    const key = `${date}:${mealSlot}`;
-    setErrorMessage(null);
-    const defaults = buildWeekDays(
-      prepStyle,
-      new Date(`${currentPlan.weekStart}T12:00:00`),
-      currentPlan.mealSlots,
-      currentPlan.dayCount
-    );
+  const replacementInput = useMemo<PlanWeekInput | null>(() => {
+    if (!currentPlan || !swapTarget) return null;
     const daysInput: DailyPlanPreference[] = currentPlan.entries.map((entry) => ({
       date: entry.date,
       mealSlot: entry.mealSlot,
@@ -234,11 +259,10 @@ export default function PlanScreen() {
       mealTime:
         entry.kind === 'recipe'
           ? entry.plannedMealTime.slice(11)
-          : defaults.find((day) => day.date === entry.date && day.mealSlot === entry.mealSlot)!
-              .mealTime,
+          : defaultPlanMealTime(entry.date, entry.mealSlot),
     }));
 
-    const planInput: PlanWeekInput = {
+    return {
       recipes: BUNDLED_CATALOG,
       pantry: pantrySet,
       preferences,
@@ -252,24 +276,55 @@ export default function PlanScreen() {
         satietyLevel: null,
       },
     };
-
+  }, [
+    currentPlan,
+    swapTarget,
+    prepStyle,
+    pantrySet,
+    preferences,
+    variety,
+    planTasteSignals,
+    bodyMetrics,
+    bodyGoal,
+  ]);
+  const replacements = useMemo(
+    () =>
+      currentPlan && swapTarget && replacementInput
+        ? getPlanMealReplacements(currentPlan, swapTarget.key, replacementInput)
+        : [],
+    [currentPlan, swapTarget, replacementInput]
+  );
+  const swap = (date: string, mealSlot: MealSlot) => {
+    if (!currentPlan) return;
+    setErrorMessage(null);
+    setSwapTarget({ key: `${date}:${mealSlot}`, date, mealSlot, plan: currentPlan });
+  };
+  const confirmReplacement = (recipeId: string) => {
+    if (!currentPlan || !swapTarget || !replacementInput) return;
+    if (currentPlan !== swapTarget.plan) {
+      setErrorMessage('Your plan changed. Cancel and open Swap again to choose a replacement.');
+      return;
+    }
     let next: WeeklyMealPlan | null;
     try {
-      next = swapPlanMeal(currentPlan, key, planInput);
+      next = swapPlanMeal(currentPlan, swapTarget.key, replacementInput, recipeId);
     } catch {
       setErrorMessage('Couldn’t replace this meal. Your plan is unchanged; please try again.');
       return;
     }
     if (!next) {
-      setErrorMessage('No safe replacement found. Your plan is unchanged.');
+      setErrorMessage('That meal is no longer eligible. Choose another meal or cancel.');
       return;
     }
 
     if (next.status === 'confirmed') {
+      recordConfirmedPlanSelections([recipeId]);
       setWeeklyPlan(next);
     } else {
       setProposal(next);
     }
+    setSwapTarget(null);
+    setErrorMessage(null);
   };
 
   const handleBack = () => {
@@ -280,6 +335,23 @@ export default function PlanScreen() {
     else if (step === 'style') setStep('slots');
     else if (step === 'variety') setStep('style');
   };
+
+  if (swapTarget) {
+    return (
+      <PlanReplacementPicker
+        key={swapTarget.key}
+        date={swapTarget.date}
+        mealSlot={swapTarget.mealSlot}
+        replacements={replacements}
+        errorMessage={errorMessage}
+        onConfirm={confirmReplacement}
+        onCancel={() => {
+          setSwapTarget(null);
+          setErrorMessage(null);
+        }}
+      />
+    );
+  }
 
   if (step === 'grocery' && currentPlan) {
     return (
@@ -292,7 +364,7 @@ export default function PlanScreen() {
         onSwap={swap}
         onStartOver={startOver}
         remindersEnabled={remindersEnabled}
-        errorMessage={errorMessage}
+        errorMessage={errorMessage ?? reminderError}
       />
     );
   }
@@ -323,6 +395,8 @@ export default function PlanScreen() {
       days={days}
       mealSlots={mealSlots}
       prepStyle={prepStyle}
+      weekCuisine={weekCuisine}
+      onWeekCuisine={setWeekCuisine}
       variety={variety}
       isGenerating={isGenerating}
       errorMessage={errorMessage}
@@ -346,6 +420,8 @@ function PlanStep({
   days,
   mealSlots,
   prepStyle,
+  weekCuisine,
+  onWeekCuisine,
   variety,
   isGenerating,
   errorMessage,
@@ -361,6 +437,8 @@ function PlanStep({
   days: Days;
   mealSlots: MealSlot[];
   prepStyle: PrepStyle;
+  weekCuisine: string | null;
+  onWeekCuisine: (value: string | null) => void;
   variety: Variety;
   isGenerating: boolean;
   errorMessage: string | null;
@@ -431,6 +509,7 @@ function PlanStep({
         />
       }
       footer={footerAction}
+      transitionKey={step}
     >
       <View style={styles.header}>
         <Text variant="display">Plan my week</Text>
@@ -529,6 +608,18 @@ function PlanStep({
           ))}
         </View>
       )}
+      {step === 'style' ? (
+        <View style={styles.group}>
+          <Text variant="bodyStrong">A food style for this week? (Optional)</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+            <FoodGenreOptions cuisine={weekCuisine} onSelectCuisine={onWeekCuisine} />
+          </View>
+          <Text variant="caption" tone="muted">
+            We may suggest other styles when needed and explain each change. Your allergies, dietary
+            needs, and equipment always apply.
+          </Text>
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -580,6 +671,7 @@ function PlanSummary({
 
   return (
     <Screen
+      transitionKey={plan.status}
       header={
         <Header
           onBack={onStartOver}
@@ -786,7 +878,7 @@ function PlanSummary({
             </Text>
           ) : remindersEnabled ? (
             <Text variant="caption" tone="muted">
-              Cooking reminders are scheduled from Settings.
+              Reminders are enabled. Open Reminders to check scheduling status.
             </Text>
           ) : (
             <Text variant="caption" tone="muted">
@@ -807,8 +899,10 @@ async function syncReminders(
   const entries = toMealPrepReminderEntries(plan, BUNDLED_CATALOG);
   try {
     await syncMealPrepReminders(entries, { enabled, leadMinutes });
+    return null;
   } catch (error: unknown) {
     console.warn('[plan] Reminder sync failed; plan state is preserved', error);
+    return 'Your plan is saved, but reminders need attention. Open Reminders to retry.';
   }
 }
 

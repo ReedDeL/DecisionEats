@@ -21,7 +21,7 @@ The product is not a recipe search engine. It is a **decision engine** built as 
 
 | # | Business outcome (what the user experiences) | Technical constraint it forces |
 |---|---|---|
-| B1 | "I set up my kitchen once and it never asks again." | Durable per-user profile with equipment tier + allergens. Must survive reinstall → server-side, not device-local. Auth required from day one. |
+| B1 | "My kitchen stays available, and my account carries it across devices." | Local guests remain supported. Signed-in kitchen data uses Supabase with explicit guest import, account isolation and verified sync; see DE-01/02 in `09_FEEDBACK_ROADMAP.md`. |
 | B2 | "I take a photo of my fridge and it knows what I have." | Open-vocabulary visual recognition. Cannot be a fixed-class model. Output must be machine-parseable, not prose. |
 | B3 | "It shows me meals in four buckets by what I'm missing." | Set-difference of pantry against every recipe's ingredient list, computed for the entire catalog on every query. Must feel instant (<100ms perceived). |
 | B4 | "A few answers first, more when I ask." | Ranking, initial truncation, and paged Show more results are product features. The engine is an opinionated scoring function, not a filter. |
@@ -141,28 +141,30 @@ Deno.serve(async (req) => {
 });
 ```
 
-### 2.2.1 Authentication — Supabase Auth, federated sign-in
+### 2.2.1 Authentication and account data
 
-**DECIDED Aug 12, 2026.** Accounts are mandatory from first launch (B1: "I set up
-my kitchen once and it never asks again" requires a durable server-side profile
-that survives reinstall). Sign-in is **federated via Google**, brokered by
-Supabase Auth.
+**Updated September 27, 2026.** The entry screen supports Google OAuth,
+email/password signup and sign-in, password reset, and Continue as guest. Supabase Auth
+remains the identity provider. Guest choice is persisted under its own storage key and
+does not rewrite or clear the kitchen store; returning local kitchens remain available.
 
-Supabase Auth issues the JWT that every RLS policy in §3 keys on, so the
-provider choice and the authorization model are the same decision. No custom
-session handling, no second identity store.
+Web OAuth, email confirmation, and password-reset links return to a route on the browser
+origin that started the flow. A configured canonical site origin does not override the
+current origin. Browser auth sessions remain scoped to their origin and browser profile;
+a callback that moves from a preview or localhost to a different host can therefore
+appear to lose its session. Account identity and pantry sync status are shown separately.
+A signed-in session alone is not proof that a pantry operation synced.
 
-**This is what makes the app online-only.** A user cannot reach the
-first screen without a network round trip to an identity provider, so designing
-any downstream layer for offline operation protects a state that cannot occur.
+Pantry persistence and sync have separate acceptance criteria in DE-01 and DE-02 of
+[the feedback roadmap](09_FEEDBACK_ROADMAP.md). The auth screens preserve local kitchens
+and do not import guest pantry items without the existing explicit import choice. Body
+metrics remain local-only. Network-dependent capabilities such as photo analysis retain
+honest failure and manual-entry paths.
 
-**Open items — owner RJ:**
-
-| Item | Why it matters |
-|---|---|
-| **Sign in with Apple** | Apple's App Store guidelines have historically required it wherever a third-party social login is offered. If that holds, iOS ships with both or is rejected at review. **Verify against current guidelines before the iOS build.** |
-| **Email fallback** | A federated-only app locks out anyone without a Google account, and makes review-team testing awkward. Supabase magic links cost nothing to add. |
-| **Session persistence** | Sessions must survive app restart, or "never asks again" fails on the second launch. |
+Supabase Auth must allow the exact callback URLs for each local, preview, and production
+origin, including /auth/callback and /auth/reset-password. Local browser testing does not
+verify provider configuration or the deployed origin. Real iPhone Safari and hosted
+confirmation/reset round trips remain release evidence to collect.
 
 ### 2.3 Recipe sources — bundled catalog and optional live expansion
 
@@ -189,7 +191,7 @@ current generated totals.
 
 The input is a photograph of a college refrigerator: dense occlusion, poor lighting, arbitrary orientation, generic packaging, and an **unbounded vocabulary** of possible ingredients. The output must be a database mutation, not a description.
 
-An open-vocabulary VLM is the only approach that satisfies B2. It recognizes gochujang, tahini, or a half-used bag of frozen edamame with no training data from us — a fixed-class model returns nothing for these, silently, which is worse than an error. It accepts multiple images per prompt, so a user photographs the fridge, freezer, and two shelves in one flow and gets one merged pantry back. And it has zero fixed cost: nothing to train, nothing to host, which is what makes it compatible with free-forever (B11).
+An open-vocabulary VLM is the only approach that satisfies B2. It recognizes gochujang, tahini, or a half-used bag of frozen edamame with no training data from us — a fixed-class model returns nothing for these, silently, which is worse than an error. It accepts multiple images per prompt, so a user photographs the fridge, freezer, and two shelves in one flow and gets one merged pantry back. And it has zero fixed cost: nothing to train, nothing to host, which is what makes it compatible with a low-cost starting tier (B11); paid entitlements remain pending marketing decisions.
 
 #### Model selection within the Gemini 3 family
 
@@ -203,7 +205,7 @@ Pin the **stable** string, not `gemini-flash-latest`. The `latest` alias hot-swa
 
 Google's **Interactions API** is now GA and is the recommended surface for new builds. Use it for this integration rather than the older endpoint.
 
-**Accepted tradeoffs:** requires network connectivity (acceptable — the app is online-only by decision, §2.2.1); per-call cost scaling with usage (bounded — capture is infrequent, and this is the app's largest per-user variable cost); and a third-party dependency (mitigated — manual pantry entry is a complete fallback and is required anyway for B7).
+**Accepted tradeoffs:** requires network connectivity for photo analysis; local guests retain manual entry (§2.2.1); per-call cost scaling with usage (bounded — capture is infrequent, and this is the app's largest per-user variable cost); and a third-party dependency (mitigated — manual pantry entry is a complete fallback and is required anyway for B7).
 
 **Phase 3 option:** once real user photos accumulate, a distilled on-device model could handle the ~200 most common ingredients locally and fall back to the cloud for the tail. A sound cost optimization, not a launch strategy.
 
@@ -254,6 +256,12 @@ Three places where the sources disagreed, and the resolution:
 ---
 
 ## 3. Data Model
+
+This section records existing foundations, not proof of client sync integration.
+DE-02 owns the account-sync contract. DE-14 introduces planned calorie display/intake
+tracking after a nutrition data design; existing optional goals and portion estimates
+must be reused. The current MVP exclusion of macro tracking does not exclude that
+new, separately phased calorie work. DE-15 owns future billing once marketing defines tiers.
 
 ```sql
 -- ---------- Identity and grouping ----------

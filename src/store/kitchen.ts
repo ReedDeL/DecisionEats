@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { lookupIngredient } from '@/data/catalog';
-import type { BodyGoal, WeeklyMealPlan } from '@/contracts/meal-journeys';
+import type { BodyGoal, TasteSignal, WeeklyMealPlan } from '@/contracts/meal-journeys';
+import mealImageCredits from '@/data/meal-image-credits.json';
 import type { DietaryTag, Equipment, IngredientId, UserPreferences } from '@/engine/types';
 import {
   migrateEquipmentState,
@@ -110,6 +111,9 @@ export interface PlanTasteSignal {
 
 const DISLIKED_KEY = 'homechef-disliked';
 const SKIPPED_KEY = 'homechef-skipped';
+// Older builds saved skips indefinitely. Discard that legacy key on upgrade:
+// "Not right now" starts fresh with each app session.
+storage.remove(SKIPPED_KEY);
 export const GUEST_PANTRY_KEY = 'decisioneats-guest-pantry-v1';
 let pantryMutationSink: ((id: IngredientId, present: boolean) => void) | null = null;
 export function installPantryMutationSink(sink: typeof pantryMutationSink): void {
@@ -133,6 +137,7 @@ interface KitchenState {
   bodyGoal: BodyGoal | null;
   bodyMetrics: BodyMetrics;
   planTasteSignals: PlanTasteSignal[];
+  photoTasteSignals: TasteSignal[];
   weeklyPlan: WeeklyMealPlan | null;
   checkedPlanGroceryNeeds: string[];
 
@@ -153,10 +158,12 @@ interface KitchenState {
   removeDislike: (recipeId: string) => void;
   resetDislikes: () => void;
   recordSkip: (recipeId: string) => void;
+  removeSkip: (recipeId: string) => void;
   setBodyGoal: (goal: BodyGoal | null) => void;
   setBodyMetrics: (metrics: Partial<BodyMetrics>) => void;
   clearBodyData: () => void;
   recordConfirmedPlanSelections: (recipeIds: readonly string[], recordedAt?: string) => void;
+  setPhotoTasteSelections: (recipeIds: readonly string[]) => void;
   setWeeklyPlan: (plan: WeeklyMealPlan | null) => void;
   togglePlanGroceryNeed: (ingredientId: string) => void;
   clearPlanGroceryChecks: () => void;
@@ -208,11 +215,14 @@ export function migrateKitchenState(persisted: unknown): Record<string, unknown>
   const migrated = migrateEquipmentState(persisted);
   const withoutStarterFlag = { ...migrated };
   delete withoutStarterFlag.pantryStarterInitialized;
+  delete withoutStarterFlag.skippedRecipes;
+  storage.remove(SKIPPED_KEY);
   if (getJSON(GUEST_PANTRY_KEY) === null && Array.isArray(migrated.pantry))
     setJSON(GUEST_PANTRY_KEY, migrated.pantry);
   return {
     ...withoutStarterFlag,
     pantry: [],
+    skippedRecipes: [],
     weeklyPlan: migrateWeeklyPlan(migrated.weeklyPlan),
   };
 }
@@ -230,10 +240,11 @@ export const useKitchenStore = create<KitchenState>()(
       mealPrepReminderLeadMinutes: 0,
       mealPrepReminderOnboardingComplete: false,
       dislikedRecipes: getJSON<string[]>(DISLIKED_KEY) ?? [],
-      skippedRecipes: getJSON<string[]>(SKIPPED_KEY) ?? [],
+      skippedRecipes: [],
       bodyGoal: null,
       bodyMetrics: { heightCentimeters: null, weightKilograms: null },
       planTasteSignals: [],
+      photoTasteSignals: [],
       weeklyPlan: null,
       checkedPlanGroceryNeeds: [],
 
@@ -275,7 +286,10 @@ export const useKitchenStore = create<KitchenState>()(
         set((s) => {
           const updated = [...new Set([...s.dislikedRecipes, recipeId])];
           setJSON(DISLIKED_KEY, updated);
-          return { dislikedRecipes: updated };
+          return {
+            dislikedRecipes: updated,
+            skippedRecipes: s.skippedRecipes.filter((item) => item !== recipeId),
+          };
         }),
       removeDislike: (recipeId) =>
         set((s) => {
@@ -289,11 +303,13 @@ export const useKitchenStore = create<KitchenState>()(
           return { dislikedRecipes: [] };
         }),
       recordSkip: (recipeId) =>
-        set((s) => {
-          const updated = [...new Set([...s.skippedRecipes, recipeId])];
-          setJSON(SKIPPED_KEY, updated);
-          return { skippedRecipes: updated };
-        }),
+        set((s) =>
+          s.dislikedRecipes.includes(recipeId)
+            ? s
+            : { skippedRecipes: [...new Set([...s.skippedRecipes, recipeId])] }
+        ),
+      removeSkip: (recipeId) =>
+        set((s) => ({ skippedRecipes: s.skippedRecipes.filter((item) => item !== recipeId) })),
       setBodyGoal: (bodyGoal) => set({ bodyGoal }),
       setBodyMetrics: (metrics) =>
         set((state) => ({
@@ -314,6 +330,17 @@ export const useKitchenStore = create<KitchenState>()(
         set((state) => ({
           planTasteSignals: mergePlanTasteSignals(state.planTasteSignals, recipeIds, recordedAt),
         })),
+      setPhotoTasteSelections: (recipeIds) =>
+        set({
+          photoTasteSignals: [...new Set(recipeIds)]
+            .filter((id) => mealImageCredits.some((credit) => credit.recipe_ids.includes(id)))
+            .map((recipeId) => ({
+              kind: 'photo_selected',
+              recipeId,
+              journey: 'now',
+              recordedAt: new Date().toISOString(),
+            })),
+        }),
       setWeeklyPlan: (weeklyPlan) => set({ weeklyPlan, checkedPlanGroceryNeeds: [] }),
       togglePlanGroceryNeed: (ingredientId) =>
         set((state) => ({
@@ -324,7 +351,7 @@ export const useKitchenStore = create<KitchenState>()(
       clearPlanGroceryChecks: () => set({ checkedPlanGroceryNeeds: [] }),
       reset: () => {
         setJSON(DISLIKED_KEY, []);
-        setJSON(SKIPPED_KEY, []);
+        storage.remove(SKIPPED_KEY);
         clearLocalMealSatiety();
         set({
           equipment: [],
@@ -341,6 +368,7 @@ export const useKitchenStore = create<KitchenState>()(
           bodyGoal: null,
           bodyMetrics: { heightCentimeters: null, weightKilograms: null },
           planTasteSignals: [],
+          photoTasteSignals: [],
           weeklyPlan: null,
           checkedPlanGroceryNeeds: [],
         });
@@ -349,9 +377,9 @@ export const useKitchenStore = create<KitchenState>()(
     {
       name: 'homechef-kitchen',
       storage: zustandStorage,
-      version: 3,
+      version: 4,
       migrate: migrateKitchenState,
-      partialize: ({ pantry: _pantry, ...state }) => state,
+      partialize: ({ pantry: _pantry, skippedRecipes: _skippedRecipes, ...state }) => state,
     }
   )
 );
@@ -369,6 +397,7 @@ export function toEnginePreferences(
     skippedRecipes?: readonly string[];
     bodyGoal?: BodyGoal | null;
     bodyMetrics?: BodyMetrics;
+    photoTasteSignals?: readonly TasteSignal[];
   },
   preferredCuisine: string | null = null
 ): UserPreferences {
@@ -382,9 +411,7 @@ export function toEnginePreferences(
   const disliked = state.dislikedRecipes
     ? new Set(state.dislikedRecipes)
     : new Set(getJSON<string[]>(DISLIKED_KEY) ?? []);
-  const skipped = state.skippedRecipes
-    ? new Set(state.skippedRecipes)
-    : new Set(getJSON<string[]>(SKIPPED_KEY) ?? []);
+  const skipped = state.skippedRecipes ? new Set(state.skippedRecipes) : new Set<string>();
 
   return {
     equipment: normalizeOwnedEquipment(state.equipment),
@@ -395,16 +422,20 @@ export function toEnginePreferences(
     preferredCuisine,
     bodyGoal: state.bodyGoal,
     bodyMetrics: state.bodyMetrics,
+    photoSelectedRecipeIds: new Set(state.photoTasteSignals?.map(({ recipeId }) => recipeId) ?? []),
   };
 }
 
 /**
- * `skipped` is a weak negative signal and `disliked` a strong one; the engine
- * de-ranks one and eliminates the other, so they are stored separately even
- * though the UI records them from adjacent gestures.
+ * Both actions hide recipes from new suggestions. Skips live only in memory for
+ * this app session; dislikes remain stored until the user restores them.
  */
 export function recordSkip(recipeId: string): void {
   useKitchenStore.getState().recordSkip(recipeId);
+}
+
+export function removeSkip(recipeId: string): void {
+  useKitchenStore.getState().removeSkip(recipeId);
 }
 
 export function recordDislike(recipeId: string): void {

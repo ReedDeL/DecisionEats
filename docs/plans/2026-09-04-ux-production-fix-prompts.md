@@ -1,10 +1,11 @@
 # DecisionEats UX Production Fix Prompts
 
 **Date:** September 4, 2026  
-**Status:** Proposed implementation sequence  
+**Status:** Historical implementation context; see September 23 roadmap
+
 **Source:** Hands-on UX feedback in DecisionEats UX Issues.md
 
-Run these prompts one at a time, in order. Each is scoped as a reviewable production change. Do not combine them into one large pass.
+These original prompts are retained as historical context. The [September 23 feedback roadmap](../09_FEEDBACK_ROADMAP.md) owns current follow-up work and maps existing implementations to remaining gaps. Do not run this older sequence as a second backlog; generated meal-art direction is superseded by DE-08 reviewed real photography.
 
 ## Prompt 1: Replace bundled kitchen tiers with an equipment checklist
 

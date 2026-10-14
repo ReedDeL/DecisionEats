@@ -14,9 +14,8 @@ import type { IngredientId, Minutes, Recipe, ScoredRecipe, UserPreferences } fro
  * Bucketing is by missing count, so score only orders recipes WITHIN a bucket.
  *
  * Coverage dominates because it is the user's actual question. The skip penalty
- * outweighs a marginal coverage gain because an explicit skip is the only
- * negative signal the user volunteers; a disliked recipe never reaches scoring
- * at all, since `decide` eliminates it outright.
+ * remains for direct scoring callers; Now and Plan exclude skipped recipes
+ * before scoring candidates. Disliked recipes are also excluded there.
  */
 export const WEIGHTS = {
   coverage: 0.6,

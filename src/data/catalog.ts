@@ -45,7 +45,7 @@ export function lookupIngredient(id: string): VocabularyEntry | undefined {
   return BY_ID.get(id);
 }
 
-/** Pre-populated on first run so a brand-new pantry is not empty. */
+/** Ingredient taxonomy only; these are never assumed to be in a user's pantry. */
 export const STAPLE_INGREDIENT_IDS: readonly string[] = INGREDIENT_VOCABULARY.filter(
   (entry) => entry.isStaple
 ).map((entry) => entry.id);

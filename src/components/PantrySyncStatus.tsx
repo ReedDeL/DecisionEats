@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { Text } from '@/components/ui/Text';
+import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useAuthSession } from '@/lib/auth/useAuthSession';
 import { pantrySync, usePantrySyncState } from '@/lib/pantry-sync-live';
 import { space } from '@/theme/tokens';
@@ -26,9 +27,13 @@ export function PantrySyncStatus() {
 
   return (
     <View style={styles.status}>
-      <Text variant="caption" tone="muted" accessibilityLiveRegion="polite">
-        {message}
-      </Text>
+      {state.phase === 'loading' ? (
+        <LoadingSkeleton label={message} rows={2} />
+      ) : (
+        <Text variant="caption" tone="muted" accessibilityLiveRegion="polite">
+          {message}
+        </Text>
+      )}
       {state.phase === 'error' ? (
         <PrimaryButton
           label="Retry pantry sync"

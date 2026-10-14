@@ -68,8 +68,11 @@ describe('PlanScreen contract and flow requirements', () => {
 
   it('swaps meals by date plus slot instead of array index', () => {
     expect(planSource).toContain('onSwap(entry.date, entry.mealSlot)');
-    expect(planSource).toContain('const key = `${date}:${mealSlot}`');
-    expect(planSource).toContain('swapPlanMeal(currentPlan, key, planInput)');
+    expect(planSource).toContain('key: `${date}:${mealSlot}`');
+    expect(planSource).toContain(
+      'swapPlanMeal(currentPlan, swapTarget.key, replacementInput, recipeId)'
+    );
+    expect(planSource).toContain('<PlanReplacementPicker');
     expect(planSource).not.toContain('onSwap(index)');
     expect(planSource).not.toContain('swap(index: number)');
   });

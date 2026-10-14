@@ -10,6 +10,23 @@ import {
 } from '@/engine/__fixtures__';
 
 describe('decide — hard constraints eliminate', () => {
+  it('uses explicit photo choices only for ties and never overrides readiness or hard constraints', () => {
+    const a = makeRecipe({ id: 'a', ingredients: [ingredient('rice')] });
+    const b = makeRecipe({ id: 'b', ingredients: [ingredient('rice')] });
+    const unsafe = makeRecipe({ id: 'unsafe', equipmentRequired: ['oven'] });
+    const gap = makeRecipe({ id: 'gap', ingredients: [ingredient('onion')] });
+    const prefs = makePrefs({
+      equipment: ['microwave'],
+      photoSelectedRecipeIds: new Set(['b', 'unsafe', 'gap']),
+    });
+    const result = decide([a, b, unsafe, gap], pantry('rice'), prefs, 30);
+    expect(result.buckets.ready.map(({ recipe }) => recipe.id)).toEqual(['b', 'a']);
+    expect(result.buckets.missing_few.map(({ recipe }) => recipe.id)).toEqual(['gap']);
+    expect(flatIds(result)).not.toContain('unsafe');
+    expect(
+      decide([a, b], pantry('rice'), makePrefs(), 30).buckets.ready.map(({ recipe }) => recipe.id)
+    ).toEqual(['a', 'b']);
+  });
   it('removes a recipe needing equipment the user lacks', () => {
     const catalog = [
       makeRecipe({ id: 'oven', equipmentRequired: ['oven'] }),
@@ -51,6 +68,18 @@ describe('decide — hard constraints eliminate', () => {
       30
     );
     expect(flatIds(result)).toEqual(['yes']);
+  });
+
+  it('excludes a session-skipped recipe and restores it when the skip is removed', () => {
+    const catalog = [makeRecipe({ id: 'skip' }), makeRecipe({ id: 'keep' })];
+    const skipped = decide(
+      catalog,
+      pantry('egg', 'salt'),
+      makePrefs({ skippedRecipeIds: new Set(['skip']) }),
+      30
+    );
+    expect(flatIds(skipped)).toEqual(['keep']);
+    expect(flatIds(decide(catalog, pantry('egg', 'salt'), makePrefs(), 30))).toContain('skip');
   });
 
   it('reveals the next eligible ranked recipe when a top recipe is disliked', () => {

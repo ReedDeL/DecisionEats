@@ -68,14 +68,14 @@ function stagesFor(day: DailyPlanPreference, cuisine: string | null): SelectionS
     ? exact
     : [...exact, ...tiers.map((timeLimit) => ({ timeLimit, cuisineDropped: true }))];
 }
-function chooseMeal(
+function rankMeals(
   input: PlanWeekInput,
   day: DailyPlanPreference,
   existing: readonly RecipeWeeklyEntry[],
   groceryEntries: readonly PlanGroceryEntry[],
   excludedId?: string,
   neighborIds?: ReadonlySet<string>
-): { candidate: Candidate | null; reason: 'no_safe_recipe' | 'grocery_need_cap' } {
+): { candidates: Candidate[]; reason: 'no_safe_recipe' | 'grocery_need_cap' } {
   const counts = new Map<string, number>();
   for (const entry of existing) counts.set(entry.recipeId, (counts.get(entry.recipeId) ?? 0) + 1);
   const lastId = existing.at(-1)?.recipeId;
@@ -94,6 +94,7 @@ function chooseMeal(
   for (const recipe of input.recipes) {
     if (
       recipe.id === excludedId ||
+      input.preferences.skippedRecipeIds.has(recipe.id) ||
       !isHardSafePlanRecipe(recipe, input.preferences) ||
       !recipe.mealSlots?.includes(day.mealSlot)
     )
@@ -137,7 +138,7 @@ function chooseMeal(
     return a.recipe.id < b.recipe.id ? -1 : a.recipe.id > b.recipe.id ? 1 : 0;
   });
   return {
-    candidate: candidates[0] ?? null,
+    candidates,
     reason: eligible ? 'grocery_need_cap' : 'no_safe_recipe',
   };
 }
@@ -208,7 +209,8 @@ export function planWeek(input: PlanWeekInput): WeeklyMealPlan {
   const groceries: PlanGroceryEntry[] = [];
   let limitedVariety = false;
   for (const day of input.days) {
-    const { candidate, reason } = chooseMeal(input, day, concrete, groceries);
+    const { candidates, reason } = rankMeals(input, day, concrete, groceries);
+    const candidate = candidates[0];
     if (!candidate) {
       entries.push({ kind: 'day_of_decision', date: day.date, mealSlot: day.mealSlot, reason });
       continue;
@@ -230,12 +232,7 @@ export function planWeek(input: PlanWeekInput): WeeklyMealPlan {
     groceryNeeds: derivePlanLinkedGroceryNeeds(groceries, input.pantry, GROCERY_NEED_LIMIT),
   });
 }
-/** Replace one stable slot, keeping the rest of the plan and its confirmation intact. */
-export function swapPlanMeal(
-  plan: WeeklyMealPlan,
-  key: string,
-  input: PlanWeekInput
-): WeeklyMealPlan | null {
+function replacementContext(plan: WeeklyMealPlan, key: string, input: PlanWeekInput) {
   const target = plan.entries.find((entry) => mealEntryKey(entry) === key);
   const day = input.days.find((entry) => mealEntryKey(entry) === key);
   if (!target || !day) return null;
@@ -243,11 +240,13 @@ export function swapPlanMeal(
     (entry): entry is RecipeWeeklyEntry => entry.kind === 'recipe' && mealEntryKey(entry) !== key
   );
   const byId = new Map(input.recipes.map((recipe) => [recipe.id, recipe]));
+  // Do not silently lose grocery requirements for a no-longer-known recipe.
+  if (others.some((entry) => !byId.has(entry.recipeId))) return null;
   const groceries = others.flatMap((entry) => {
     const recipe = byId.get(entry.recipeId);
     return recipe ? [{ date: entry.date, recipe }] : [];
   });
-  const { candidate } = chooseMeal(
+  const { candidates } = rankMeals(
     input,
     day,
     others,
@@ -260,6 +259,37 @@ export function swapPlanMeal(
       ].flatMap((entry) => (entry?.kind === 'recipe' ? [entry.recipeId] : []))
     )
   );
+  return { day, groceries, candidates };
+}
+
+/** Read-only choices, using the same safety, slot, and grocery limits as planning. */
+export function getPlanMealReplacements(plan: WeeklyMealPlan, key: string, input: PlanWeekInput) {
+  const context = replacementContext(plan, key, input);
+  if (!context) return [];
+  return context.candidates.map((candidate) => ({
+    recipe: candidate.recipe,
+    missingIngredientIds: candidate.scored.missing,
+    statedRelaxations: concreteEntry(input, context.day, candidate).statedRelaxations,
+  }));
+}
+
+/**
+ * Replace one stable slot. An explicit choice is revalidated against current
+ * inputs; an expired choice never silently becomes a different recipe.
+ */
+export function swapPlanMeal(
+  plan: WeeklyMealPlan,
+  key: string,
+  input: PlanWeekInput,
+  selectedRecipeId?: string
+): WeeklyMealPlan | null {
+  const context = replacementContext(plan, key, input);
+  if (!context) return null;
+  const { day, groceries, candidates } = context;
+  const candidate =
+    selectedRecipeId === undefined
+      ? candidates[0]
+      : candidates.find(({ recipe }) => recipe.id === selectedRecipeId);
   if (!candidate) return null;
   const entries = plan.entries.map((entry) =>
     mealEntryKey(entry) === key ? concreteEntry(input, day, candidate) : entry

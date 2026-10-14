@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useGlobalSearchParams, usePathname, useRouter, useSegments } from 'expo-router';
 import { PostHogProvider } from 'posthog-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppState, Platform } from 'react-native';
 
 import { AnalyticsObserver } from '@/components/AnalyticsObserver';
+import { ContinuousOnboardingPrompt } from '@/components/ContinuousOnboardingPrompt';
 import { MobileViewport } from '@/components/MobileViewport';
 import { isAnalyticsConfigured, isApprovedAnalyticsEvent } from '@/lib/analytics';
 import {
@@ -15,12 +16,17 @@ import {
   ROOT_ROUTE_NAMES,
   rootRouteIsAvailable,
 } from '@/lib/auth/app-gate';
+import { useAuthSession } from '@/lib/auth/useAuthSession';
+import { useGuestChoice } from '@/lib/auth/guest-access';
+import { getJSON } from '@/lib/storage';
 import { configureMealPrepNotifications } from '@/lib/meal-prep-notifications';
 import { pantrySync } from '@/lib/pantry-sync-live';
 import { queryClient } from '@/lib/query-client';
 import { supabase } from '@/lib/supabase';
-import { useKitchenStore } from '@/store/kitchen';
+import { GUEST_PANTRY_KEY, useKitchenStore } from '@/store/kitchen';
 import { useTheme } from '@/theme/useTheme';
+import { useReducedMotion } from '@/lib/use-reduced-motion';
+import LoadingScreen from './loading';
 
 const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? '';
 const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
@@ -115,6 +121,7 @@ function PantryAuthObserver() {
   }, []);
   return null;
 }
+
 function AnalyticsProvider({ children }: { children: ReactNode }) {
   if (!isAnalyticsConfigured(posthogApiKey)) return children;
 
@@ -128,8 +135,8 @@ function AnalyticsProvider({ children }: { children: ReactNode }) {
 
 /**
  * Sends a first-run local user through onboarding and keeps a returning one
- * out of it. Until the local store hydrates, its navigator exposes only a
- * blank route; after that, only the destination group can mount while an
+ * out of it. Until storage and auth load, a neutral loading screen withholds
+ * the navigator; after that, only the destination group can mount while an
  * explicit replacement finishes. Account and sync controls live in Settings.
  *
  * The equipment tier and allergen list are hard constraints the engine cannot
@@ -137,26 +144,72 @@ function AnalyticsProvider({ children }: { children: ReactNode }) {
  * through the equipment screen, only through the optional restrictions one.
  */
 function AppGate() {
+  const reducedMotion = useReducedMotion();
   const router = useRouter();
   const segments = useSegments();
-  const onboardingDone = useKitchenStore((state) => state.onboardingDone);
+  const pathname = usePathname();
+  const params = useGlobalSearchParams<{ intent?: string }>();
+  const kitchen = useKitchenStore();
+  const { isLoading: isAuthLoading, isAuthenticated } = useAuthSession();
+  const hasGuestChoice = useGuestChoice();
   const hydrated = useStoreHydrated();
-  const target = authRoute({ onboardingDone });
+  const [visitedFirstRunThisSession, setVisitedFirstRunThisSession] = useState(false);
+  const guestPantry = getJSON<string[]>(GUEST_PANTRY_KEY) ?? [];
+  const hasExistingLocalKitchen =
+    kitchen.onboardingDone ||
+    kitchen.equipment.length > 0 ||
+    kitchen.allergens.length > 0 ||
+    kitchen.dietary.length > 0 ||
+    kitchen.pantry.length > 0 ||
+    guestPantry.length > 0 ||
+    kitchen.weeklyPlan !== null ||
+    kitchen.bodyGoal !== null ||
+    kitchen.bodyMetrics.heightCentimeters !== null ||
+    kitchen.bodyMetrics.weightKilograms !== null ||
+    kitchen.dislikedRecipes.length > 0 ||
+    kitchen.skippedRecipes.length > 0;
+  const target = authRoute({
+    onboardingDone: kitchen.onboardingDone,
+    hasExistingLocalKitchen,
+    hasGuestChoice,
+    isAuthenticated,
+  });
   const currentSegment = segments[0];
-  const phase = appGatePhase(hydrated, currentSegment, target);
+  const preserveLogin = currentSegment === 'login' && params.intent === 'account';
+  const phase = appGatePhase(hydrated && !isAuthLoading, currentSegment, target, preserveLogin);
+
+  useEffect(() => {
+    if (hydrated && currentSegment === '(onboarding)') setVisitedFirstRunThisSession(true);
+  }, [hydrated, currentSegment]);
 
   useEffect(() => {
     if (phase === 'redirecting') router.replace(target);
   }, [phase, router, target]);
 
+  // A protected route removed during hydration is discarded by the navigator.
+  // Wait before mounting it so an authorized deep link keeps its destination.
+  if (phase === 'loading') return <LoadingScreen />;
+
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-      {ROOT_ROUTE_NAMES.map((routeName) => (
-        <Stack.Protected key={routeName} guard={rootRouteIsAvailable(routeName, phase, target)}>
-          <Stack.Screen name={routeName} />
-        </Stack.Protected>
-      ))}
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false, animation: reducedMotion ? 'none' : 'fade' }}>
+        {ROOT_ROUTE_NAMES.map((routeName) => (
+          <Stack.Protected key={routeName} guard={rootRouteIsAvailable(routeName, phase, target)}>
+            <Stack.Screen name={routeName} />
+          </Stack.Protected>
+        ))}
+      </Stack>
+      <ContinuousOnboardingPrompt
+        enabled={
+          phase === 'ready' &&
+          !visitedFirstRunThisSession &&
+          target === '/' &&
+          currentSegment === '(tabs)' &&
+          (pathname === '/' || pathname === '/plan')
+        }
+        journey={pathname === '/plan' ? 'week' : 'now'}
+      />
+    </>
   );
 }
 

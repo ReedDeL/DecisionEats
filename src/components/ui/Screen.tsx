@@ -1,5 +1,6 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Animated, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useStepOpacity } from '@/lib/use-step-opacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getResponsiveLayout } from '@/components/ui/responsive-layout';
@@ -18,6 +19,7 @@ interface ScreenProps extends PropsWithChildren {
   footer?: ReactNode;
   /** Results manages its own scrolling per bucket; opt out here. */
   scroll?: boolean;
+  transitionKey?: string;
 }
 
 /**
@@ -28,7 +30,8 @@ interface ScreenProps extends PropsWithChildren {
  * handling — the failure mode is a title tucked under a notch, which is
  * invisible on a simulator with no notch and obvious on real hardware.
  */
-export function Screen({ children, header, footer, scroll = true }: ScreenProps) {
+export function Screen({ children, header, footer, scroll = true, transitionKey }: ScreenProps) {
+  const opacity = useStepOpacity(transitionKey);
   const { color } = useTheme();
   const { width } = useWindowDimensions();
   const { horizontalPadding, contentMaxWidth } = getResponsiveLayout(
@@ -48,15 +51,20 @@ export function Screen({ children, header, footer, scroll = true }: ScreenProps)
       {header ? <View style={[styles.header, contentFrame, horizontalInset]}>{header}</View> : null}
 
       {scroll ? (
-        <ScrollView
+        <Animated.ScrollView
+          style={{ opacity }}
           contentContainerStyle={[styles.content, contentFrame, horizontalInset]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {children}
-        </ScrollView>
+        </Animated.ScrollView>
       ) : (
-        <View style={[styles.content, styles.flex, contentFrame, horizontalInset]}>{children}</View>
+        <Animated.View
+          style={[styles.content, styles.flex, contentFrame, horizontalInset, { opacity }]}
+        >
+          {children}
+        </Animated.View>
       )}
 
       {footer ? (

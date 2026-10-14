@@ -1,7 +1,8 @@
 # DecisionEats Product Direction
 
 **Owner:** Founding team  
-**Decision date:** August 26, 2026  
+**Decision date:** August 26, 2026; feedback scope updated September 23, 2026
+
 **Status:** Current product direction
 
 DecisionEats reduces decision fatigue around food. The first question is still
@@ -30,7 +31,7 @@ never relaxed.
 This journey turns the current pantry into an immediate meal decision.
 
 1. Ask how much time the user has.
-2. Ask one optional preference, such as cuisine or meal mood.
+2. Ask one optional preference, such as food style or meal mood; the planned photo-led step uses reviewed real meal photos and remains skippable.
 3. Show a small first set of strong matches.
 4. Let the user open a recipe or choose **Show more matches**.
 
@@ -69,8 +70,9 @@ Existing equipment, allergens, dietary needs, pantry contents, and learned
 preferences apply automatically.
 
 DecisionEats produces one recommended weekly plan, not a calendar full of choices.
-The user may replace one meal at a time. After confirmation, DecisionEats shows
-**What to get**: the ingredients needed beyond the pantry.
+The user may replace one meal at a time. Planned improvements let the user choose the
+replacement and inspect missing ingredients before confirmation. **What to get** previews
+the ingredients needed beyond the pantry, then remains attached to the confirmed plan.
 
 “What to get” is plan-linked guidance, not a general shopping-list product. It
 does not introduce a reusable checklist, store workflow, or barcode scanner.
@@ -118,6 +120,28 @@ Use:
 
 DecisionEats keeps its own warm palette and accessibility standards. The visual
 design should communicate momentum: one question, one answer, one next step.
+
+## September 23 feedback scope
+
+The [feedback roadmap](09_FEEDBACK_ROADMAP.md) owns the code comparison, priorities,
+acceptance criteria and prompts. These are planned improvements, not claims of shipped behavior.
+
+- Offer a clear login screen with Google, email/password and Continue as guest.
+- Guests keep local kitchens; signed-in accounts gain Supabase-backed kitchen data with
+  explicit guest import, account isolation and visible sync status.
+- New pantries contain no assumed ingredients. Suggestions require explicit selection.
+- Keep permanent exclusions editable and distinguish them from temporary skips.
+- Prefer accurately matched, licensed real food photos; use a neutral fallback where
+  no suitable image exists. Keep ingredient photos separate from finished meals.
+- Complete continuous onboarding using existing optional goals, height/weight and preferences.
+  Body metrics retain their current local-only promise unless users explicitly opt into a separately designed sync flow.
+- Verify existing mobile cooking reminders and separately decide web notification scope.
+- Add calorie information and intake tracking as a later phase after nutrition data design.
+  Existing portion estimates do not constitute tracking.
+- Plan Stripe tiers after marketing supplies prices and entitlements.
+
+Account/pantry trust and decision-flow fixes precede broad polish, nutrition expansion
+and billing. Now and Plan remain separate journeys; no third decision tree is introduced.
 
 ## Release policy
 

@@ -1,5 +1,12 @@
 # DecisionEats Dual Meal Journeys Technical Design
 
+> September 23 scope update: [Feedback Roadmap](../09_FEEDBACK_ROADMAP.md) owns
+> current delivery work. Reuse this document's existing contracts. DE-01/02 add
+> guest-compatible login and account sync; DE-08 replaces generated imagery direction;
+> DE-14 adds planned calorie display and intake logging beyond this document's older
+> exclusions. Those additions are not implemented by updating this specification.
+> Body metrics retain their current local-only UI promise until explicit opt-in is designed.
+
 > **Current authority:** Product behavior is governed by
 > `../00_PRODUCT_DIRECTION.md` and `../04_UIUX_SPEC.md`. This file preserves
 > supporting data, privacy, and engine contracts. Cook-mode, satiety, portion,
